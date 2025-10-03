@@ -132,7 +132,7 @@ You are not asked to ensure code quality for the code written for **Task 1**, **
 
 ## Group-wide task
 
-Draw a UML diagram for (a part of) the `censor` package. You do not need to show all the classes within this package. Instead, you should design the diagram so that someone looking at it can understand your architectural designs easily.
+Draw a UML diagram for (a part of) the `reactions` package. You do not need to show all the classes within this package. Instead, you should design the diagram so that someone looking at it can understand your architectural designs easily.
 
 **Criteria 1 (60%).** Your UML diagram should demonstrate your knowledge of UML, as taught in the course. In particular, you must correctly show at least one example of each of the following aspects of UML: aggregation, composition, dependency, inheritance, multiplicity, visibility.
 
