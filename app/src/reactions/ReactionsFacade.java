@@ -10,8 +10,16 @@ public class ReactionsFacade {
 	 * Users may have an arbitrary number of reactions on a single message, but only one of a given type.
 	 */
 	public static boolean addReaction(UUID userUUID, UUID messageUUID, ReactionType type, long timestamp) {
-		// TODO (task 1)
-		return false;
+		if (userUUID == null || messageUUID == null || type == null) {
+			return false;
+		}
+
+		Reaction reaction = new Reaction(userUUID, messageUUID, type, timestamp);
+
+		boolean result = ReactionDAO.getInstance().addReaction(reaction);
+
+		return result;
+
 	}
 
 	/**
@@ -19,8 +27,13 @@ public class ReactionsFacade {
 	 * Returns true if the reaction was successfully removed, and false otherwise.
 	 */
 	public static boolean removeReaction(UUID userUUID, UUID messageUUID, ReactionType type) {
-		// TODO (task 1)
-		return false;
+		if (userUUID == null || messageUUID == null || type == null) {
+			return false;
+		}
+
+		boolean result = ReactionDAO.getInstance().removeReaction(userUUID, messageUUID, type);
+
+		return result;
 	}
 
 	/**
@@ -29,9 +42,13 @@ public class ReactionsFacade {
 	 * They must be returned in chronological (time-based) order, from oldest to newest.
 	 */
 	public static List<ReactionType> getReactions(UUID userUUID, UUID messageUUID) {
-		// TODO (task 1)
-		return null;
-	}
+			if (userUUID == null || messageUUID == null) {
+				return null;
+			}
+
+			return ReactionDAO.getInstance().getReactionsByUser(userUUID, messageUUID);
+		}
+
 
 	/**
 	 * Loads all persistent data (users, messages, posts, and importantly reactions) from persistent data.
