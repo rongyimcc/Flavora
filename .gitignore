@@ -1,9 +1,0 @@
-
-.idea/
-*.iml
-
-*.log
-*.class
-
-target/
-.DS_Store
