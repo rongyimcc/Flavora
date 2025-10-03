@@ -18,6 +18,11 @@ public class ReactionsFacade {
 
 		boolean result = ReactionDAO.getInstance().addReaction(reaction);
 
+		// Save to persistent storage after modification
+		if (result) {
+			ReactionPersistence.saveReactions();
+		}
+
 		return result;
 
 	}
@@ -32,6 +37,11 @@ public class ReactionsFacade {
 		}
 
 		boolean result = ReactionDAO.getInstance().removeReaction(userUUID, messageUUID, type);
+
+		// Save to persistent storage after modification
+		if (result) {
+			ReactionPersistence.saveReactions();
+		}
 
 		return result;
 	}
@@ -54,6 +64,6 @@ public class ReactionsFacade {
 	 * Loads all persistent data (users, messages, posts, and importantly reactions) from persistent data.
 	 */
 	public static void loadPersistentData() {
-		// TODO (task 3)
+		ReactionPersistence.loadReactions();
 	}
 }
