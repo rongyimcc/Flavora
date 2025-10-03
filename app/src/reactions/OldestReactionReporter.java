@@ -1,64 +1,54 @@
 package reactions;
 
 import dao.UserDAO;
-
 import dao.model.Message;
-
 import dao.model.User;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 
 public class OldestReactionReporter extends AbstractReactionReporter {
+	private final UserDAO userDAO = UserDAO.getInstance();
 
-    @Override
-    protected List<ReactionDisplayTag> processReactions(List<Reaction> reactions, Message message) {
-        // Sort reactions by timestamp (oldest first)
-        List<Reaction> sortedReactions = new ArrayList<>(reactions);
-        sortedReactions.sort(Comparator.comparingLong(Reaction::getTimestamp));
+	@Override
+	protected List<ReactionDisplayTag> processReactions(List<Reaction> reactions, Message message) {
+		List<Reaction> sortedReactions = new ArrayList<>(reactions);
+		sortedReactions.sort(Comparator.comparingLong(Reaction::getTimestamp));
 
-        // Track which users we've already included
-        Set<UUID> includedUsers = new HashSet<>();
-        List<ReactionDisplayTag> result = new ArrayList<>();
+		Set<UUID> includedUsers = new HashSet<>();
+		Map<UUID, String> usernameCache = new HashMap<>();
+		List<ReactionDisplayTag> result = new ArrayList<>();
 
-        // Process reactions in chronological order
-        for (Reaction reaction : sortedReactions) {
-            UUID userId = reaction.getUserId();
+		for (Reaction reaction : sortedReactions) {
+			UUID userId = reaction.getUserId();
+			if (!includedUsers.add(userId)) {
+				continue;
+			}
 
-            // Only include the first (oldest) reaction per user
-            if (!includedUsers.contains(userId)) {
-                includedUsers.add(userId);
+			String username = usernameCache.computeIfAbsent(userId, this::resolveUsername);
+			result.add(new ReactionDisplayTag(reaction.getType(), username));
 
-                // Get the username
-                String username = getUsernameById(userId);
+			if (result.size() >= getMaxDisplayCount()) {
+				break;
+			}
+		}
 
-                // Add to result
-                result.add(new ReactionDisplayTag(reaction.getType(), username));
+		return result;
+	}
 
-                // Stop if we've reached the maximum display count
-                if (result.size() >= getMaxDisplayCount()) {
-                    break;
-                }
-            }
-        }
+	private String resolveUsername(UUID userId) {
+		User user = userDAO.getByUUID(userId);
+		if (user == null) {
+			return userId.toString();
+		}
 
-        return result;
-    }
-
-
-    private String getUsernameById(UUID userId) {
-        try {
-            // Try to find user by iterating through all users
-            Iterator<User> users = UserDAO.getInstance().getAll();
-            while (users.hasNext()) {
-                User user = users.next();
-                if (user != null && user.getUUID().equals(userId)) {
-                    return user.username() != null ? user.username() : userId.toString();
-                }
-            }
-        } catch (Exception e) {
-            // If any error occurs, return UUID as string
-
-        }
-        return userId.toString();
-    }
+		String username = user.username();
+		return (username == null || username.isBlank()) ? userId.toString() : username;
+	}
 }
