@@ -1,54 +1,75 @@
 package reactions;
 
 import dao.PostDAO;
-import dao.UserDAO;
 import dao.model.Message;
-import dao.model.*;
+import dao.model.User;
 
-import java.util.ArrayList;
+import java.util.Collections;
+import java.util.EnumMap;
+import java.util.HashSet;
 import java.util.Iterator;
-import java.util.Hashtable;
-import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
-import java.util.LinkedList;
-import java.util.*;
-import java.awt.*;
-import java.io.*;
-import java.applet.*;
-import java.beans.*;
 
 public class SpamDetector {
-// algorithm to check whether a user might be spamming reactions (true) or not spamming (false)
-public boolean checkspamforuser(User user) {
-	Iterator<Message> m           = PostDAO.getInstance().getAllMessages();
-	float             probability = 0;
-	List<UUID>        across      = new ArrayList<UUID>(), posts_in = new ArrayList<UUID>();
-	boolean           firstTime   = false;
-	while (m.hasNext()) {
-		// Note to self: it's inefficient to search through all the messages and users when we really only need to check any that have changed since the last time this function was called, but there's no way to do this with the current codebase... Maybe once architectural decisions have been made, it'll be possible to do something about this. Also, we expect this to be called regularly, so it might also be worth looking into caching results from each execution of the function to speed it up in subsequent invokations.
-		Message message = m.next();
-		Iterator<User> users = UserDAO.getInstance().getAll();
-		int[] frequency = new int[ReactionType.values().length + 100];
-		for (ReactionDisplayTag displayTag : ReactionReportFactory
-				.buildReporter("overview")
-				.generateReport(message)) try {
-				frequency[displayTag.type().ordinal()] += Integer.parseInt(displayTag.label());
-			} catch (NumberFormatException ignored) {};
+	private static final int CONTRIBUTION_CAP = 3;
+	private static final float SPAM_THRESHOLD = 5f;
 
+	private final PostDAO postDAO;
 
-	for (ReactionType type : ReactionsFacade.getReactions(message.id(), user.getUUID())) {
-		probability = probability + 1f /
-						(frequency[type.ordinal()] > 3 ? 3 : frequency[type.ordinal()]);
-		if (across.stream().anyMatch(x -> x.equals(message.thread()))) continue;
-			across.add(message.thread());
-		if (firstTime) continue;
-	} /* else */ {
-		firstTime = true;
-		m.next();
-		if (users.hasNext()) users.next();
-	}}
+	public SpamDetector() {
+		this(PostDAO.getInstance());
+	}
 
+	SpamDetector(PostDAO postDAO) {
+		this.postDAO = Objects.requireNonNull(postDAO);
+	}
 
-	return ((probability / across.size())) >= 5; // 5 is the threshold. We can tweak it during testing.
-}}
+	// algorithm to check whether a user might be spamming reactions (true) or not spamming (false)
+	public boolean checkSpamForUser(User user) {
+		if (user == null) {
+			return false;
+		}
+
+		Iterator<Message> messages = postDAO.getAllMessages();
+		float probability = 0f;
+		Set<UUID> threadsReacted = new HashSet<>();
+
+		while (messages.hasNext()) {
+			Message message = messages.next();
+			Map<ReactionType, Integer> frequency = countReactionsForMessage(message.id());
+			List<ReactionType> userReactions = safeGetReactions(user.getUUID(), message.id());
+			if (userReactions.isEmpty()) {
+				continue;
+			}
+
+			threadsReacted.add(message.thread());
+			for (ReactionType type : userReactions) {
+				int occurrences = Math.max(1, frequency.getOrDefault(type, 0));
+				probability += 1f / Math.min(CONTRIBUTION_CAP, occurrences);
+			}
+		}
+
+		if (threadsReacted.isEmpty()) {
+			return false;
+		}
+
+		return probability / threadsReacted.size() >= SPAM_THRESHOLD; // 5 is the threshold. We can tweak it during testing.
+	}
+
+	private Map<ReactionType, Integer> countReactionsForMessage(UUID messageId) {
+		EnumMap<ReactionType, Integer> counts = new EnumMap<>(ReactionType.class);
+		for (Reaction reaction : ReactionDAO.getInstance().getAllReactionsForMessage(messageId)) {
+			counts.merge(reaction.getType(), 1, Integer::sum);
+		}
+		return counts;
+	}
+
+	private List<ReactionType> safeGetReactions(UUID userId, UUID messageId) {
+		List<ReactionType> reactions = ReactionsFacade.getReactions(userId, messageId);
+		return reactions == null ? Collections.emptyList() : reactions;
+	}
+}
