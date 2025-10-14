@@ -1,0 +1,25 @@
+# === Gradle / Build ===
+.gradle/
+**/build/
+!.gradle/verification-metadata.xml
+
+# === Android Studio / IntelliJ ===
+.idea/
+*.iml
+*.ipr
+*.iws
+.DS_Store
+
+# === Local machine ===
+local.properties
+
+# === Keystore ===
+*.keystore
+*.jks
+
+# === Google Services  ===
+app/google-services.json
+
+# === Others ===
+captures/
+.externalNativeBuild/

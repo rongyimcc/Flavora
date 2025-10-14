@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "580388323889",
+    "project_id": "flavora-97fa5",
+    "storage_bucket": "flavora-97fa5.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:580388323889:android:19ed0ea56c121c70da8b10",
+        "android_client_info": {
+          "package_name": "comp.assignment.flavora"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAJwSrxVetFes33PSVx64GkYr26y8PIX6w"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
