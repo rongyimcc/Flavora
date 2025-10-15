@@ -39,6 +39,9 @@ import java.util.stream.Collectors;
  *   <li>Like and favorite interactions</li>
  *   <li>Navigate to post detail page</li>
  * </ul>
+ * @author Flavora Team
+ * @version 1.0
+ * @since 1.0
  */
 public class DiscoverFragment extends Fragment implements PostsAdapter.OnPostInteractionListener {
 

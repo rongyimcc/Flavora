@@ -25,138 +25,272 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 我的帖子Fragment
+ * My Posts Fragment
  * <p>
- * 显示当前用户发布的所有帖子列表。
- * 用户可以查看、点赞、收藏和删除自己发布的帖子。
+ * Displays all posts published by the current user.
+ * Users can view, like, favorite, and delete their own posts.
  * </p>
  *
- * <p>主要功能：</p>
+ * <p>Main features:</p>
  * <ul>
- *   <li>展示当前用户发布的所有帖子</li>
- *   <li>支持点赞和收藏操作</li>
- *   <li>支持删除自己的帖子（带确认对话框）</li>
- *   <li>点击帖子跳转到详情页</li>
- *   <li>每次Fragment可见时自动刷新数据</li>
+ *   <li>Display all posts created by the current user</li>
+ *   <li>Support liking and favoriting operations</li>
+ *   <li>Allow deleting user’s own posts (with confirmation dialog)</li>
+ *   <li>Navigate to post details by clicking on a post</li>
+ *   <li>Automatically refresh data each time the fragment becomes visible</li>
  * </ul>
  *
- * @author Flavora团队
+ * @author Flavora Team
  * @version 1.0
  */
 public class MyPostsFragment extends Fragment implements PostsAdapter.OnPostInteractionListener {
 
-    /** RecyclerView用于显示帖子列表 */
     private RecyclerView recyclerView;
 
-    /** 进度条视图，加载数据时显示 */
     private View progressBar;
 
-    /** 空状态文本，无数据时显示提示信息 */
     private TextView textEmpty;
 
-    /** 帖子列表适配器 */
     private PostsAdapter postsAdapter;
 
     /**
-     * 创建Fragment的视图
+     * Create the fragment view
      *
-     * @param inflater 用于填充布局的LayoutInflater
-     * @param container 父视图容器
-     * @param savedInstanceState 保存的实例状态
-     * @return 创建的根视图
+     * @param inflater LayoutInflater used to inflate the layout
+     * @param container Parent view container
+     * @param savedInstanceState Saved instance state
+     * @return The created root view
      */
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
-                                 // TODO
-                             }
+        View view = inflater.inflate(R.layout.fragment_post_list, container, false);
+
+        // 初始化视图引用
+        recyclerView = view.findViewById(R.id.recycler_view_posts);
+        progressBar = view.findViewById(R.id.progress_bar);
+        textEmpty = view.findViewById(R.id.text_empty);
+
+        setupRecyclerView();
+
+        return view;
+    }
 
     /**
-     * Fragment恢复时的回调
-     * 每次Fragment可见时重新加载数据，确保数据是最新的
+     * Called when the fragment resumes.
+     * Reloads the data each time the fragment becomes visible to ensure the list is up to date.
      */
     @Override
     public void onResume() {
-        // TODO
+        super.onResume();
+        // Reload data when the fragment becomes visible
+        loadMyPosts();
     }
 
     /**
-     * 设置RecyclerView
-     * 初始化适配器和布局管理器，并启用删除按钮
+     * Set up the RecyclerView
+     * <p>
+     * Initializes the adapter and layout manager, and enables the delete button
+     * since this fragment shows the user's own posts.
+     * </p>
      */
     private void setupRecyclerView() {
-        // TODO
+        postsAdapter = new PostsAdapter();
+        postsAdapter.setOnPostInteractionListener(this);
+        postsAdapter.setShowDeleteButton(true); // 为"我的帖子"启用删除按钮
+        recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+        recyclerView.setAdapter(postsAdapter);
     }
 
     /**
-     * 加载当前用户发布的所有帖子
+     * Load all posts created by the current user
      * <p>
-     * 执行以下步骤：
-     * 1. 获取当前登录用户ID
-     * 2. 从数据库加载该用户发布的所有帖子
-     * 3. 加载用户的点赞和收藏状态
-     * 4. 更新每个帖子的交互状态
-     * 5. 显示在列表中
+     * Steps:
+     * 1. Get the current logged-in user's ID
+     * 2. Fetch all posts published by that user
+     * 3. Load the user's like and favorite states
+     * 4. Update each post's interaction status
+     * 5. Display the posts in the list
      * </p>
      */
     private void loadMyPosts() {
-        // TODO
+        progressBar.setVisibility(View.VISIBLE);
+        textEmpty.setVisibility(View.GONE);
+
+        String userId = AuthRepository.getInstance().getCurrentUserId();
+        if (userId == null) {
+            progressBar.setVisibility(View.GONE);
+            textEmpty.setVisibility(View.VISIBLE);
+            textEmpty.setText("Not logged in");
+            return;
+        }
+
+        // Load posts published by the user
+        PostFacade.getPostsByUser(userId, task -> {
+            if (!task.isSuccessful() || task.getResult() == null) {
+                progressBar.setVisibility(View.GONE);
+                textEmpty.setVisibility(View.VISIBLE);
+                textEmpty.setText("Failed to load posts");
+                return;
+            }
+
+            List<Post> posts = task.getResult();
+
+            // Load user interaction states (likes and favorites)
+            PostInteractionFacade.getLikedPostIds(likedTask -> {
+                PostInteractionFacade.getFavoritedPostIds(favoritedTask -> {
+                    progressBar.setVisibility(View.GONE);
+
+                    List<String> likedPostIds = likedTask.isSuccessful() && likedTask.getResult() != null
+                            ? likedTask.getResult() : new ArrayList<>();
+                    List<String> favoritedPostIds = favoritedTask.isSuccessful() && favoritedTask.getResult() != null
+                            ? favoritedTask.getResult() : new ArrayList<>();
+
+                    java.util.Set<String> likedSet = new java.util.HashSet<>(likedPostIds);
+                    java.util.Set<String> favoritedSet = new java.util.HashSet<>(favoritedPostIds);
+
+                    for (Post post : posts) {
+                        post.setLikedByCurrentUser(likedSet.contains(post.getPostId()));
+                        post.setFavoritedByCurrentUser(favoritedSet.contains(post.getPostId()));
+                    }
+
+                    postsAdapter.setPosts(posts);
+
+                    if (postsAdapter.getItemCount() == 0) {
+                        textEmpty.setVisibility(View.VISIBLE);
+                        textEmpty.setText("No posts yet");
+                    } else {
+                        textEmpty.setVisibility(View.GONE);
+                    }
+                });
+            });
+        });
     }
 
     /**
-     * 处理帖子点击事件
-     * 跳转到帖子详情页面
+     * Handle post click event
+     * Navigates to the post detail screen.
      *
-     * @param post 被点击的帖子
+     * @param post The clicked post
      */
     @Override
     public void onPostClicked(Post post) {
-        // TODO
+        Intent intent = new Intent(getContext(), PostDetailActivity.class);
+        intent.putExtra(PostDetailActivity.EXTRA_POST_ID, post.getPostId());
+        startActivity(intent);
     }
 
     /**
-     * 处理点赞按钮点击事件
-     * 切换帖子的点赞状态并更新点赞数
+     * Handle like button click event
+     * Toggles the like status of a post and updates the like count.
      *
-     * @param post 被点赞/取消点赞的帖子
-     * @param position 帖子在列表中的位置
+     * @param post The post being liked or unliked
+     * @param position The post's position in the list
      */
     @Override
     public void onLikeClicked(Post post, int position) {
-        // TODO
+        boolean currentStatus = post.isLikedByCurrentUser();
+        PostInteractionFacade.toggleLike(post.getPostId(), currentStatus, task -> {
+            if (task.isSuccessful() && task.getResult() != null) {
+                boolean newStatus = task.getResult();
+                post.setLikedByCurrentUser(newStatus);
+
+                // Update like count
+                if (newStatus) {
+                    post.setLikeCount(post.getLikeCount() + 1);
+                } else {
+                    post.setLikeCount(Math.max(0, post.getLikeCount() - 1));
+                }
+
+                postsAdapter.updatePost(position, post);
+            }
+        });
     }
 
     /**
-     * 处理收藏按钮点击事件
-     * 切换帖子的收藏状态并更新收藏数
+     * Handle favorite button click event
+     * Toggles the favorite status of a post and updates the favorite count.
      *
-     * @param post 被收藏/取消收藏的帖子
-     * @param position 帖子在列表中的位置
+     * @param post The post being favorited or unfavorited
+     * @param position The post's position in the list
      */
     @Override
     public void onFavoriteClicked(Post post, int position) {
-        // TODO
+        // Toggle favorite status
+        boolean currentStatus = post.isFavoritedByCurrentUser();
+        PostInteractionFacade.toggleFavorite(post.getPostId(), currentStatus, task -> {
+            if (task.isSuccessful() && task.getResult() != null) {
+                boolean newStatus = task.getResult();
+                post.setFavoritedByCurrentUser(newStatus);
+
+                // Update favorite count
+                if (newStatus) {
+                    post.setFavoriteCount(post.getFavoriteCount() + 1);
+                } else {
+                    post.setFavoriteCount(Math.max(0, post.getFavoriteCount() - 1));
+                }
+
+                postsAdapter.updatePost(position, post);
+            }
+        });
     }
 
     /**
-     * 处理删除按钮点击事件
-     * 显示确认对话框，确认后删除帖子
+     * Handle delete button click event
+     * <p>
+     * Displays a confirmation dialog. If confirmed, deletes the post.
+     * </p>
      *
-     * @param post 要删除的帖子
-     * @param position 帖子在列表中的位置
+     * @param post The post to delete
+     * @param position The post's position in the list
      */
     @Override
     public void onDeleteClicked(Post post, int position) {
-        // TODO
+        // Show confirmation dialog
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Delete Post")
+                .setMessage("Are you sure you want to delete this post? This action cannot be undone.")
+                .setPositiveButton("Delete", (dialog, which) -> {
+                    // Delete the post
+                    String userId = AuthRepository.getInstance().getCurrentUserId();
+                    if (userId == null) {
+                        Toast.makeText(getContext(), "Not logged in", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+
+                    // Use PostFacade to delete the post
+                    PostFacade.deletePost(post.getPostId(), userId, task -> {
+                        if (task.isSuccessful()) {
+                            // 从适配器中移除
+                            postsAdapter.removePost(position);
+                            Toast.makeText(getContext(), "Post deleted", Toast.LENGTH_SHORT).show();
+
+                            // 如果没有剩余帖子，显示空状态提示
+                            if (postsAdapter.getItemCount() == 0) {
+                                textEmpty.setVisibility(View.VISIBLE);
+                                textEmpty.setText("No posts yet");
+                            }
+                        } else {
+                            Toast.makeText(getContext(), "Failed to delete post", Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
     }
 
     /**
-     * Fragment视图销毁时的回调
-     * 清理所有View引用防止内存泄漏
+     * Called when the fragment's view is destroyed
+     * Clears all view references to prevent memory leaks.
      */
     @Override
     public void onDestroyView() {
-        // TODO
+        super.onDestroyView();
+        // Clear references to prevent memory leaks
+        recyclerView = null;
+        progressBar = null;
+        textEmpty = null;
+        postsAdapter = null;
     }
 }

@@ -17,96 +17,152 @@ import comp.assignment.flavora.facade.PostFacade;
 import comp.assignment.flavora.model.User;
 import comp.assignment.flavora.repository.AuthRepository;
 
+
 /**
- * 个人资料页面Fragment
+ * Profile Fragment
  * <p>
- * 展示用户的个人信息和帖子管理功能，包含两个子页面：
- * - 我的帖子：用户发布的所有帖子
- * - 我的收藏：用户收藏的所有帖子
+ * Displays the user's profile information and post management options, including two sub-pages:
+ * - My Posts: Posts created by the user
+ * - My Favorites: Posts favorited by the user
  * </p>
  *
- * <p>主要功能：</p>
+ * <p>Main Features:</p>
  * <ul>
- *   <li>显示用户头像、用户名和ID</li>
- *   <li>显示用户收到的总点赞数</li>
- *   <li>使用ViewPager2和TabLayout切换"我的帖子"和"我的收藏"</li>
+ *   <li>Show user avatar, username, and ID</li>
+ *   <li>Display total number of likes received by the user</li>
+ *   <li>Use ViewPager2 and TabLayout to switch between "My Posts" and "My Favorites"</li>
  * </ul>
  *
- * @author Flavora团队
+ * @author Flavora Team
  * @version 1.0
  */
 public class ProfileFragment extends Fragment {
 
-    /** ViewBinding对象，用于访问布局中的视图 */
     private FragmentProfileBinding binding;
 
-    /** ViewPager2适配器，管理"我的帖子"和"我的收藏"两个页面 */
     private ProfilePagerAdapter pagerAdapter;
 
     /**
-     * 创建Fragment的视图
+     * Create the fragment's view
      *
-     * @param inflater 用于填充布局的LayoutInflater
-     * @param container 父视图容器
-     * @param savedInstanceState 保存的实例状态
-     * @return 创建的根视图
+     * @param inflater LayoutInflater used to inflate the layout
+     * @param container Parent view container
+     * @param savedInstanceState Saved instance state
+     * @return The created root view
      */
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
                              @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-                                 // TODO
+        binding = FragmentProfileBinding.inflate(inflater, container, false);
+        return binding.getRoot();
                              }
 
     /**
-     * 视图创建完成后的回调
-     * 初始化ViewPager和加载用户资料
+     * Callback after the view has been created
+     * Initializes the ViewPager and loads the user's profile data.
      *
-     * @param view 创建的视图
-     * @param savedInstanceState 保存的实例状态
+     * @param view The created view
+     * @param savedInstanceState Saved instance state
      */
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        // TODO
+        super.onViewCreated(view, savedInstanceState);
+
+        setupViewPager();
+        loadUserProfile();
     }
 
     /**
-     * 设置ViewPager2和TabLayout
-     * 配置"我的帖子"和"我的收藏"两个标签页
+     * Sets up ViewPager2 and TabLayout
+     * Configures two tabs: "My Posts" and "My Favorites"
      */
     private void setupViewPager() {
-        // TODO
+        pagerAdapter = new ProfilePagerAdapter(this);
+        binding.viewPager.setAdapter(pagerAdapter);
+
+        // Attach TabLayout to ViewPager2
+        new TabLayoutMediator(binding.tabLayout, binding.viewPager, (tab, position) -> {
+            if (position == 0) {
+                tab.setText("My Posts");
+            } else {
+                tab.setText("My Favorites");
+            }
+        }).attach();
     }
 
     /**
-     * 加载用户资料信息
+     * Loads user profile data
      * <p>
-     * 执行以下操作：
-     * 1. 获取当前登录用户的ID
-     * 2. 从数据库加载用户信息（用户名、头像等）
-     * 3. 加载用户收到的总点赞数
+     * Actions performed:
+     * 1. Get the current user's ID
+     * 2. Load user info from the database (username, avatar, etc.)
+     * 3. Load total number of likes received by the user
      * </p>
      */
     private void loadUserProfile() {
-        // TODO
+        binding.progressBar.setVisibility(View.VISIBLE);
+
+        String userId = AuthRepository.getInstance().getCurrentUserId();
+        if (userId == null) {
+            binding.progressBar.setVisibility(View.GONE);
+            Toast.makeText(getContext(), "Not logged in", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // Load user info
+        UserDAO.getInstance().get(userId, userTask -> {
+            if (userTask.isSuccessful() && userTask.getResult() != null) {
+                User user = userTask.getResult();
+                displayUserInfo(user);
+            } else {
+                binding.progressBar.setVisibility(View.GONE);
+                Toast.makeText(getContext(), "Failed to load profile", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        // Load total likes received by the user
+        PostFacade.getTotalLikesForUser(userId, likesTask -> {
+            binding.progressBar.setVisibility(View.GONE);
+            if (likesTask.isSuccessful() && likesTask.getResult() != null) {
+                int totalLikes = likesTask.getResult();
+                binding.textLikesCount.setText(String.valueOf(totalLikes));
+            } else {
+                binding.textLikesCount.setText("0");
+            }
+        });
     }
 
     /**
-     * 显示用户信息到界面
-     * 包括用户名、ID和头像
+     * Displays user info on the screen
+     * Includes username, ID, and avatar
      *
-     * @param user 用户对象
+     * @param user The user object
      */
     private void displayUserInfo(User user) {
-        // TODO
+        binding.textUsername.setText(user.getUsername());
+
+        // Display user ID as a secondary identifier
+        binding.textEmail.setText("@" + user.getUsername());
+
+        // Load avatar using Glide
+        if (user.getAvatarUrl() != null && !user.getAvatarUrl().isEmpty()) {
+            Glide.with(this)
+                    .load(user.getAvatarUrl())
+                    .circleCrop()
+                    .placeholder(R.drawable.ic_person_24)
+                    .error(R.drawable.ic_person_24)
+                    .into(binding.imageAvatar);
+        }
     }
 
     /**
-     * Fragment视图销毁时的回调
-     * 清理ViewBinding引用以防止内存泄漏
+     * Callback when the fragment view is destroyed
+     * Clears ViewBinding to prevent memory leaks
      */
     @Override
     public void onDestroyView() {
-        // TODO
+        super.onDestroyView();
+        binding = null;
     }
 }

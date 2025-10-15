@@ -27,6 +27,9 @@ import java.util.List;
  * Supports displaying, clicking, liking, favoriting, and deleting posts.
  * Each post includes user info, image carousel, title, description, rating, and interaction buttons.
  * </p>
+ * @author Flavora Team
+ * @version 1.0
+ * @since 1.0
  */
 public class PostsAdapter extends RecyclerView.Adapter<PostsAdapter.PostViewHolder> {
 

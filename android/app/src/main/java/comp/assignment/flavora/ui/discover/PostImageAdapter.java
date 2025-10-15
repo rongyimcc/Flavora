@@ -14,6 +14,9 @@ import java.util.List;
  * This adapter is used to display post images in a ViewPager2 carousel.
  * It uses Glide to load images from URLs and applies CENTER_CROP scaling
  * to preserve aspect ratio while filling the view.
+ * @author Flavora Team
+ * @version 1.0
+ * @since 1.0
  */
 public class PostImageAdapter extends RecyclerView.Adapter<PostImageAdapter.ImageViewHolder> {
 
