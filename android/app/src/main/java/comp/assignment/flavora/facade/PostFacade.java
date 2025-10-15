@@ -151,7 +151,7 @@ public class PostFacade {
      * @param listener 完成回调，返回帖子列表
      */
     public static void getAllPosts(OnCompleteListener<List<Post>> listener) {
-        // TODO
+        PostDAO.getInstance().getPostsOrderByTime(listener);
     }
 
     /**
@@ -164,7 +164,12 @@ public class PostFacade {
      * @param listener 完成回调，返回该用户的帖子列表
      */
     public static void getUserPosts(String userId, OnCompleteListener<List<Post>> listener) {
-        // TODO
+        if (userId == null) {
+            listener.onComplete(Tasks.forResult(List.of()));
+            return;
+        }
+
+        PostDAO.getInstance().getPostsByUser(userId, listener);
     }
 
     /**
@@ -178,7 +183,7 @@ public class PostFacade {
      * @param listener 完成回调，返回该用户的帖子列表
      */
     public static void getPostsByUser(String userId, OnCompleteListener<List<Post>> listener) {
-        // TODO
+        getUserPosts(userId, listener);
     }
 
     /**
@@ -191,7 +196,12 @@ public class PostFacade {
      * @param listener 完成回调，返回用户收藏的帖子列表
      */
     public static void getFavoritedPostsByUser(String userId, OnCompleteListener<List<Post>> listener) {
-        // TODO
+        if (userId == null) {
+            listener.onComplete(Tasks.forResult(List.of()));
+            return;
+        }
+
+        PostDAO.getInstance().getFavoritedPostsByUser(userId, listener);
     }
 
     /**
@@ -205,7 +215,12 @@ public class PostFacade {
      * @param listener 完成回调，返回点赞总数
      */
     public static void getTotalLikesForUser(String userId, OnCompleteListener<Integer> listener) {
-        // TODO
+        if (userId == null) {
+            listener.onComplete(Tasks.forResult(0));
+            return;
+        }
+
+        PostDAO.getInstance().getTotalLikesForUser(userId, listener);
     }
 
     /**
@@ -215,7 +230,13 @@ public class PostFacade {
      * @param listener 完成回调，返回帖子对象，如果不存在则返回null
      */
     public static void getPost(String postId, OnCompleteListener<Post> listener) {
-        // TODO
+        if (postId == null) {
+            listener.onComplete(Tasks.forException(
+                    new IllegalArgumentException("Post ID is required")));
+            return;
+        }
+
+        PostDAO.getInstance().get(postId, listener);
     }
 
     /**
@@ -229,6 +250,12 @@ public class PostFacade {
      * @param listener 完成回调，成功时返回null，失败时返回异常
      */
     public static void updatePost(Post post, OnCompleteListener<Void> listener) {
-        // TODO
+        if (post == null || post.getPostId() == null) {
+            listener.onComplete(Tasks.forException(
+                    new IllegalArgumentException("Post and post ID are required")));
+            return;
+        }
+
+        PostDAO.getInstance().update(post, listener);
     }
 }
