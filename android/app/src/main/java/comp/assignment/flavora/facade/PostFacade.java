@@ -69,8 +69,50 @@ public class PostFacade {
     public static void createPost(String userId, String username, String userAvatarUrl,
                                   String title, String description, List<String> imageUrls,
                                   double rating, OnCompleteListener<String> listener) {
-                                      // TODO
-                                  }
+
+        if (userId == null || title == null || title.trim().isEmpty()) {
+            listener.onComplete(Tasks.forException(
+                    new IllegalArgumentException("User ID and title are required")));
+            return;
+        }
+
+
+        String postId = UUID.randomUUID().toString();
+
+
+        Post post = new Post(
+                postId,
+                userId,
+                username,
+                userAvatarUrl,
+                title,
+                description,
+                imageUrls,
+                rating,
+                Timestamp.now(),
+                0,  // 初始点赞计数
+                0   // 初始收藏计数
+        );
+
+
+        PostDAO.getInstance().add(post, task -> {
+            if (task.isSuccessful()) {
+
+                UserDAO.getInstance().incrementPostsCount(userId, updateTask -> {
+                    if (updateTask.isSuccessful()) {
+                        listener.onComplete(Tasks.forResult(postId));
+                    } else {
+                        // 帖子已创建但计数更新失败
+                        // 如有需要可在此处实现回滚逻辑
+                        listener.onComplete(Tasks.forResult(postId));
+                    }
+                });
+            } else {
+                listener.onComplete(Tasks.forException(task.getException()));
+            }
+        });
+    }
+
 
     /**
      * 删除帖子并更新用户的帖子计数
@@ -85,8 +127,23 @@ public class PostFacade {
      */
     public static void deletePost(String postId, String userId,
                                   OnCompleteListener<Void> listener) {
-                                      // TODO
-                                  }
+        // 验证帖子ID
+        if (postId == null) {
+            listener.onComplete(Tasks.forException(
+                    new IllegalArgumentException("Post ID is required")));
+            return;
+        }
+
+        // 删除帖子
+        PostDAO.getInstance().delete(postId, task -> {
+            if (task.isSuccessful() && userId != null) {
+                // 减少用户的帖子计数
+                UserDAO.getInstance().decrementPostsCount(userId, listener);
+            } else {
+                listener.onComplete(task);
+            }
+        });
+    }
 
     /**
      * 获取所有帖子，按创建时间降序排列（最新的在前）
