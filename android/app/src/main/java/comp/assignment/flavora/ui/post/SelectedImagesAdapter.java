@@ -13,10 +13,11 @@ import comp.assignment.flavora.R;
 import java.util.List;
 
 /**
- * 已选图片适配器
+ * Selected images adapter.
  * <p>
- * 用于在创建帖子底部表单中以水平列表方式显示用户已选择的图片。
- * 每个图片项包含图片预览和删除按钮，用户可以在发布前移除不需要的图片。
+ * Used in the create-post bottom sheet to show user-selected images
+ * in a horizontal list. Each item shows an image preview and a delete
+ * button so the user can remove unwanted images before posting.
  * </p>
  *
  * @author Flavora Team
@@ -25,99 +26,112 @@ import java.util.List;
  */
 public class SelectedImagesAdapter extends RecyclerView.Adapter<SelectedImagesAdapter.ViewHolder> {
 
-    /** 图片URI列表（本地文件URI） */
+    /** List of image URIs (local file URIs). */
     private final List<Uri> imageUris;
 
-    /** 图片移除监听器 */
+    /** Listener for image removal. */
     private final OnImageRemoveListener removeListener;
 
     /**
-     * 图片移除监听器接口
+     * Listener interface for image removal.
      * <p>
-     * 当用户点击删除按钮时触发回调。
+     * Triggered when the user taps the delete button.
      * </p>
      */
     public interface OnImageRemoveListener {
         /**
-         * 移除指定位置的图片
+         * Remove the image at the given position.
          *
-         * @param position 要移除的图片位置
+         * @param position position of the image to remove
          */
         void onRemove(int position);
     }
 
     /**
-     * 构造方法
+     * Constructor method.
      *
-     * @param imageUris 图片URI列表
-     * @param removeListener 图片移除监听器
+     * @param imageUris list of image URIs
+     * @param removeListener listener for image removal
      */
     public SelectedImagesAdapter(List<Uri> imageUris, OnImageRemoveListener removeListener) {
-        // TODO
+        this.imageUris = imageUris;
+        this.removeListener = removeListener;
     }
 
     /**
-     * 创建ViewHolder
+     * Create a ViewHolder.
      * <p>
-     * 加载item_selected_image布局并创建ViewHolder实例。
+     * Inflate {@code item_selected_image} and create a ViewHolder instance.
      * </p>
      *
-     * @param parent 父ViewGroup
-     * @param viewType 视图类型（未使用）
-     * @return ViewHolder实例
+     * @param parent parent ViewGroup
+     * @param viewType view type (unused)
+     * @return ViewHolder instance
      */
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        // TODO
+        View view = LayoutInflater.from(parent.getContext())
+                .inflate(R.layout.item_selected_image, parent, false);
+        return new ViewHolder(view);
     }
 
     /**
-     * 绑定数据到ViewHolder
+     * Bind data to the ViewHolder.
      * <p>
-     * 设置图片预览并配置删除按钮的点击监听器。
+     * Set the image preview and configure the delete button click listener.
      * </p>
      *
-     * @param holder ViewHolder实例
-     * @param position 图片位置
+     * @param holder ViewHolder instance
+     * @param position image position
      */
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        // TODO
+        Uri imageUri = imageUris.get(position);
+        // Set local image URI directly
+        holder.imageView.setImageURI(imageUri);
+        // Set delete button click handler
+        holder.buttonRemove.setOnClickListener(v -> {
+            if (removeListener != null) {
+                removeListener.onRemove(position);
+            }
+        });
     }
 
     /**
-     * 获取图片数量
+     * Get number of images.
      *
-     * @return 图片列表的大小
+     * @return size of the image list
      */
     @Override
     public int getItemCount() {
-        // TODO
+        return imageUris.size();
     }
 
     /**
-     * 图片ViewHolder
+     * ViewHolder for image items.
      * <p>
-     * 持有图片预览和删除按钮视图。
+     * Holds the image preview and the delete button views.
      * </p>
      */
     static class ViewHolder extends RecyclerView.ViewHolder {
-        /** 图片预览 */
+        /** Image preview. */
         ImageView imageView;
-        /** 删除按钮 */
+        /** Delete button. */
         ImageButton buttonRemove;
 
         /**
-         * ViewHolder构造方法
+         * ViewHolder constructor.
          * <p>
-         * 初始化并绑定视图组件。
+         * Initialize and bind view components.
          * </p>
          *
-         * @param itemView 列表项视图
+         * @param itemView item view
          */
         ViewHolder(View itemView) {
-            // TODO
+            super(itemView);
+            imageView = itemView.findViewById(R.id.image_view);
+            buttonRemove = itemView.findViewById(R.id.button_remove);
         }
     }
 }
