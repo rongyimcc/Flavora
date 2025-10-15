@@ -59,7 +59,32 @@ public class PostInteractionFacade {
      * @param listener 完成回调，返回操作后的新状态（true=已点赞，false=未点赞）
      */
     public static void toggleLike(String postId, boolean isLiked, OnCompleteListener<Boolean> listener) {
-        // TODO
+        // 获取当前登录用户ID
+        String userId = authRepository.getCurrentUserId();
+        if (userId == null) {
+            listener.onComplete(Tasks.forException(new IllegalStateException("User not logged in")));
+            return;
+        }
+
+        if (isLiked) {
+            // 取消点赞：移除点赞记录并减少计数
+            dataSource.removeLikeAndDecrementCount(userId, postId, task -> {
+                if (task.isSuccessful()) {
+                    listener.onComplete(Tasks.forResult(false)); // 现在未点赞
+                } else {
+                    listener.onComplete(Tasks.forException(task.getException()));
+                }
+            });
+        } else {
+            // 点赞：添加点赞记录并增加计数
+            dataSource.addLikeAndIncrementCount(userId, postId, task -> {
+                if (task.isSuccessful()) {
+                    listener.onComplete(Tasks.forResult(true)); // 现在已点赞
+                } else {
+                    listener.onComplete(Tasks.forException(task.getException()));
+                }
+            });
+        }
     }
 
     /**
@@ -83,7 +108,32 @@ public class PostInteractionFacade {
      * @param listener    完成回调，返回操作后的新状态（true=已收藏，false=未收藏）
      */
     public static void toggleFavorite(String postId, boolean isFavorited, OnCompleteListener<Boolean> listener) {
-        // TODO
+        // 获取当前登录用户ID
+        String userId = authRepository.getCurrentUserId();
+        if (userId == null) {
+            listener.onComplete(Tasks.forException(new IllegalStateException("User not logged in")));
+            return;
+        }
+
+        if (isFavorited) {
+            // 取消收藏：移除收藏记录并减少计数
+            dataSource.removeFavoriteAndDecrementCount(userId, postId, task -> {
+                if (task.isSuccessful()) {
+                    listener.onComplete(Tasks.forResult(false)); // 现在未收藏
+                } else {
+                    listener.onComplete(Tasks.forException(task.getException()));
+                }
+            });
+        } else {
+            // 收藏：添加收藏记录并增加计数
+            dataSource.addFavoriteAndIncrementCount(userId, postId, task -> {
+                if (task.isSuccessful()) {
+                    listener.onComplete(Tasks.forResult(true)); // 现在已收藏
+                } else {
+                    listener.onComplete(Tasks.forException(task.getException()));
+                }
+            });
+        }
     }
 
     /**
@@ -97,7 +147,12 @@ public class PostInteractionFacade {
      * @param listener 完成回调，返回点赞状态（true=已点赞，false=未点赞）
      */
     public static void checkIfLiked(String postId, OnCompleteListener<Boolean> listener) {
-        // TODO
+        String userId = authRepository.getCurrentUserId();
+        if (userId == null) {
+            listener.onComplete(Tasks.forResult(false));
+            return;
+        }
+        dataSource.checkLikeExists(userId, postId, listener);
     }
 
     /**
@@ -111,7 +166,12 @@ public class PostInteractionFacade {
      * @param listener 完成回调，返回收藏状态（true=已收藏，false=未收藏）
      */
     public static void checkIfFavorited(String postId, OnCompleteListener<Boolean> listener) {
-        // TODO
+        String userId = authRepository.getCurrentUserId();
+        if (userId == null) {
+            listener.onComplete(Tasks.forResult(false));
+            return;
+        }
+        dataSource.checkFavoriteExists(userId, postId, listener);
     }
 
     /**
@@ -131,7 +191,12 @@ public class PostInteractionFacade {
      * @param listener 完成回调，返回帖子ID列表
      */
     public static void getLikedPostIds(OnCompleteListener<java.util.List<String>> listener) {
-        // TODO
+        String userId = authRepository.getCurrentUserId();
+        if (userId == null) {
+            listener.onComplete(Tasks.forResult(java.util.Collections.emptyList()));
+            return;
+        }
+        dataSource.getLikesByUser(userId, listener);
     }
 
     /**
@@ -151,6 +216,11 @@ public class PostInteractionFacade {
      * @param listener 完成回调，返回帖子ID列表
      */
     public static void getFavoritedPostIds(OnCompleteListener<java.util.List<String>> listener) {
-        // TODO
+        String userId = authRepository.getCurrentUserId();
+        if (userId == null) {
+            listener.onComplete(Tasks.forResult(java.util.Collections.emptyList()));
+            return;
+        }
+        dataSource.getFavoritesByUser(userId, listener);
     }
 }
