@@ -6,127 +6,128 @@ import com.google.firebase.firestore.IgnoreExtraProperties;
 import comp.assignment.flavora.util.IdGenerator;
 
 /**
- * 点赞模型类
- * 代表用户对帖子的点赞记录
+ * Like model class.
+ * Represents a user's "like" record for a post.
  *
  * @author Flavora Team
  * @version 1.0
  */
 @IgnoreExtraProperties
 public class Like implements HasUUID {
-    /** 点赞记录ID，格式为 userId_postId，确保用户对同一帖子只能点赞一次 */
+    /** Like record ID in the format userId_postId; ensures a user can like the same post only once. */
     private String likeId;
-    /** 点赞用户ID */
+    /** ID of the user who liked the post. */
     private String userId;
-    /** 被点赞的帖子ID */
+    /** ID of the post that was liked. */
     private String postId;
-    /** 点赞创建时间 */
+    /** Timestamp when the like was created. */
     private Timestamp createdAt;
 
     /**
-     * 无参构造函数
-     * Firestore反序列化时需要
+     * No-args constructor.
+     * Required for Firestore deserialization.
      */
     public Like() {
-        // TODO
     }
 
     /**
-     * 构造点赞记录
-     * likeId会自动生成为 userId_postId 格式
+     * Constructs a like record.
+     * The likeId is automatically generated as userId_postId.
      *
-     * @param userId 点赞用户ID
-     * @param postId 被点赞的帖子ID
-     * @param createdAt 点赞时间
+     * @param userId    ID of the user who likes the post
+     * @param postId    ID of the post being liked
+     * @param createdAt Timestamp when the like is created
      */
     public Like(String userId, String postId, Timestamp createdAt) {
-        // TODO
+        this.likeId = IdGenerator.generateLikeId(userId, postId);
+        this.userId = userId;
+        this.postId = postId;
+        this.createdAt = createdAt;
     }
 
     /**
-     * 获取对象的唯一标识符
-     * 实现HasUUID接口的方法
+     * Returns the unique identifier of this object.
+     * Implements the HasUUID interface.
      *
-     * @return 点赞记录ID作为UUID
+     * @return the like record ID as the UUID
      */
     @Override
     @Exclude
     public String getUUID() {
-        // TODO
+        return likeId;
     }
 
     /**
-     * UUID的setter方法（占位方法）
-     * 用于防止Firestore警告，实际UUID通过likeId处理
+     * Placeholder UUID setter.
+     * Exists to avoid Firestore warnings; UUID is managed via likeId.
      *
-     * @param uuid UUID值（被忽略）
+     * @param uuid UUID value (ignored)
      */
     @Exclude
     public void setUuid(String uuid) {
-        // TODO
     }
 
     /**
-     * 获取点赞记录ID
-     * @return 点赞记录唯一标识符（userId_postId格式）
+     * Gets the like record ID.
+     * @return the unique identifier (in userId_postId format)
      */
     public String getLikeId() {
-        // TODO
+        return likeId;
     }
 
     /**
-     * 设置点赞记录ID
-     * @param likeId 点赞记录唯一标识符
+     * Sets the like record ID.
+     * @param likeId the unique identifier of the like record
      */
     public void setLikeId(String likeId) {
-        // TODO
+        this.likeId = likeId;
     }
 
     /**
-     * 获取点赞用户ID
-     * @return 用户ID
+     * Gets the ID of the user who liked the post.
+     * @return user ID
      */
     public String getUserId() {
-        // TODO
+        return userId;
     }
 
     /**
-     * 设置点赞用户ID
-     * @param userId 用户ID
+     * Sets the ID of the user who liked the post.
+     * @param userId user ID
      */
     public void setUserId(String userId) {
-        // TODO
+        this.userId = userId;
     }
 
     /**
-     * 获取被点赞的帖子ID
-     * @return 帖子ID
+     * Gets the ID of the liked post.
+     * @return post ID
      */
     public String getPostId() {
-        // TODO
+        return postId;
     }
 
     /**
-     * 设置被点赞的帖子ID
-     * @param postId 帖子ID
+     * Sets the ID of the liked post.
+     * @param postId post ID
      */
     public void setPostId(String postId) {
-        // TODO
+        this.postId = postId;
     }
 
     /**
-     * 获取点赞创建时间
-     * @return Firebase时间戳
+     * Gets the creation timestamp of the like.
+     * @return Firebase Timestamp
      */
     public Timestamp getCreatedAt() {
-        // TODO
+        return createdAt;
     }
 
     /**
-     * 设置点赞创建时间
-     * @param createdAt Firebase时间戳
+     * Sets the creation timestamp of the like.
+     * @param createdAt Firebase Timestamp
      */
     public void setCreatedAt(Timestamp createdAt) {
-        // TODO
+        this.createdAt = createdAt;
     }
 }
