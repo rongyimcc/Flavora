@@ -9,148 +9,182 @@ import comp.assignment.flavora.dao.UserDAO;
 import comp.assignment.flavora.model.User;
 
 /**
- * 认证仓库类
+ * Authentication Repository
  * <p>
- * 该类负责处理所有与用户认证相关的操作，包括注册、登录、登出等功能。
- * 使用单例模式确保全局只有一个认证仓库实例。
- * 集成了 Firebase Authentication 和 Firestore 数据库操作。
+ * Handles all user authentication operations, including sign-up, sign-in, and sign-out.
+ * Uses the Singleton pattern to ensure a single global repository instance.
+ * Integrates Firebase Authentication and Firestore data operations.
  * </p>
  *
- * <p>主要功能：</p>
+ * <p>Main features:</p>
  * <ul>
- *   <li>用户注册：创建 Firebase 认证账户并在 Firestore 中保存用户信息</li>
- *   <li>用户登录：使用邮箱和密码进行身份验证</li>
- *   <li>用户登出：清除当前用户会话</li>
- *   <li>获取当前用户信息：提供当前登录用户的详细信息</li>
+ *   <li>User registration: create a Firebase Auth account and persist user info in Firestore</li>
+ *   <li>User login: authenticate with email and password</li>
+ *   <li>User logout: clear the current user session</li>
+ *   <li>Get current user: provide details of the currently signed-in user</li>
  * </ul>
  *
- * @author Flavora团队
+ * @author
+ * Flavora Team
  * @version 1.0
  * @since 1.0
  */
 public class AuthRepository {
-    /** 单例实例 */
+    /** Singleton instance */
     private static AuthRepository instance;
-    /** Firebase 认证实例 */
+    /** Firebase Auth instance */
     private final FirebaseAuth auth;
-    /** 用户数据访问对象 */
+    /** User DAO */
     private final UserDAO userDAO;
 
     /**
-     * 私有构造函数
+     * Private constructor
      * <p>
-     * 初始化 Firebase Authentication 和 UserDAO 实例。
-     * 使用私有构造函数防止外部直接实例化，确保单例模式。
+     * Initializes Firebase Authentication and the UserDAO instance.
+     * Private to prevent external instantiation and enforce Singleton.
      * </p>
      */
     private AuthRepository() {
-        // TODO
+        this.auth = FirebaseAuth.getInstance();
+        this.userDAO = UserDAO.getInstance();
     }
 
     /**
-     * 获取 AuthRepository 的单例实例
+     * Returns the singleton instance of AuthRepository.
      * <p>
-     * 使用双重检查锁定（DCL）实现线程安全的懒加载。
+     * Uses double-checked locking (DCL) for thread-safe lazy initialization.
      * </p>
      *
-     * @return AuthRepository 的唯一实例
+     * @return the unique instance of AuthRepository
      */
     public static AuthRepository getInstance() {
-        // TODO
+        if (instance == null) {
+            synchronized (AuthRepository.class) {
+                if (instance == null) {
+                    instance = new AuthRepository();
+                }
+            }
+        }
+        return instance;
     }
 
     /**
-     * 注册新用户
+     * Registers a new user.
      * <p>
-     * 该方法执行完整的用户注册流程：
-     * 1. 在 Firebase Authentication 中创建认证账户
-     * 2. 获取生成的用户 UID
-     * 3. 在 Firestore 中创建对应的用户文档
+     * Full registration flow:
+     * 1) Create an Auth account in Firebase Authentication
+     * 2) Obtain the generated user UID
+     * 3) Create the corresponding user document in Firestore
      * </p>
      *
-     * <p>注册流程说明：</p>
+     * <p>Flow details:</p>
      * <ul>
-     *   <li>首先调用 Firebase Auth 创建账户</li>
-     *   <li>如果认证成功，创建 User 对象并保存到 Firestore</li>
-     *   <li>初始用户数据包含：用户名、邮箱、创建时间等</li>
-     *   <li>头像、关注数、粉丝数、帖子数等初始化为默认值</li>
+     *   <li>Call Firebase Auth to create the account</li>
+     *   <li>On success, build a User object and save it to Firestore</li>
+     *   <li>Initial user data includes: username, email, createdAt, etc.</li>
+     *   <li>Avatar, following, followers, and posts count are initialized to defaults</li>
      * </ul>
      *
-     * @param email 用户邮箱地址，用于登录和身份验证
-     * @param password 用户密码，需符合 Firebase 密码要求（至少6位）
-     * @param username 用户名，显示在应用中的昵称
-     * @return Task<AuthResult> 异步任务，包含认证结果
-     *         成功时返回 AuthResult 对象，包含用户信息
-     *         失败时 Task 会包含相应的异常信息
+     * @param email user email for login and verification
+     * @param password user password (must meet Firebase requirements, min length 6)
+     * @param username display name shown in the app
+     * @return Task<AuthResult> asynchronous task with the auth result;
+     *         on success contains AuthResult, on failure contains the exception
      */
     public Task<AuthResult> register(String email, String password, String username) {
-        // TODO
+        // Create user account via Firebase Authentication
+        return auth.createUserWithEmailAndPassword(email, password)
+                .continueWithTask(task -> {
+                    // Ensure auth succeeded and user is not null
+                    if (task.isSuccessful() && task.getResult().getUser() != null) {
+                        FirebaseUser firebaseUser = task.getResult().getUser();
+                        String userId = firebaseUser.getUid();
+
+                        // Build user object with initial information
+                        User user = new User(
+                                userId,
+                                username,
+                                email,
+                                "", // initial avatar URL is empty
+                                Timestamp.now(), // creation time
+                                0, // followers count
+                                0, // following count
+                                0  // posts count
+                        );
+
+                        // Persist user to Firestore
+                        userDAO.add(user, addTask -> {
+                            if (!addTask.isSuccessful()) {
+                                // Note: if Firestore write fails, we silently ignore here.
+                                // The user can still sign in, but profile data may be incomplete.
+                                // In production, consider logging or a retry mechanism.
+                            }
+                        });
+                    }
+                    // Return original auth task result
+                    return task;
+                });
     }
 
     /**
-     * 用户登录
+     * Signs a user in with email and password.
      * <p>
-     * 使用邮箱和密码进行用户身份验证。
-     * 该方法直接调用 Firebase Authentication 的登录接口。
+     * Directly delegates to Firebase Authentication.
      * </p>
      *
-     * @param email 用户注册时使用的邮箱地址
-     * @param password 用户密码
-     * @return Task<AuthResult> 异步任务，包含登录结果
-     *         成功时返回包含用户信息的 AuthResult
-     *         失败时返回包含错误信息的异常（如：密码错误、用户不存在等）
+     * @param email registered email address
+     * @param password user password
+     * @return Task<AuthResult> asynchronous task with the sign-in result
      */
     public Task<AuthResult> login(String email, String password) {
-        // TODO
+        return auth.signInWithEmailAndPassword(email, password);
     }
 
     /**
-     * 用户登出
+     * Signs the current user out.
      * <p>
-     * 登出当前已登录的用户，清除本地会话信息。
-     * 调用此方法后，getCurrentUser() 将返回 null。
+     * After calling this, getCurrentUser() will return null.
      * </p>
      */
     public void logout() {
-        // TODO
+        auth.signOut();
     }
 
     /**
-     * 获取当前登录的用户对象
+     * Returns the currently signed-in Firebase user.
      * <p>
-     * 返回 Firebase Authentication 中当前的用户对象。
-     * 该对象包含用户的基本信息，如 UID、邮箱等。
+     * Contains basic information such as UID and email.
      * </p>
      *
-     * @return FirebaseUser 当前登录的用户对象，如果未登录则返回 null
+     * @return FirebaseUser the current user, or null if not signed in
      */
     public FirebaseUser getCurrentUser() {
-        // TODO
+        return auth.getCurrentUser();
     }
 
     /**
-     * 检查用户是否已登录
+     * Checks whether a user is signed in.
      * <p>
-     * 通过检查当前用户对象是否存在来判断登录状态。
-     * 常用于页面权限控制和条件渲染。
+     * Useful for guarding routes and conditional rendering.
      * </p>
      *
-     * @return boolean 如果用户已登录返回 true，否则返回 false
+     * @return true if a user is signed in; false otherwise
      */
     public boolean isLoggedIn() {
-        // TODO
+        return auth.getCurrentUser() != null;
     }
 
     /**
-     * 获取当前用户的唯一标识符
+     * Returns the UID of the currently signed-in user.
      * <p>
-     * 返回当前登录用户的 UID（User ID）。
-     * UID 是 Firebase 为每个用户生成的唯一标识符，用于数据库查询和权限控制。
+     * The UID is the unique identifier generated by Firebase for each user and
+     * is commonly used for database lookups and access control.
      * </p>
      *
-     * @return String 用户的 UID，如果未登录则返回 null
+     * @return the UID as a String, or null if not signed in
      */
     public String getCurrentUserId() {
-        // TODO
+        FirebaseUser user = auth.getCurrentUser();
+        return user != null ? user.getUid() : null;
     }
 }
