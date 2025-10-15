@@ -8,141 +8,149 @@ import comp.assignment.flavora.model.Like;
 import java.util.List;
 
 /**
- * 点赞数据访问对象
- * 负责点赞实体的数据访问操作
- * 遵循单例模式，符合reference-app设计规范
+ * Like Data Access Object (DAO)
+ * Handles all data access operations related to Like entities.
+ * Implements the Singleton pattern and follows the reference-app design conventions.
  *
- * @author Flavora Team
+ * @author
+ * Flavora Team
  * @version 1.0
  */
 public class LikeDAO extends DAO<Like> {
-    /** 单例实例 */
+    /** Singleton instance */
     private static LikeDAO instance;
-    /** Firebase数据源实例 */
+    /** Firebase data source instance */
     private final FirebaseDataSource dataSource;
 
     /**
-     * 私有构造函数，防止外部实例化
-     * 初始化Firebase数据源
+     * Private constructor to prevent external instantiation.
+     * Initializes the Firebase data source.
      */
     private LikeDAO() {
-        // TODO
+        this.dataSource = FirebaseDataSource.getInstance();
     }
 
     /**
-     * 获取LikeDAO的单例实例
-     * 使用双重检查锁定（DCL）实现线程安全的懒加载
+     * Returns the singleton instance of LikeDAO.
+     * Implements thread-safe lazy initialization using Double-Checked Locking (DCL).
      *
-     * @return LikeDAO单例实例
+     * @return LikeDAO singleton instance
      */
     public static LikeDAO getInstance() {
-        // TODO
+        if (instance == null) {
+            synchronized (LikeDAO.class) {
+                if (instance == null) {
+                    instance = new LikeDAO();
+                }
+            }
+        }
+        return instance;
     }
 
     /**
-     * 添加点赞记录到数据库
+     * Adds a like record to the database.
      *
-     * @param like     要添加的点赞对象
-     * @param listener 完成回调
+     * @param like     the Like object to add
+     * @param listener completion listener for operation callback
      */
     @Override
     public void add(Like like, OnCompleteListener<Void> listener) {
-        // TODO
+        dataSource.addLike(like, listener);
     }
 
     /**
-     * 根据点赞ID获取点赞记录
+     * Retrieves a like record by ID.
      *
-     * @param id       点赞记录ID
-     * @param listener 完成回调，返回点赞对象
+     * @param id       the like record ID
+     * @param listener completion listener returning the Like object
      */
     @Override
     public void get(String id, OnCompleteListener<Like> listener) {
-        // TODO
+        dataSource.getLike(id, listener);
     }
 
     /**
-     * 获取所有点赞记录
+     * Retrieves all like records.
      *
-     * @param listener 完成回调，返回点赞列表
+     * @param listener completion listener returning a list of likes
      */
     @Override
     public void getAll(OnCompleteListener<List<Like>> listener) {
-        // TODO
+        dataSource.getAllLikes(listener);
     }
 
     /**
-     * 根据点赞ID删除点赞记录
+     * Deletes a like record by ID.
      *
-     * @param id       点赞记录ID
-     * @param listener 完成回调
+     * @param id       the like record ID
+     * @param listener completion listener for operation callback
      */
     @Override
     public void delete(String id, OnCompleteListener<Void> listener) {
-        // TODO
+        dataSource.deleteLike(id, listener);
     }
 
     /**
-     * 更新点赞记录（点赞通常不需要更新，此方法直接返回成功）
+     * Updates a like record (not typically needed for likes, returns success immediately).
      *
-     * @param like     点赞对象
-     * @param listener 完成回调
+     * @param like     the Like object
+     * @param listener completion listener for operation callback
      */
     @Override
     public void update(Like like, OnCompleteListener<Void> listener) {
-        // TODO
+        listener.onComplete(Tasks.forResult(null));
     }
 
     /**
-     * 原子操作：添加点赞记录并增加帖子的点赞数
+     * Atomic operation: adds a like record and increments the corresponding post's like count.
      *
-     * @param userId   用户ID
-     * @param postId   帖子ID
-     * @param listener 完成回调
+     * @param userId   the user ID
+     * @param postId   the post ID
+     * @param listener completion listener for operation callback
      */
     public void addLikeWithIncrement(String userId, String postId, OnCompleteListener<Void> listener) {
-        // TODO
+        dataSource.addLikeAndIncrementCount(userId, postId, listener);
     }
 
     /**
-     * 原子操作：删除点赞记录并减少帖子的点赞数
+     * Atomic operation: removes a like record and decrements the corresponding post's like count.
      *
-     * @param userId   用户ID
-     * @param postId   帖子ID
-     * @param listener 完成回调
+     * @param userId   the user ID
+     * @param postId   the post ID
+     * @param listener completion listener for operation callback
      */
     public void removeLikeWithDecrement(String userId, String postId, OnCompleteListener<Void> listener) {
-        // TODO
+        dataSource.removeLikeAndDecrementCount(userId, postId, listener);
     }
 
     /**
-     * 检查用户是否已点赞指定帖子
+     * Checks whether a user has liked a specific post.
      *
-     * @param userId   用户ID
-     * @param postId   帖子ID
-     * @param listener 完成回调，返回布尔值结果
+     * @param userId   the user ID
+     * @param postId   the post ID
+     * @param listener completion listener returning a boolean result
      */
     public void hasLiked(String userId, String postId, OnCompleteListener<Boolean> listener) {
-        // TODO
+        dataSource.checkLikeExists(userId, postId, listener);
     }
 
     /**
-     * 获取指定帖子的所有点赞记录
+     * Retrieves all like records for a given post.
      *
-     * @param postId   帖子ID
-     * @param listener 完成回调，返回点赞列表
+     * @param postId   the post ID
+     * @param listener completion listener returning a list of likes
      */
     public void getLikesByPost(String postId, OnCompleteListener<List<Like>> listener) {
-        // TODO
+        dataSource.getLikesByPost(postId, listener);
     }
 
     /**
-     * 获取指定用户点赞的所有帖子ID
+     * Retrieves all post IDs liked by a specific user.
      *
-     * @param userId   用户ID
-     * @param listener 完成回调，返回帖子ID列表
+     * @param userId   the user ID
+     * @param listener completion listener returning a list of post IDs
      */
     public void getLikesByUser(String userId, OnCompleteListener<List<String>> listener) {
-        // TODO
+        dataSource.getLikesByUser(userId, listener);
     }
 }
