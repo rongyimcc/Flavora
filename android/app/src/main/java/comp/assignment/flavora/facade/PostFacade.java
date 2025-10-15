@@ -11,23 +11,23 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * 帖子操作的外观类
+ * Facade class for post operations
  * <p>
- * 该类为帖子管理提供简化的API接口，遵循外观设计模式。
- * 协调涉及多个DAO的复杂操作，如创建帖子并更新用户统计信息。
+ * This class provides a simplified API interface for post management, following the Facade design pattern.
+ * Coordinates complex operations involving multiple DAOs, such as creating posts and updating user statistics.
  * </p>
  *
- * <p>主要功能：</p>
+ * <p>Main features:</p>
  * <ul>
- *   <li>创建和删除帖子，同时更新用户的帖子计数</li>
- *   <li>查询帖子列表（按时间、按用户、按收藏等）</li>
- *   <li>获取单个帖子详情</li>
- *   <li>更新帖子信息</li>
- *   <li>统计用户获得的点赞总数</li>
+ *   <li>Create and delete posts while updating user post counts</li>
+ *   <li>Query post lists (by time, by user, by favorites, etc.)</li>
+ *   <li>Retrieve individual post details</li>
+ *   <li>Update post information</li>
+ *   <li>Calculate total likes received by a user</li>
  * </ul>
  *
- * <p>该类使用静态方法，无需实例化即可使用。所有方法采用异步回调机制，
- * 通过 {@link OnCompleteListener} 返回操作结果。</p>
+ * <p>This class uses static methods and can be used without instantiation. All methods use
+ * asynchronous callback mechanism, returning operation results through {@link OnCompleteListener}.</p>
  *
  * @author Flavora Team
  * @version 1.0
@@ -38,33 +38,34 @@ import java.util.UUID;
 public class PostFacade {
 
     /**
-     * 创建新帖子并更新用户的帖子计数
+     * Create a new post and update the user's post count
      * <p>
-     * 这是一个协调操作，确保帖子创建和用户统计信息更新尽可能原子化执行。
-     * 该方法会自动生成帖子ID，初始化点赞和收藏计数为0，并记录当前时间戳。
+     * This is a coordinated operation that ensures post creation and user statistics update
+     * are executed as atomically as possible. This method automatically generates a post ID,
+     * initializes like and favorite counts to 0, and records the current timestamp.
      * </p>
      *
-     * <p>操作流程：</p>
+     * <p>Operation flow:</p>
      * <ol>
-     *   <li>验证必填参数（用户ID和标题）</li>
-     *   <li>生成唯一的帖子ID（UUID）</li>
-     *   <li>创建Post对象并初始化所有字段</li>
-     *   <li>将帖子添加到数据库</li>
-     *   <li>如果添加成功，增加用户的帖子计数</li>
-     *   <li>通过回调返回新创建的帖子ID</li>
+     *   <li>Validate required parameters (user ID and title)</li>
+     *   <li>Generate a unique post ID (UUID)</li>
+     *   <li>Create Post object and initialize all fields</li>
+     *   <li>Add the post to the database</li>
+     *   <li>If addition is successful, increment the user's post count</li>
+     *   <li>Return the newly created post ID through callback</li>
      * </ol>
      *
-     * <p>注意：即使用户计数更新失败，也会返回成功并包含帖子ID。
-     * 这种设计确保帖子创建不会因为统计更新失败而回滚。</p>
+     * <p>Note: Even if the user count update fails, success will be returned with the post ID.
+     * This design ensures post creation is not rolled back due to statistics update failure.</p>
      *
-     * @param userId        用户ID（帖子作者）
-     * @param username      用户名（用于数据反规范化，避免额外查询）
-     * @param userAvatarUrl 用户头像URL（用于数据反规范化）
-     * @param title         帖子标题（必填）
-     * @param description   帖子描述内容
-     * @param imageUrls     图片URL列表
-     * @param rating        评分（1-5分）
-     * @param listener      完成回调，成功时返回新创建的帖子ID，失败时返回异常
+     * @param userId        User ID (post author)
+     * @param username      Username (for data denormalization to avoid extra queries)
+     * @param userAvatarUrl User avatar URL (for data denormalization)
+     * @param title         Post title (required)
+     * @param description   Post description content
+     * @param imageUrls     List of image URLs
+     * @param rating        Rating (1-5 points)
+     * @param listener      Completion callback, returns newly created post ID on success, exception on failure
      */
     public static void createPost(String userId, String username, String userAvatarUrl,
                                   String title, String description, List<String> imageUrls,
@@ -90,8 +91,8 @@ public class PostFacade {
                 imageUrls,
                 rating,
                 Timestamp.now(),
-                0,  // 初始点赞计数
-                0   // 初始收藏计数
+                0,  // Initial like count
+                0   // Initial favorite count
         );
 
 
@@ -102,8 +103,8 @@ public class PostFacade {
                     if (updateTask.isSuccessful()) {
                         listener.onComplete(Tasks.forResult(postId));
                     } else {
-                        // 帖子已创建但计数更新失败
-                        // 如有需要可在此处实现回滚逻辑
+                        // Post created but count update failed
+                        // Rollback logic can be implemented here if needed
                         listener.onComplete(Tasks.forResult(postId));
                     }
                 });
@@ -115,29 +116,29 @@ public class PostFacade {
 
 
     /**
-     * 删除帖子并更新用户的帖子计数
+     * Delete a post and update the user's post count
      * <p>
-     * 该方法首先从数据库中删除指定的帖子，如果删除成功且提供了用户ID，
-     * 则会自动减少该用户的帖子计数。
+     * This method first deletes the specified post from the database. If deletion is successful
+     * and a user ID is provided, it will automatically decrement that user's post count.
      * </p>
      *
-     * @param postId   要删除的帖子ID（必填）
-     * @param userId   用户ID（用于更新计数，如果为null则只删除帖子不更新计数）
-     * @param listener 完成回调，成功时返回null，失败时返回异常
+     * @param postId   ID of the post to delete (required)
+     * @param userId   User ID (for updating count, if null only deletes post without updating count)
+     * @param listener Completion callback, returns null on success, exception on failure
      */
     public static void deletePost(String postId, String userId,
                                   OnCompleteListener<Void> listener) {
-        // 验证帖子ID
+        // Validate post ID
         if (postId == null) {
             listener.onComplete(Tasks.forException(
                     new IllegalArgumentException("Post ID is required")));
             return;
         }
 
-        // 删除帖子
+        // Delete post
         PostDAO.getInstance().delete(postId, task -> {
             if (task.isSuccessful() && userId != null) {
-                // 减少用户的帖子计数
+                // Decrement user's post count
                 UserDAO.getInstance().decrementPostsCount(userId, listener);
             } else {
                 listener.onComplete(task);
@@ -146,22 +147,22 @@ public class PostFacade {
     }
 
     /**
-     * 获取所有帖子，按创建时间降序排列（最新的在前）
+     * Get all posts ordered by creation time descending (newest first)
      *
-     * @param listener 完成回调，返回帖子列表
+     * @param listener Completion callback, returns list of posts
      */
     public static void getAllPosts(OnCompleteListener<List<Post>> listener) {
         PostDAO.getInstance().getPostsOrderByTime(listener);
     }
 
     /**
-     * 获取指定用户创建的所有帖子
+     * Get all posts created by a specified user
      * <p>
-     * 如果用户ID为null，将返回空列表而不是抛出异常。
+     * If user ID is null, will return an empty list rather than throwing an exception.
      * </p>
      *
-     * @param userId   用户ID
-     * @param listener 完成回调，返回该用户的帖子列表
+     * @param userId   User ID
+     * @param listener Completion callback, returns list of posts by this user
      */
     public static void getUserPosts(String userId, OnCompleteListener<List<Post>> listener) {
         if (userId == null) {
@@ -173,27 +174,27 @@ public class PostFacade {
     }
 
     /**
-     * 获取指定用户创建的所有帖子（getUserPosts的别名方法）
+     * Get all posts created by a specified user (alias method for getUserPosts)
      * <p>
-     * 该方法与 {@link #getUserPosts(String, OnCompleteListener)} 功能完全相同，
-     * 提供此别名是为了代码可读性和向后兼容。
+     * This method has identical functionality to {@link #getUserPosts(String, OnCompleteListener)}.
+     * This alias is provided for code readability and backward compatibility.
      * </p>
      *
-     * @param userId   用户ID
-     * @param listener 完成回调，返回该用户的帖子列表
+     * @param userId   User ID
+     * @param listener Completion callback, returns list of posts by this user
      */
     public static void getPostsByUser(String userId, OnCompleteListener<List<Post>> listener) {
         getUserPosts(userId, listener);
     }
 
     /**
-     * 获取指定用户收藏的所有帖子
+     * Get all posts favorited by a specified user
      * <p>
-     * 返回该用户标记为收藏的所有帖子列表。如果用户ID为null，返回空列表。
+     * Returns a list of all posts marked as favorites by this user. If user ID is null, returns empty list.
      * </p>
      *
-     * @param userId   用户ID
-     * @param listener 完成回调，返回用户收藏的帖子列表
+     * @param userId   User ID
+     * @param listener Completion callback, returns list of posts favorited by the user
      */
     public static void getFavoritedPostsByUser(String userId, OnCompleteListener<List<Post>> listener) {
         if (userId == null) {
@@ -205,14 +206,14 @@ public class PostFacade {
     }
 
     /**
-     * 获取指定用户所有帖子收到的点赞总数
+     * Get the total number of likes received on all posts by a specified user
      * <p>
-     * 该方法会统计用户创建的所有帖子获得的点赞数总和，
-     * 可用于展示用户的受欢迎程度。如果用户ID为null，返回0。
+     * This method calculates the sum of all likes received on posts created by the user,
+     * which can be used to display the user's popularity. If user ID is null, returns 0.
      * </p>
      *
-     * @param userId   用户ID
-     * @param listener 完成回调，返回点赞总数
+     * @param userId   User ID
+     * @param listener Completion callback, returns total number of likes
      */
     public static void getTotalLikesForUser(String userId, OnCompleteListener<Integer> listener) {
         if (userId == null) {
@@ -224,10 +225,10 @@ public class PostFacade {
     }
 
     /**
-     * 根据ID获取单个帖子的详细信息
+     * Get detailed information for a single post by ID
      *
-     * @param postId   帖子ID（必填）
-     * @param listener 完成回调，返回帖子对象，如果不存在则返回null
+     * @param postId   Post ID (required)
+     * @param listener Completion callback, returns Post object, or null if it does not exist
      */
     public static void getPost(String postId, OnCompleteListener<Post> listener) {
         if (postId == null) {
@@ -240,14 +241,14 @@ public class PostFacade {
     }
 
     /**
-     * 更新现有帖子的信息
+     * Update information for an existing post
      * <p>
-     * 使用提供的Post对象更新数据库中的帖子记录。
-     * 注意：帖子ID必须存在且不能为null。
+     * Updates the post record in the database using the provided Post object.
+     * Note: The post ID must exist and cannot be null.
      * </p>
      *
-     * @param post     包含更新数据的Post对象（必填，且postId不能为null）
-     * @param listener 完成回调，成功时返回null，失败时返回异常
+     * @param post     Post object containing updated data (required, and postId cannot be null)
+     * @param listener Completion callback, returns null on success, exception on failure
      */
     public static void updatePost(Post post, OnCompleteListener<Void> listener) {
         if (post == null || post.getPostId() == null) {
