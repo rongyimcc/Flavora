@@ -1,13 +1,13 @@
 package comp.assignment.flavora.util;
 
 /**
- * Firestore字段名常量类
+ * Firestore Field Name Constants
  * <p>
- * 定义所有Firestore文档字段的名称常量，避免硬编码字符串。
- * 使用常量可以：
- * 1. 在编译时发现拼写错误
- * 2. 便于重构时统一修改
- * 3. 提供IDE自动完成支持
+ * Defines constant names for all Firestore document fields to avoid hard-coded strings.
+ * Using constants helps to:
+ * 1) Catch typos at compile time
+ * 2) Centralize changes during refactoring
+ * 3) Enable IDE autocompletion
  *
  * @author Flavora Team
  */
@@ -15,93 +15,93 @@ public class FirestoreFields {
 
     // ==================== User Collection Fields ====================
 
-    /** 用户ID字段 */
+    /** User ID field */
     public static final String USER_ID = "userId";
 
-    /** 用户名字段 */
+    /** Username field */
     public static final String USERNAME = "username";
 
-    /** 邮箱字段 */
+    /** Email field */
     public static final String EMAIL = "email";
 
-    /** 头像URL字段 */
+    /** Avatar URL field */
     public static final String AVATAR_URL = "avatarUrl";
 
-    /** 用户创建时间字段 */
+    /** User creation timestamp field */
     public static final String USER_CREATED_AT = "createdAt";
 
-    /** 粉丝数量字段 */
+    /** Followers count field */
     public static final String FOLLOWERS_COUNT = "followersCount";
 
-    /** 关注数量字段 */
+    /** Following count field */
     public static final String FOLLOWING_COUNT = "followingCount";
 
-    /** 发帖数量字段 */
+    /** Posts count field */
     public static final String POSTS_COUNT = "postsCount";
 
     // ==================== Post Collection Fields ====================
 
-    /** 帖子ID字段 */
+    /** Post ID field */
     public static final String POST_ID = "postId";
 
-    /** 帖子标题字段 */
+    /** Post title field */
     public static final String TITLE = "title";
 
-    /** 帖子描述字段 */
+    /** Post description field */
     public static final String DESCRIPTION = "description";
 
-    /** 图片URL列表字段 */
+    /** Image URL list field */
     public static final String IMAGE_URLS = "imageUrls";
 
-    /** 评分字段 */
+    /** Rating field */
     public static final String RATING = "rating";
 
-    /** 点赞数量字段 */
+    /** Like count field */
     public static final String LIKE_COUNT = "likeCount";
 
-    /** 收藏数量字段 */
+    /** Favorite count field */
     public static final String FAVORITE_COUNT = "favoriteCount";
 
-    /** 帖子创建时间字段 */
+    /** Post creation timestamp field */
     public static final String POST_CREATED_AT = "createdAt";
 
     // ==================== Like Collection Fields ====================
 
-    /** 点赞记录ID字段 */
+    /** Like record ID field */
     public static final String LIKE_ID = "likeId";
 
-    /** 点赞用户ID字段 */
+    /** ID of the user who liked (field) */
     public static final String LIKE_USER_ID = "userId";
 
-    /** 被点赞帖子ID字段 */
+    /** ID of the liked post (field) */
     public static final String LIKE_POST_ID = "postId";
 
-    /** 点赞创建时间字段 */
+    /** Like creation timestamp field */
     public static final String LIKE_CREATED_AT = "createdAt";
 
     // ==================== Favorite Collection Fields ====================
 
-    /** 收藏记录ID字段 */
+    /** Favorite record ID field */
     public static final String FAVORITE_ID = "favoriteId";
 
-    /** 收藏用户ID字段 */
+    /** ID of the user who favorited (field) */
     public static final String FAVORITE_USER_ID = "userId";
 
-    /** 被收藏帖子ID字段 */
+    /** ID of the favorited post (field) */
     public static final String FAVORITE_POST_ID = "postId";
 
-    /** 收藏创建时间字段 */
+    /** Favorite creation timestamp field */
     public static final String FAVORITE_CREATED_AT = "createdAt";
 
     // ==================== Common Fields ====================
 
-    /** 通用创建时间字段名 */
+    /** Common creation timestamp field name */
     public static final String CREATED_AT = "createdAt";
 
     /**
-     * 私有构造函数，防止实例化
+     * Private constructor to prevent instantiation.
      */
     private FirestoreFields() {
-        // TODO
+        throw new AssertionError("FirestoreFields is a utility class and should not be instantiated");
     }
 }
