@@ -33,18 +33,18 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 创建帖子底部表单
- * <p>
- * 全屏底部抽屉对话框，用于创建新帖子。提供以下功能：
- * - 输入标题和描述
- * - 选择和预览最多5张图片
- * - 评分（1-5星）
- * - 上传图片并创建帖子
- * </p>
- * <p>
- * 使用ViewBinding管理视图，通过ActivityResultLauncher处理图片选择，
- * 并集成StorageRepository和PostFacade完成图片上传和帖子创建。
- * </p>
+ * Create Post Bottom Sheet
+ *
+ * <p>Full-screen bottom sheet dialog for creating a new post. Features:</p>
+ * <ul>
+ *   <li>Input title and description</li>
+ *   <li>Select and preview up to 5 images</li>
+ *   <li>Rating (1–5 stars)</li>
+ *   <li>Upload images and create the post</li>
+ * </ul>
+ *
+ * <p>Uses ViewBinding for view access, ActivityResultLauncher for image picking,
+ * and integrates StorageRepository and PostFacade to upload images and create a post.</p>
  *
  * @author Flavora Team
  * @version 1.0
@@ -52,202 +52,405 @@ import java.util.List;
  */
 public class CreatePostBottomSheet extends BottomSheetDialogFragment {
 
-    /** 最大图片数量限制 */
+    /** Max allowed image count. */
     private static final int MAX_IMAGES = 5;
 
-    /** ViewBinding实例 */
+    /** ViewBinding instance */
     private BottomSheetCreatePostBinding binding;
 
-    /** 已选择的图片URI列表 */
+    /** Selected image URIs. */
     private final List<Uri> selectedImageUris = new ArrayList<>();
 
-    /** 图片列表适配器 */
+    /** Adapter for selected images list. */
     private SelectedImagesAdapter imagesAdapter;
 
-    /** 图片选择器启动器 */
+    /** Image picker launcher. */
     private ActivityResultLauncher<Intent> imagePickerLauncher;
 
     /**
-     * Fragment创建时回调
-     * <p>
-     * 初始化图片选择器启动器，处理单张或多张图片的选择结果。
-     * 限制最多选择5张图片。
-     * </p>
+     * Fragment onCreate.
      *
-     * @param savedInstanceState 保存的实例状态
+     * <p>Initialize the image picker and handle single/multiple selections.
+     * Limit selection to at most 5 images.</p>
+     *
+     * @param savedInstanceState saved state
      */
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
-        // TODO
+        super.onCreate(savedInstanceState);
+
+        // Init image picker
+        imagePickerLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() == Activity.RESULT_OK && result.getData() != null) {
+                        Intent data = result.getData();
+
+                        // Multiple selection
+                        if (data.getClipData() != null) {
+                            int count = data.getClipData().getItemCount();
+                            for (int i = 0; i < count && selectedImageUris.size() < MAX_IMAGES; i++) {
+                                Uri imageUri = data.getClipData().getItemAt(i).getUri();
+                                selectedImageUris.add(imageUri);
+                            }
+                        }
+                        // Single selection
+                        else if (data.getData() != null) {
+                            if (selectedImageUris.size() < MAX_IMAGES) {
+                                selectedImageUris.add(data.getData());
+                            }
+                        }
+
+                        updateImagesAdapter();
+                        checkImageLimit();
+                    }
+                });
     }
 
     /**
-     * 创建视图
-     * <p>
-     * 使用ViewBinding加载布局。
-     * </p>
+     * Create view with ViewBinding.
      *
-     * @param inflater 布局加载器
-     * @param container 父容器
-     * @param savedInstanceState 保存的实例状态
-     * @return 创建的视图
+     * @param inflater  layout inflater
+     * @param container parent
+     * @param savedInstanceState saved state
+     * @return root view
      */
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
-                                 // TODO
+        binding = BottomSheetCreatePostBinding.inflate(inflater, container, false);
+        return binding.getRoot();
                              }
 
     /**
-     * 视图创建完成回调
-     * <p>
-     * 初始化RecyclerView、设置点击监听器并加载用户头像。
-     * </p>
+     * View created callback.
      *
-     * @param view 创建的视图
-     * @param savedInstanceState 保存的实例状态
+     * <p>Initialize RecyclerView, set click listeners, and load user avatar.</p>
      */
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        // TODO
+        super.onViewCreated(view, savedInstanceState);
+
+        setupRecyclerView();
+        setupClickListeners();
+        loadUserAvatar();
     }
 
     /**
-     * Dialog启动时回调
-     * <p>
-     * 配置BottomSheet为全屏展开模式，禁用滑动关闭，
-     * 并设置软键盘弹出时调整窗口大小以避免遮挡输入框。
-     * </p>
+     * Dialog start callback.
+     *
+     * <p>Configure the bottom sheet as full-screen expanded, disable swipe-to-dismiss,
+     * and adjust for soft keyboard.</p>
      */
     @Override
     public void onStart() {
-        // TODO
+        super.onStart();
+
+        // Full-screen bottom sheet and keyboard adjustment
+        if (getDialog() instanceof BottomSheetDialog) {
+            BottomSheetDialog dialog = (BottomSheetDialog) getDialog();
+
+            // AdjustResize for soft keyboard
+            if (dialog.getWindow() != null) {
+                dialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
+            }
+
+            FrameLayout bottomSheet = dialog.findViewById(com.google.android.material.R.id.design_bottom_sheet);
+            if (bottomSheet != null) {
+                BottomSheetBehavior<FrameLayout> behavior = BottomSheetBehavior.from(bottomSheet);
+                behavior.setState(BottomSheetBehavior.STATE_EXPANDED);
+                behavior.setSkipCollapsed(true);
+                behavior.setDraggable(false);
+
+                // Full height
+                ViewGroup.LayoutParams layoutParams = bottomSheet.getLayoutParams();
+                layoutParams.height = ViewGroup.LayoutParams.MATCH_PARENT;
+                bottomSheet.setLayoutParams(layoutParams);
+            }
+        }
     }
 
     /**
-     * 初始化图片列表RecyclerView
-     * <p>
-     * 设置水平布局管理器和适配器，处理图片移除操作。
-     * </p>
+     * Init images RecyclerView.
+     *
+     * <p>Use horizontal layout and adapter. Support removing images.</p>
      */
     private void setupRecyclerView() {
-        // TODO
+        imagesAdapter = new SelectedImagesAdapter(selectedImageUris, position -> {
+            // Remove the image at the given index
+            selectedImageUris.remove(position);
+            updateImagesAdapter();
+            checkImageLimit();
+        });
+
+        binding.recyclerViewImages.setLayoutManager(
+                new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false));
+        binding.recyclerViewImages.setAdapter(imagesAdapter);
     }
 
     /**
-     * 设置按钮点击监听器
-     * <p>
-     * 配置关闭、添加图片、评分和提交按钮的点击事件。
-     * </p>
+     * Wire up button click listeners.
      */
     private void setupClickListeners() {
-        // TODO
+        binding.buttonClose.setOnClickListener(v -> dismiss());
+
+        binding.buttonAddImage.setOnClickListener(v -> openImagePicker());
+
+        binding.buttonRating.setOnClickListener(v -> showRatingDialog());
+
+        binding.buttonSubmit.setOnClickListener(v -> attemptCreatePost());
     }
 
     /**
-     * 加载当前用户头像
-     * <p>
-     * 从UserDAO获取用户信息，使用Glide加载圆形头像。
-     * 如果加载失败或没有头像，显示默认图标。
-     * </p>
+     * Load current user's avatar.
+     *
+     * <p>Fetch user info from UserDAO and load a circular avatar via Glide.
+     * Fallback to default icon if missing or failed.</p>
      */
     private void loadUserAvatar() {
-        // TODO
+        AuthRepository authRepository = AuthRepository.getInstance();
+        String userId = authRepository.getCurrentUserId();
+
+        if (userId != null) {
+            UserDAO.getInstance().get(userId, userTask -> {
+                if (userTask.isSuccessful() && userTask.getResult() != null) {
+                    User user = userTask.getResult();
+                    if (user.getAvatarUrl() != null && !user.getAvatarUrl().isEmpty()) {
+                        Glide.with(this)
+                                .load(user.getAvatarUrl())
+                                .circleCrop()
+                                .placeholder(R.drawable.ic_person_24)
+                                .error(R.drawable.ic_person_24)
+                                .into(binding.imageAvatar);
+                    }
+                }
+            });
+        }
     }
 
     /**
-     * 显示评分对话框
-     * <p>
-     * 弹出包含RatingBar的对话框，允许用户选择1-5星评分。
-     * 确认后更新评分显示。
-     * </p>
+     * Show rating dialog.
+     *
+     * <p>Dialog with a RatingBar allowing 1–5 stars. On confirm, update the display.</p>
      */
     private void showRatingDialog() {
-        // TODO
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        builder.setTitle("Rate your experience");
+
+        // Inflate dialog layout with RatingBar
+        View dialogView = LayoutInflater.from(getContext()).inflate(
+                R.layout.dialog_rating, null);
+        android.widget.RatingBar dialogRatingBar = dialogView.findViewById(R.id.dialog_rating_bar);
+
+        // Set current rating
+        dialogRatingBar.setRating(binding.ratingBar.getRating());
+
+        builder.setView(dialogView);
+        builder.setPositiveButton("OK", (dialog, which) -> {
+            float rating = dialogRatingBar.getRating();
+            binding.ratingBar.setRating(rating);
+            updateRatingDisplay(rating);
+        });
+        builder.setNegativeButton("Cancel", null);
+        builder.show();
     }
 
     /**
-     * 更新评分显示
-     * <p>
-     * 根据评分值更新显示文本。评分大于0时显示星星符号和数值，
-     * 否则隐藏显示。
-     * </p>
+     * Update rating display.
      *
-     * @param rating 评分值（0-5）
+     * <p>Update the text based on the rating value. When the rating is > 0,
+     * show a star and the numeric value; otherwise hide the display.</p>
+     *
+     * @param rating Rating value (0–5)
      */
     private void updateRatingDisplay(float rating) {
-        // TODO
+        if (rating > 0) {
+            binding.textRatingDisplay.setText("★ " + rating);
+            binding.textRatingDisplay.setVisibility(View.VISIBLE);
+        } else {
+            binding.textRatingDisplay.setVisibility(View.GONE);
+        }
     }
 
     /**
-     * 打开图片选择器
-     * <p>
-     * 检查图片数量限制后，启动系统图片选择器。
-     * 支持多选，但总数不能超过MAX_IMAGES。
-     * </p>
+     * Open the image picker.
+     *
+     * <p>After checking the image count limit, launch the system picker.
+     * Multiple selection is supported, but the total cannot exceed MAX_IMAGES.</p>
      */
     private void openImagePicker() {
-        // TODO
+        if (selectedImageUris.size() >= MAX_IMAGES) {
+            Toast.makeText(getContext(), "Maximum " + MAX_IMAGES + " images allowed",
+                    Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+        intent.setType("image/*");
+        intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
+        imagePickerLauncher.launch(Intent.createChooser(intent, "Select Images"));
     }
 
     /**
-     * 更新图片列表适配器
-     * <p>
-     * 刷新适配器显示，并根据是否有图片控制RecyclerView的可见性。
-     * </p>
+     * Update the image list adapter.
+     *
+     * <p>Refresh the adapter, and toggle the RecyclerView visibility
+     * based on whether images are selected.</p>
      */
     private void updateImagesAdapter() {
-        // TODO
+        if (imagesAdapter != null) {
+            imagesAdapter.notifyDataSetChanged();
+        }
+
+        // Toggle RecyclerView by selection state
+        if (selectedImageUris.isEmpty()) {
+            binding.recyclerViewImages.setVisibility(View.GONE);
+        } else {
+            binding.recyclerViewImages.setVisibility(View.VISIBLE);
+        }
     }
 
     /**
-     * 检查图片数量限制
-     * <p>
-     * 根据当前图片数量启用或禁用添加图片按钮。
-     * 达到上限时禁用按钮。
-     * </p>
+     * Check the image count limit.
+     *
+     * <p>Enable or disable the “Add Image” button based on the current
+     * number of selected images. Disable the button when the limit is reached.</p>
      */
     private void checkImageLimit() {
-        // TODO
+        binding.buttonAddImage.setEnabled(selectedImageUris.size() < MAX_IMAGES);
     }
 
     /**
-     * 尝试创建帖子
-     * <p>
-     * 执行完整的帖子创建流程：
-     * 1. 验证输入（标题、描述、图片）
-     * 2. 获取当前用户信息
-     * 3. 上传图片到Firebase Storage
-     * 4. 创建帖子文档到Firestore
-     * 5. 显示结果并关闭对话框
+     * Attempt to create a post.
+     *
+     * <p>Runs the full post-creation flow:
+     * 1) Validate input (title, description, images)
+     * 2) Fetch current user info
+     * 3) Upload images to Firebase Storage
+     * 4) Create the post document in Firestore
+     * 5) Show the result and close the dialog
      * </p>
      */
     private void attemptCreatePost() {
-        // TODO
+
+        String title = binding.editTextTitle.getText().toString().trim();
+        String description = binding.editTextDescription.getText().toString().trim();
+        float rating = binding.ratingBar.getRating();
+
+        boolean hasError = false;
+
+        if (TextUtils.isEmpty(title)) {
+            Toast.makeText(getContext(), "Title is required", Toast.LENGTH_SHORT).show();
+            hasError = true;
+        }
+
+        if (TextUtils.isEmpty(description)) {
+            Toast.makeText(getContext(), "Description is required", Toast.LENGTH_SHORT).show();
+            hasError = true;
+        }
+
+        if (selectedImageUris.isEmpty()) {
+            Toast.makeText(getContext(), "Please add at least one image", Toast.LENGTH_SHORT).show();
+            hasError = true;
+        }
+
+        if (hasError) {
+            return;
+        }
+
+        setLoading(true);
+
+        // Current User
+        AuthRepository authRepository = AuthRepository.getInstance();
+        String userId = authRepository.getCurrentUserId();
+
+        if (userId == null) {
+            Toast.makeText(getContext(), "User not logged in", Toast.LENGTH_SHORT).show();
+            setLoading(false);
+            return;
+        }
+
+        // Get User Information
+        UserDAO.getInstance().get(userId, userTask -> {
+            if (!userTask.isSuccessful() || userTask.getResult() == null) {
+                setLoading(false);
+                Toast.makeText(getContext(), "Failed to get user info", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            User user = userTask.getResult();
+            String username = user.getUsername();
+            String avatarUrl = user.getAvatarUrl() != null ? user.getAvatarUrl() : "";
+
+            // Upload images then create post
+            StorageRepository.getInstance().uploadImages(selectedImageUris, task -> {
+                if (task.isSuccessful() && task.getResult() != null) {
+                    List<String> imageUrls = task.getResult();
+
+                    // Create post with uploaded image URLs
+                    PostFacade.createPost(
+                            userId,
+                            username,
+                            avatarUrl,
+                            title,
+                            description,
+                            imageUrls,
+                            rating,
+                            postTask -> {
+                                setLoading(false);
+
+                                if (postTask.isSuccessful()) {
+                                    Toast.makeText(getContext(), "Post created successfully!",
+                                            Toast.LENGTH_SHORT).show();
+                                    dismiss();
+                                } else {
+                                    String errorMessage = "Failed to create post";
+                                    if (postTask.getException() != null) {
+                                        errorMessage = postTask.getException().getMessage();
+                                    }
+                                    Toast.makeText(getContext(), errorMessage, Toast.LENGTH_LONG).show();
+                                }
+                            });
+                } else {
+                    setLoading(false);
+                    String errorMessage = "Failed to upload images";
+                    if (task.getException() != null) {
+                        errorMessage = task.getException().getMessage();
+                    }
+                    Toast.makeText(getContext(), errorMessage, Toast.LENGTH_LONG).show();
+                }
+            });
+        });
     }
 
     /**
-     * 设置加载状态
-     * <p>
-     * 在加载时禁用所有交互控件并显示进度条，
-     * 加载完成后恢复控件状态并隐藏进度条。
-     * </p>
+     * Set loading state.
      *
-     * @param loading true表示正在加载，false表示加载完成
+     * <p>While loading, disable all interactive controls and show the progress bar;
+     * when finished, restore controls and hide the progress bar.</p>
+     *
+     * @param loading true to indicate loading; false when loading is finished
      */
     private void setLoading(boolean loading) {
-        // TODO
+        binding.buttonSubmit.setEnabled(!loading);
+        binding.buttonAddImage.setEnabled(!loading && selectedImageUris.size() < MAX_IMAGES);
+        binding.buttonRating.setEnabled(!loading);
+        binding.editTextTitle.setEnabled(!loading);
+        binding.editTextDescription.setEnabled(!loading);
+        binding.ratingBar.setEnabled(!loading);
+        binding.buttonClose.setEnabled(!loading);
+        binding.progressBar.setVisibility(loading ? View.VISIBLE : View.GONE);
     }
 
     /**
-     * 视图销毁时回调
-     * <p>
-     * 清理ViewBinding引用，防止内存泄漏。
-     * </p>
+     * Callback when the view is destroyed.
+     *
+     * <p>Clear the ViewBinding reference to prevent memory leaks.</p>
      */
     @Override
     public void onDestroyView() {
-        // TODO
+        super.onDestroyView();
+        binding = null;
     }
 }
