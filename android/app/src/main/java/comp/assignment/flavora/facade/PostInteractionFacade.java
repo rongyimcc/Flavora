@@ -6,24 +6,24 @@ import comp.assignment.flavora.datasource.FirebaseDataSource;
 import comp.assignment.flavora.repository.AuthRepository;
 
 /**
- * Facade class for post interaction operations
+ * 帖子互动操作的外观类
  * <p>
- * This class provides a simplified API interface for managing user interactions with posts (likes, favorites).
- * All operations are based on the currently logged-in user, with user identity obtained through {@link AuthRepository}.
+ * 该类为管理用户与帖子的互动（点赞、收藏）提供简化的API接口。
+ * 所有操作都基于当前登录用户，通过 {@link AuthRepository} 获取用户身份。
  * </p>
  *
- * <p>Main features:</p>
+ * <p>主要功能：</p>
  * <ul>
- *   <li>Toggle post like status (like/unlike)</li>
- *   <li>Toggle post favorite status (favorite/unfavorite)</li>
- *   <li>Check if current user has liked/favorited a post</li>
- *   <li>Get list of all post IDs liked/favorited by current user</li>
+ *   <li>切换帖子的点赞状态（点赞/取消点赞）</li>
+ *   <li>切换帖子的收藏状态（收藏/取消收藏）</li>
+ *   <li>检查当前用户是否已点赞/收藏某个帖子</li>
+ *   <li>获取当前用户点赞/收藏的所有帖子ID列表</li>
  * </ul>
  *
- * <p>This class uses static methods and can be used without instantiation. All methods use
- * asynchronous callback mechanism, returning operation results through {@link OnCompleteListener}.</p>
+ * <p>该类使用静态方法，无需实例化即可使用。所有方法采用异步回调机制，
+ * 通过 {@link OnCompleteListener} 返回操作结果。</p>
  *
- * <p>Note: All interaction operations require the user to be logged in, otherwise an exception or default value will be returned.</p>
+ * <p>注意：所有互动操作都要求用户已登录，否则将返回异常或默认值。</p>
  *
  * @author Flavora Team
  * @version 1.0
@@ -32,195 +32,125 @@ import comp.assignment.flavora.repository.AuthRepository;
  */
 public class PostInteractionFacade {
 
-    /** Firebase data source instance for executing underlying database operations */
+    /** Firebase数据源实例，用于执行底层的数据库操作 */
     private static final FirebaseDataSource dataSource = FirebaseDataSource.getInstance();
 
-    /** Authentication repository instance for obtaining current logged-in user information */
+    /** 认证仓库实例，用于获取当前登录用户的信息 */
     private static final AuthRepository authRepository = AuthRepository.getInstance();
 
     /**
-     * Toggle the current user's like status for a post
+     * 切换当前用户对帖子的点赞状态
      * <p>
-     * If the post is already liked, it will be unliked; if not liked, it will be liked.
-     * This operation automatically updates the post's like count.
+     * 如果帖子已被点赞，则取消点赞；如果未点赞，则添加点赞。
+     * 该操作会自动更新帖子的点赞计数。
      * </p>
      *
-     * <p>Operation flow:</p>
+     * <p>操作流程：</p>
      * <ol>
-     *   <li>Get current logged-in user ID</li>
-     *   <li>Verify if user is logged in</li>
-     *   <li>Execute like or unlike operation based on current status</li>
-     *   <li>Synchronously update the post's like count</li>
-     *   <li>Return new like status</li>
+     *   <li>获取当前登录用户ID</li>
+     *   <li>验证用户是否已登录</li>
+     *   <li>根据当前状态执行点赞或取消点赞操作</li>
+     *   <li>同步更新帖子的点赞计数</li>
+     *   <li>返回新的点赞状态</li>
      * </ol>
      *
-     * @param postId   Post ID
-     * @param isLiked  Current like status (true means already liked, false means not liked)
-     * @param listener Completion callback, returns new status after operation (true=liked, false=unliked)
+     * @param postId   帖子ID
+     * @param isLiked  当前点赞状态（true表示已点赞，false表示未点赞）
+     * @param listener 完成回调，返回操作后的新状态（true=已点赞，false=未点赞）
      */
     public static void toggleLike(String postId, boolean isLiked, OnCompleteListener<Boolean> listener) {
-        // Get current logged-in user ID
-        String userId = authRepository.getCurrentUserId();
-        if (userId == null) {
-            listener.onComplete(Tasks.forException(new IllegalStateException("User not logged in")));
-            return;
-        }
-
-        if (isLiked) {
-            // Unlike: remove like record and decrement count
-            dataSource.removeLikeAndDecrementCount(userId, postId, task -> {
-                if (task.isSuccessful()) {
-                    listener.onComplete(Tasks.forResult(false)); // Now unliked
-                } else {
-                    listener.onComplete(Tasks.forException(task.getException()));
-                }
-            });
-        } else {
-            // Like: add like record and increment count
-            dataSource.addLikeAndIncrementCount(userId, postId, task -> {
-                if (task.isSuccessful()) {
-                    listener.onComplete(Tasks.forResult(true)); // Now liked
-                } else {
-                    listener.onComplete(Tasks.forException(task.getException()));
-                }
-            });
-        }
+        // TODO
     }
 
     /**
-     * Toggle the current user's favorite status for a post
+     * 切换当前用户对帖子的收藏状态
      * <p>
-     * If the post is already favorited, it will be unfavorited; if not favorited, it will be favorited.
-     * This operation automatically updates the post's favorite count.
+     * 如果帖子已被收藏，则取消收藏；如果未收藏，则添加收藏。
+     * 该操作会自动更新帖子的收藏计数。
      * </p>
      *
-     * <p>Operation flow:</p>
+     * <p>操作流程：</p>
      * <ol>
-     *   <li>Get current logged-in user ID</li>
-     *   <li>Verify if user is logged in</li>
-     *   <li>Execute favorite or unfavorite operation based on current status</li>
-     *   <li>Synchronously update the post's favorite count</li>
-     *   <li>Return new favorite status</li>
+     *   <li>获取当前登录用户ID</li>
+     *   <li>验证用户是否已登录</li>
+     *   <li>根据当前状态执行收藏或取消收藏操作</li>
+     *   <li>同步更新帖子的收藏计数</li>
+     *   <li>返回新的收藏状态</li>
      * </ol>
      *
-     * @param postId      Post ID
-     * @param isFavorited Current favorite status (true means already favorited, false means not favorited)
-     * @param listener    Completion callback, returns new status after operation (true=favorited, false=unfavorited)
+     * @param postId      帖子ID
+     * @param isFavorited 当前收藏状态（true表示已收藏，false表示未收藏）
+     * @param listener    完成回调，返回操作后的新状态（true=已收藏，false=未收藏）
      */
     public static void toggleFavorite(String postId, boolean isFavorited, OnCompleteListener<Boolean> listener) {
-        // Get current logged-in user ID
-        String userId = authRepository.getCurrentUserId();
-        if (userId == null) {
-            listener.onComplete(Tasks.forException(new IllegalStateException("User not logged in")));
-            return;
-        }
-
-        if (isFavorited) {
-            // Unfavorite: remove favorite record and decrement count
-            dataSource.removeFavoriteAndDecrementCount(userId, postId, task -> {
-                if (task.isSuccessful()) {
-                    listener.onComplete(Tasks.forResult(false)); // Now unfavorited
-                } else {
-                    listener.onComplete(Tasks.forException(task.getException()));
-                }
-            });
-        } else {
-            // Favorite: add favorite record and increment count
-            dataSource.addFavoriteAndIncrementCount(userId, postId, task -> {
-                if (task.isSuccessful()) {
-                    listener.onComplete(Tasks.forResult(true)); // Now favorited
-                } else {
-                    listener.onComplete(Tasks.forException(task.getException()));
-                }
-            });
-        }
+        // TODO
     }
 
     /**
-     * Check if the current user has liked a specified post
+     * 检查当前用户是否已点赞指定帖子
      * <p>
-     * Queries the database for whether a like record exists for the current user on this post.
-     * If the user is not logged in, directly returns false.
+     * 查询数据库中是否存在当前用户对该帖子的点赞记录。
+     * 如果用户未登录，直接返回false。
      * </p>
      *
-     * @param postId   Post ID
-     * @param listener Completion callback, returns like status (true=liked, false=not liked)
+     * @param postId   帖子ID
+     * @param listener 完成回调，返回点赞状态（true=已点赞，false=未点赞）
      */
     public static void checkIfLiked(String postId, OnCompleteListener<Boolean> listener) {
-        String userId = authRepository.getCurrentUserId();
-        if (userId == null) {
-            listener.onComplete(Tasks.forResult(false));
-            return;
-        }
-        dataSource.checkLikeExists(userId, postId, listener);
+        // TODO
     }
 
     /**
-     * Check if the current user has favorited a specified post
+     * 检查当前用户是否已收藏指定帖子
      * <p>
-     * Queries the database for whether a favorite record exists for the current user on this post.
-     * If the user is not logged in, directly returns false.
+     * 查询数据库中是否存在当前用户对该帖子的收藏记录。
+     * 如果用户未登录，直接返回false。
      * </p>
      *
-     * @param postId   Post ID
-     * @param listener Completion callback, returns favorite status (true=favorited, false=not favorited)
+     * @param postId   帖子ID
+     * @param listener 完成回调，返回收藏状态（true=已收藏，false=未收藏）
      */
     public static void checkIfFavorited(String postId, OnCompleteListener<Boolean> listener) {
-        String userId = authRepository.getCurrentUserId();
-        if (userId == null) {
-            listener.onComplete(Tasks.forResult(false));
-            return;
-        }
-        dataSource.checkFavoriteExists(userId, postId, listener);
+        // TODO
     }
 
     /**
-     * Get list of all post IDs liked by the current user
+     * 获取当前用户点赞的所有帖子ID列表
      * <p>
-     * Returns the collection of IDs for all posts liked by the currently logged-in user.
-     * If the user is not logged in, returns an empty list.
+     * 返回当前登录用户点赞过的所有帖子的ID集合。
+     * 如果用户未登录，返回空列表。
      * </p>
      *
-     * <p>Usage examples:</p>
+     * <p>用途示例：</p>
      * <ul>
-     *   <li>Batch mark liked status in post lists</li>
-     *   <li>Implement "Posts I Liked" feature page</li>
-     *   <li>Track user like behavior</li>
+     *   <li>在帖子列表中批量标记已点赞状态</li>
+     *   <li>实现"我点赞的帖子"功能页面</li>
+     *   <li>统计用户点赞行为</li>
      * </ul>
      *
-     * @param listener Completion callback, returns list of post IDs
+     * @param listener 完成回调，返回帖子ID列表
      */
     public static void getLikedPostIds(OnCompleteListener<java.util.List<String>> listener) {
-        String userId = authRepository.getCurrentUserId();
-        if (userId == null) {
-            listener.onComplete(Tasks.forResult(java.util.Collections.emptyList()));
-            return;
-        }
-        dataSource.getLikesByUser(userId, listener);
+        // TODO
     }
 
     /**
-     * Get list of all post IDs favorited by the current user
+     * 获取当前用户收藏的所有帖子ID列表
      * <p>
-     * Returns the collection of IDs for all posts favorited by the currently logged-in user.
-     * If the user is not logged in, returns an empty list.
+     * 返回当前登录用户收藏过的所有帖子的ID集合。
+     * 如果用户未登录，返回空列表。
      * </p>
      *
-     * <p>Usage examples:</p>
+     * <p>用途示例：</p>
      * <ul>
-     *   <li>Batch mark favorited status in post lists</li>
-     *   <li>Implement "My Favorites" feature page</li>
-     *   <li>Track user favorite behavior</li>
+     *   <li>在帖子列表中批量标记已收藏状态</li>
+     *   <li>实现"我的收藏"功能页面</li>
+     *   <li>统计用户收藏行为</li>
      * </ul>
      *
-     * @param listener Completion callback, returns list of post IDs
+     * @param listener 完成回调，返回帖子ID列表
      */
     public static void getFavoritedPostIds(OnCompleteListener<java.util.List<String>> listener) {
-        String userId = authRepository.getCurrentUserId();
-        if (userId == null) {
-            listener.onComplete(Tasks.forResult(java.util.Collections.emptyList()));
-            return;
-        }
-        dataSource.getFavoritesByUser(userId, listener);
+        // TODO
     }
 }
