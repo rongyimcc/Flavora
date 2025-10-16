@@ -9,87 +9,94 @@ import com.bumptech.glide.Glide;
 import java.util.List;
 
 /**
- * 帖子图片适配器
+ * Post Image Adapter
  * <p>
- * 用于在ViewPager2中显示帖子的图片轮播。使用Glide加载网络图片，
- * 并通过CENTER_CROP缩放类型保持图片比例同时填充整个视图。
- * </p>
- *
+ * This adapter is used to display post images in a ViewPager2 carousel.
+ * It uses Glide to load images from URLs and applies CENTER_CROP scaling
+ * to preserve aspect ratio while filling the view.
  * @author Flavora Team
  * @version 1.0
  * @since 1.0
  */
 public class PostImageAdapter extends RecyclerView.Adapter<PostImageAdapter.ImageViewHolder> {
 
-    /** 图片URL列表 */
     private final List<String> imageUrls;
 
     /**
-     * 构造方法
+     * Constructor
      *
-     * @param imageUrls 图片URL列表
+     * @param imageUrls List of image URLs
      */
     public PostImageAdapter(List<String> imageUrls) {
-        // TODO
+        this.imageUrls = imageUrls;
     }
 
     /**
-     * 创建ViewHolder
+     * Create a ViewHolder
      * <p>
-     * 动态创建ImageView并设置布局参数和缩放类型。
+     * Dynamically creates an ImageView, sets layout parameters and scaling type.
      * </p>
      *
-     * @param parent 父ViewGroup
-     * @param viewType 视图类型（未使用）
-     * @return ImageViewHolder实例
+     * @param parent Parent ViewGroup
+     * @param viewType View type (not used)
+     * @return An instance of ImageViewHolder
      */
     @NonNull
     @Override
     public ImageViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        // TODO
+        ImageView imageView = new ImageView(parent.getContext());
+        imageView.setLayoutParams(new ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT));
+        imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
+        return new ImageViewHolder(imageView);
     }
 
     /**
-     * 绑定数据到ViewHolder
+     * Bind data to the ViewHolder
      * <p>
-     * 使用Glide加载指定位置的图片URL并显示到ImageView中。
+     * Uses Glide to load the image URL at the specified position into the ImageView.
      * </p>
      *
-     * @param holder ViewHolder实例
-     * @param position 图片位置
+     * @param holder ViewHolder instance
+     * @param position Image position in the list
      */
     @Override
     public void onBindViewHolder(@NonNull ImageViewHolder holder, int position) {
-        // TODO
+        String imageUrl = imageUrls.get(position);
+        Glide.with(holder.imageView.getContext())
+                .load(imageUrl)
+                .centerCrop()
+                .into(holder.imageView);
     }
 
     /**
-     * 获取图片数量
+     * Get the number of images
      *
-     * @return 图片列表的大小
+     * @return Size of the image list
      */
     @Override
     public int getItemCount() {
-        // TODO
+        return imageUrls.size();
     }
 
     /**
-     * 图片ViewHolder
+     * Image ViewHolder
      * <p>
-     * 简单的ViewHolder，只持有一个ImageView用于显示图片。
+     * A simple ViewHolder that holds an ImageView for displaying an image.
      * </p>
      */
     static class ImageViewHolder extends RecyclerView.ViewHolder {
-        /** 图片视图 */
         final ImageView imageView;
 
         /**
-         * ViewHolder构造方法
+         * ViewHolder constructor
          *
-         * @param imageView 图片视图
+         * @param imageView The ImageView to be held
          */
         ImageViewHolder(@NonNull ImageView imageView) {
-            // TODO
+            super(imageView);
+            this.imageView = imageView;
         }
     }
 }

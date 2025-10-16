@@ -23,129 +23,229 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 我的收藏Fragment
+ * My Favorites Fragment
  * <p>
- * 显示当前用户收藏的所有帖子列表。
- * 用户可以查看、点赞和取消收藏帖子。
+ * Displays a list of posts that the current user has favorited.
+ * Users can view, like, and remove posts from their favorites.
  * </p>
  *
- * <p>主要功能：</p>
+ * <p>Main features:</p>
  * <ul>
- *   <li>展示当前用户收藏的所有帖子</li>
- *   <li>支持点赞操作</li>
- *   <li>支持取消收藏（取消后自动从列表移除）</li>
- *   <li>点击帖子跳转到详情页</li>
- *   <li>每次Fragment可见时自动刷新数据</li>
+ *   <li>Display all posts favorited by the current user</li>
+ *   <li>Support for liking posts</li>
+ *   <li>Support for unfavoriting (removes the post from the list)</li>
+ *   <li>Navigate to post details by clicking on a post</li>
+ *   <li>Automatically refresh data each time the fragment becomes visible</li>
  * </ul>
  *
- * @author Flavora团队
+ * @author Flavora Team
  * @version 1.0
  */
 public class MyFavoritesFragment extends Fragment implements PostsAdapter.OnPostInteractionListener {
 
-    /** RecyclerView用于显示帖子列表 */
     private RecyclerView recyclerView;
 
-    /** 进度条视图，加载数据时显示 */
     private View progressBar;
 
-    /** 空状态文本，无数据时显示提示信息 */
     private TextView textEmpty;
 
-    /** 帖子列表适配器 */
     private PostsAdapter postsAdapter;
 
     /**
-     * 创建Fragment的视图
+     * Create the fragment's view
      *
-     * @param inflater 用于填充布局的LayoutInflater
-     * @param container 父视图容器
-     * @param savedInstanceState 保存的实例状态
-     * @return 创建的根视图
+     * @param inflater LayoutInflater for inflating the layout
+     * @param container Parent view container
+     * @param savedInstanceState Saved instance state
+     * @return The created root view
      */
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
-                                 // TODO
-                             }
+        View view = inflater.inflate(R.layout.fragment_post_list, container, false);
+
+
+        // Initialize view references
+        recyclerView = view.findViewById(R.id.recycler_view_posts);
+        progressBar = view.findViewById(R.id.progress_bar);
+        textEmpty = view.findViewById(R.id.text_empty);
+
+        setupRecyclerView();
+
+        return view;
+    }
 
     /**
-     * Fragment恢复时的回调
-     * 每次Fragment可见时重新加载数据，确保数据是最新的
+     * Called when the fragment resumes.
+     * Reloads data each time the fragment becomes visible to ensure freshness.
      */
     @Override
     public void onResume() {
-        // TODO
+        super.onResume();
+        // 当Fragment变为可见时重新加载数据
+        loadMyFavorites();
     }
 
     /**
-     * 设置RecyclerView
-     * 初始化适配器和布局管理器
+     * Set up the RecyclerView
+     * Initializes the adapter and layout manager.
      */
     private void setupRecyclerView() {
-        // TODO
+        postsAdapter = new PostsAdapter();
+        postsAdapter.setOnPostInteractionListener(this);
+        recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+        recyclerView.setAdapter(postsAdapter);
     }
 
     /**
-     * 加载当前用户收藏的所有帖子
+     * Load all favorited posts for the current user
      * <p>
-     * 执行以下步骤：
-     * 1. 获取当前登录用户ID
-     * 2. 从数据库加载该用户收藏的所有帖子
-     * 3. 加载用户的点赞和收藏状态
-     * 4. 更新每个帖子的交互状态
-     * 5. 显示在列表中
+     * Steps:
+     * 1. Get the current user's ID
+     * 2. Load all favorited posts from the database
+     * 3. Load the user's like and favorite status
+     * 4. Update each post's interaction state
+     * 5. Display posts in the list
      * </p>
      */
     private void loadMyFavorites() {
-        // TODO
+        progressBar.setVisibility(View.VISIBLE);
+        textEmpty.setVisibility(View.GONE);
+
+        String userId = AuthRepository.getInstance().getCurrentUserId();
+        if (userId == null) {
+            progressBar.setVisibility(View.GONE);
+            textEmpty.setVisibility(View.VISIBLE);
+            textEmpty.setText("Not logged in");
+            return;
+        }
+
+        // Load user's favorited posts
+        PostFacade.getFavoritedPostsByUser(userId, task -> {
+            if (!task.isSuccessful() || task.getResult() == null) {
+                progressBar.setVisibility(View.GONE);
+                textEmpty.setVisibility(View.VISIBLE);
+                textEmpty.setText("Failed to load favorites");
+                return;
+            }
+
+            List<Post> posts = task.getResult();
+
+            // Load user interaction states (likes and favorites)）
+            PostInteractionFacade.getLikedPostIds(likedTask -> {
+                PostInteractionFacade.getFavoritedPostIds(favoritedTask -> {
+                    progressBar.setVisibility(View.GONE);
+
+                    List<String> likedPostIds = likedTask.isSuccessful() && likedTask.getResult() != null
+                            ? likedTask.getResult() : new ArrayList<>();
+                    List<String> favoritedPostIds = favoritedTask.isSuccessful() && favoritedTask.getResult() != null
+                            ? favoritedTask.getResult() : new ArrayList<>();
+
+                    java.util.Set<String> likedSet = new java.util.HashSet<>(likedPostIds);
+                    java.util.Set<String> favoritedSet = new java.util.HashSet<>(favoritedPostIds);
+
+                    for (Post post : posts) {
+                        post.setLikedByCurrentUser(likedSet.contains(post.getPostId()));
+                        post.setFavoritedByCurrentUser(favoritedSet.contains(post.getPostId()));
+                    }
+
+                    postsAdapter.setPosts(posts);
+
+                    if (postsAdapter.getItemCount() == 0) {
+                        textEmpty.setVisibility(View.VISIBLE);
+                        textEmpty.setText("No favorites yet");
+                    } else {
+                        textEmpty.setVisibility(View.GONE);
+                    }
+                });
+            });
+        });
     }
 
     /**
-     * 处理帖子点击事件
-     * 跳转到帖子详情页面
+     * Handle post click events
+     * Navigates to the post detail screen.
      *
-     * @param post 被点击的帖子
+     * @param post The clicked post
      */
     @Override
     public void onPostClicked(Post post) {
-        // TODO
+        Intent intent = new Intent(getContext(), PostDetailActivity.class);
+        intent.putExtra(PostDetailActivity.EXTRA_POST_ID, post.getPostId());
+        startActivity(intent);
     }
 
     /**
-     * 处理点赞按钮点击事件
-     * 切换帖子的点赞状态并更新点赞数
+     * Handle like button click events
+     * Toggles the like status of a post and updates its like count.
      *
-     * @param post 被点赞/取消点赞的帖子
-     * @param position 帖子在列表中的位置
+     * @param post The post being liked/unliked
+     * @param position The position of the post in the list
      */
     @Override
     public void onLikeClicked(Post post, int position) {
-        // TODO
+        // Toggle like status
+        boolean currentStatus = post.isLikedByCurrentUser();
+        PostInteractionFacade.toggleLike(post.getPostId(), currentStatus, task -> {
+            if (task.isSuccessful() && task.getResult() != null) {
+                boolean newStatus = task.getResult();
+                post.setLikedByCurrentUser(newStatus);
+
+                // Update like count
+                if (newStatus) {
+                    post.setLikeCount(post.getLikeCount() + 1);
+                } else {
+                    post.setLikeCount(Math.max(0, post.getLikeCount() - 1));
+                }
+
+                postsAdapter.updatePost(position, post);
+            }
+        });
     }
 
     /**
-     * 处理收藏按钮点击事件
+     * Handle favorite button click events
      * <p>
-     * 特别处理：在收藏列表中，如果用户取消收藏，则重新加载列表以移除该帖子。
-     * （正常情况下不应该出现"添加收藏"操作，因为列表中的都是已收藏的帖子）
+     * Special case: In the favorites list, if the user removes a favorite,
+     * reload the list to remove the post from view.
+     * (Normally, adding a favorite should not occur here since all posts are already favorited.)
      * </p>
      *
-     * @param post 被收藏/取消收藏的帖子
-     * @param position 帖子在列表中的位置
+     * @param post The post being favorited/unfavorited
+     * @param position The position of the post in the list
      */
     @Override
     public void onFavoriteClicked(Post post, int position) {
-        // TODO
+        // Toggle favorite status
+        boolean currentStatus = post.isFavoritedByCurrentUser();
+        PostInteractionFacade.toggleFavorite(post.getPostId(), currentStatus, task -> {
+            if (task.isSuccessful() && task.getResult() != null) {
+                boolean newStatus = task.getResult();
+
+                if (!newStatus) {
+
+                    loadMyFavorites();
+                } else {
+                    post.setFavoritedByCurrentUser(newStatus);
+                    post.setFavoriteCount(post.getFavoriteCount() + 1);
+                    postsAdapter.updatePost(position, post);
+                }
+            }
+        });
     }
 
     /**
-     * Fragment视图销毁时的回调
-     * 清理所有View引用防止内存泄漏
+     * Called when the fragment's view is destroyed
+     * Clears all view references to prevent memory leaks.
      */
     @Override
     public void onDestroyView() {
-        // TODO
+        super.onDestroyView();
+        // Clear references to prevent memory leaks
+        recyclerView = null;
+        progressBar = null;
+        textEmpty = null;
+        postsAdapter = null;
     }
 }

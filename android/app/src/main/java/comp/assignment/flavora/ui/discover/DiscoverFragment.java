@@ -25,152 +25,288 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * 发现页面Fragment
+ * Discover Fragment
  * <p>
- * 这个Fragment用于展示所有帖子，并提供搜索和交互功能。
- * 用户可以浏览所有帖子、搜索帖子、点赞、收藏以及查看帖子详情。
+ * This fragment displays all posts and provides search and interaction features.
+ * Users can browse all posts, search, like, favorite, and view post details.
  * </p>
  *
- * <p>主要功能：</p>
+ * <p>Main Features:</p>
  * <ul>
- *   <li>展示所有用户发布的帖子列表</li>
- *   <li>实时搜索功能（按标题、描述、用户名）</li>
- *   <li>下拉刷新功能</li>
- *   <li>点赞和收藏交互</li>
- *   <li>跳转到帖子详情页</li>
+ *   <li>Display a list of all user-posted posts</li>
+ *   <li>Real-time search (by title, description, or username)</li>
+ *   <li>Pull-to-refresh functionality</li>
+ *   <li>Like and favorite interactions</li>
+ *   <li>Navigate to post detail page</li>
  * </ul>
- *
- * @author Flavora团队
+ * @author Flavora Team
  * @version 1.0
+ * @since 1.0
  */
 public class DiscoverFragment extends Fragment implements PostsAdapter.OnPostInteractionListener {
 
-    /** ViewBinding对象，用于访问布局中的视图 */
     private FragmentDiscoverBinding binding;
 
-    /** 帖子列表适配器 */
     private PostsAdapter postsAdapter;
 
-    /** 存储所有帖子的列表，用于搜索过滤 */
     private List<Post> allPosts = new ArrayList<>();
 
     /**
-     * 创建Fragment的视图
+     * Create the view for the fragment
      *
-     * @param inflater 用于填充布局的LayoutInflater
-     * @param container 父视图容器
-     * @param savedInstanceState 保存的实例状态
-     * @return 创建的根视图
+     * @param inflater LayoutInflater to inflate the layout
+     * @param container Parent view container
+     * @param savedInstanceState Saved instance state
+     * @return The root view created
      */
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
                              @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-                                 // TODO
+            binding = FragmentDiscoverBinding.inflate(inflater, container, false);
+            return binding.getRoot();
                              }
 
     /**
-     * 视图创建完成后的回调
-     * 在这里初始化RecyclerView、下拉刷新、搜索栏并加载帖子数据
+     * Callback after the view is created.
+     * Initializes RecyclerView, pull-to-refresh, search bar, and loads post data.
      *
-     * @param view 创建的视图
-     * @param savedInstanceState 保存的实例状态
+     * @param view The created view
+     * @param savedInstanceState Saved instance state
      */
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        // TODO
+        super.onViewCreated(view, savedInstanceState);
+
+        setupRecyclerView();
+        setupSwipeRefresh();
+        setupSearchBar();
+        loadPosts();
     }
 
     /**
-     * 设置RecyclerView
-     * 初始化适配器和布局管理器
+     * Set up the RecyclerView
+     * Initialize adapter and layout manager
      */
     private void setupRecyclerView() {
-        // TODO
+        postsAdapter = new PostsAdapter();
+        postsAdapter.setOnPostInteractionListener(this);
+        binding.recyclerViewPosts.setLayoutManager(new LinearLayoutManager(getContext()));
+        binding.recyclerViewPosts.setAdapter(postsAdapter);
     }
 
     /**
-     * 设置下拉刷新功能
-     * 用户下拉时重新加载帖子列表
+     * Set up pull-to-refresh feature
+     * Reload post list when user pulls down
      */
     private void setupSwipeRefresh() {
-        // TODO
+        binding.swipeRefresh.setOnRefreshListener(this::loadPosts);
     }
 
     /**
-     * 设置搜索栏
-     * 监听搜索框文本变化，实时过滤帖子
+     * Set up the search bar
+     * Listen for text changes and filter posts in real-time
      */
     private void setupSearchBar() {
-        // TODO
+        binding.searchEditText.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                // 文本改变前的回调（未使用）
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                // 文本改变时立即过滤帖子
+                filterPosts(s.toString());
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                // 文本改变后的回调（未使用）
+            }
+        });
     }
 
     /**
-     * 根据搜索关键词过滤帖子
-     * 在帖子的标题、描述和用户名中搜索匹配项
+     * Filter posts based on the search query.
+     * Match against post title, description, and username.
      *
-     * @param query 搜索关键词
+     * @param query Search keyword
      */
     private void filterPosts(String query) {
-        // TODO
+        if (query == null || query.trim().isEmpty()) {
+            // 如果搜索框为空，显示所有帖子
+            postsAdapter.setPosts(allPosts);
+        } else {
+            // 根据标题、描述或用户名过滤帖子
+            String lowerQuery = query.toLowerCase().trim();
+            List<Post> filteredPosts = allPosts.stream()
+                    .filter(post ->
+                            (post.getTitle() != null && post.getTitle().toLowerCase().contains(lowerQuery)) ||
+                                    (post.getDescription() != null && post.getDescription().toLowerCase().contains(lowerQuery)) ||
+                                    (post.getUsername() != null && post.getUsername().toLowerCase().contains(lowerQuery))
+                    )
+                    .collect(Collectors.toList());
+            postsAdapter.setPosts(filteredPosts);
+        }
     }
 
     /**
-     * 加载所有帖子数据
+     * Load all post data
      * <p>
-     * 执行以下步骤：
-     * 1. 从数据库加载所有帖子
-     * 2. 加载当前用户的点赞列表
-     * 3. 加载当前用户的收藏列表
-     * 4. 更新每个帖子的点赞和收藏状态
-     * 5. 应用当前搜索过滤（如果有）
+     * Steps:
+     * 1. Load all posts from the database
+     * 2. Load current user's liked post IDs
+     * 3. Load current user's favorited post IDs
+     * 4. Update each post's like and favorite status
+     * 5. Apply current search filter (if any)
      * </p>
      */
     private void loadPosts() {
-        // TODO
+        binding.swipeRefresh.setRefreshing(true);
+
+        // 第一步：加载所有帖子
+        PostFacade.getAllPosts(postsTask -> {
+            // 生命周期检查：确保Fragment仍然附加且binding有效
+            if (!isAdded() || binding == null) return;
+
+            if (!postsTask.isSuccessful() || postsTask.getResult() == null) {
+                binding.swipeRefresh.setRefreshing(false);
+                Toast.makeText(getContext(), "Failed to load posts", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            List<Post> posts = postsTask.getResult();
+
+            // 第二步：加载用户交互状态（点赞和收藏）
+            PostInteractionFacade.getLikedPostIds(likedTask -> {
+                // 生命周期检查：确保Fragment仍然附加且binding有效
+                if (!isAdded() || binding == null) return;
+
+                PostInteractionFacade.getFavoritedPostIds(favoritedTask -> {
+                    // 生命周期检查：确保Fragment仍然附加且binding有效
+                    if (!isAdded() || binding == null) return;
+
+                    binding.swipeRefresh.setRefreshing(false);
+
+                    List<String> likedPostIds = likedTask.isSuccessful() && likedTask.getResult() != null
+                            ? likedTask.getResult() : List.of();
+                    List<String> favoritedPostIds = favoritedTask.isSuccessful() && favoritedTask.getResult() != null
+                            ? favoritedTask.getResult() : List.of();
+
+                    // 转换为Set以提高查找效率
+                    Set<String> likedSet = new HashSet<>(likedPostIds);
+                    Set<String> favoritedSet = new HashSet<>(favoritedPostIds);
+
+                    // 更新每个帖子的用户交互状态
+                    for (Post post : posts) {
+                        post.setLikedByCurrentUser(likedSet.contains(post.getPostId()));
+                        post.setFavoritedByCurrentUser(favoritedSet.contains(post.getPostId()));
+                    }
+
+                    // 保存所有帖子用于搜索过滤
+                    allPosts = new ArrayList<>(posts);
+
+                    // 应用当前的搜索过滤（如果有）
+                    String currentQuery = binding.searchEditText.getText().toString();
+                    if (currentQuery.trim().isEmpty()) {
+                        postsAdapter.setPosts(posts);
+                    } else {
+                        filterPosts(currentQuery);
+                    }
+                });
+            });
+        });
     }
 
     /**
-     * 处理帖子点击事件
-     * 跳转到帖子详情页面
+     * Handle post click event
+     * Navigate to the post detail page
      *
-     * @param post 被点击的帖子
+     * @param post The clicked post
      */
     @Override
     public void onPostClicked(Post post) {
-        // TODO
+        Intent intent = new Intent(getContext(), PostDetailActivity.class);
+        intent.putExtra(PostDetailActivity.EXTRA_POST_ID, post.getPostId());
+        startActivity(intent);
     }
 
     /**
-     * 处理点赞按钮点击事件
-     * 切换帖子的点赞状态并更新点赞数
+     * Handle like button click event
+     * Toggle like status and update like count
      *
-     * @param post 被点赞/取消点赞的帖子
-     * @param position 帖子在列表中的位置
+     * @param post The post to like/unlike
+     * @param position The post's position in the list
      */
     @Override
     public void onLikeClicked(Post post, int position) {
-        // TODO
+        // 切换点赞状态
+        boolean currentStatus = post.isLikedByCurrentUser();
+        PostInteractionFacade.toggleLike(post.getPostId(), currentStatus, task -> {
+            if (task.isSuccessful() && task.getResult() != null) {
+                boolean newStatus = task.getResult();
+                post.setLikedByCurrentUser(newStatus);
+
+                // 更新点赞数
+                if (newStatus) {
+                    post.setLikeCount(post.getLikeCount() + 1);
+                } else {
+                    post.setLikeCount(Math.max(0, post.getLikeCount() - 1));
+                }
+
+                postsAdapter.updatePost(position, post);
+            } else {
+                String errorMessage = "Failed to update like";
+                if (task.getException() != null) {
+                    errorMessage = task.getException().getMessage();
+                }
+                Toast.makeText(getContext(), errorMessage, Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     /**
-     * 处理收藏按钮点击事件
-     * 切换帖子的收藏状态并更新收藏数
+     * Handle favorite button click event
+     * Toggle favorite status and update favorite count
      *
-     * @param post 被收藏/取消收藏的帖子
-     * @param position 帖子在列表中的位置
+     * @param post The post to favorite/unfavorite
+     * @param position The post's position in the list
      */
     @Override
     public void onFavoriteClicked(Post post, int position) {
-        // TODO
+        // 切换收藏状态
+        boolean currentStatus = post.isFavoritedByCurrentUser();
+        PostInteractionFacade.toggleFavorite(post.getPostId(), currentStatus, task -> {
+            if (task.isSuccessful() && task.getResult() != null) {
+                boolean newStatus = task.getResult();
+                post.setFavoritedByCurrentUser(newStatus);
+
+                // 更新收藏数
+                if (newStatus) {
+                    post.setFavoriteCount(post.getFavoriteCount() + 1);
+                } else {
+                    post.setFavoriteCount(Math.max(0, post.getFavoriteCount() - 1));
+                }
+
+                postsAdapter.updatePost(position, post);
+            } else {
+                String errorMessage = "Failed to update favorite";
+                if (task.getException() != null) {
+                    errorMessage = task.getException().getMessage();
+                }
+                Toast.makeText(getContext(), errorMessage, Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     /**
-     * Fragment视图销毁时的回调
-     * 清理ViewBinding引用以防止内存泄漏
+     * Callback when fragment view is destroyed
+     * Clear the ViewBinding reference to prevent memory leaks
      */
     @Override
     public void onDestroyView() {
-        // TODO
+        super.onDestroyView();
+        binding = null;
     }
 }

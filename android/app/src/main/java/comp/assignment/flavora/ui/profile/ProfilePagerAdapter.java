@@ -4,15 +4,16 @@ import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.viewpager2.adapter.FragmentStateAdapter;
 
+
 /**
- * 个人资料页面适配器
+ * Profile Pager Adapter
  * <p>
- * 用于在ViewPager2中管理个人资料页面的两个标签页：
- * - 我的帖子（MyPostsFragment）
- * - 我的收藏（MyFavoritesFragment）
+ * Used to manage the two tabs in the ViewPager2 of the profile screen:
+ * - My Posts (MyPostsFragment)
+ * - My Favorites (MyFavoritesFragment)
  * </p>
  * <p>
- * 使用FragmentStateAdapter实现Fragment的懒加载和状态保存。
+ * Implements lazy loading and state saving for fragments using FragmentStateAdapter.
  * </p>
  *
  * @author Flavora Team
@@ -22,37 +23,41 @@ import androidx.viewpager2.adapter.FragmentStateAdapter;
 public class ProfilePagerAdapter extends FragmentStateAdapter {
 
     /**
-     * 构造方法
+     * Constructor
      *
-     * @param fragment 父Fragment（ProfileFragment）
+     * @param fragment The parent fragment (ProfileFragment)
      */
     public ProfilePagerAdapter(@NonNull Fragment fragment) {
-        // TODO
+        super(fragment);
     }
 
     /**
-     * 根据位置创建对应的Fragment
+     * Creates the fragment for the given position
      * <p>
-     * 位置0：我的帖子Fragment
-     * 位置1：我的收藏Fragment
+     * Position 0: MyPostsFragment<br>
+     * Position 1: MyFavoritesFragment
      * </p>
      *
-     * @param position 标签位置（0或1）
-     * @return 对应位置的Fragment实例
+     * @param position The tab index (0 or 1)
+     * @return The corresponding fragment instance
      */
     @NonNull
     @Override
     public Fragment createFragment(int position) {
-        // TODO
+        if (position == 0) {
+            return new MyPostsFragment();
+        } else {
+            return new MyFavoritesFragment();
+        }
     }
 
     /**
-     * 获取标签页数量
+     * Returns the number of tabs
      *
-     * @return 固定返回2（我的帖子 + 我的收藏）
+     * @return Always returns 2 (My Posts + My Favorites)
      */
     @Override
     public int getItemCount() {
-        // TODO
+        return 2;
     }
 }
