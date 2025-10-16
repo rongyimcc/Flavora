@@ -12,45 +12,42 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * Storage Repository
+ * Storage repository.
  * <p>
- * Handles all operations related to Firebase Storage, mainly for uploading,
- * downloading, and deleting images. Uses the Singleton pattern to ensure a
- * single repository instance across the app.
+ * Handles every Firebase Storage operation: uploading, downloading, and deleting images.
+ * Implemented as a singleton so there's a single storage entry point.
  * </p>
  *
- * <p>Main features:</p>
+ * <p>Core capabilities:</p>
  * <ul>
- *   <li>Batch image upload: upload multiple images in parallel and return all download URLs</li>
- *   <li>Single image upload: upload a single image and return its download URL</li>
- *   <li>Image deletion: delete an image file in Firebase Storage by its URL</li>
+ *   <li>Batch image upload: upload multiple images at once and return their download URLs.</li>
+ *   <li>Single image upload: upload a single image and return its download URL.</li>
+ *   <li>Image deletion: remove files from Firebase Storage using their URL.</li>
  * </ul>
  *
- * <p>Use cases:</p>
+ * <p>Typical scenarios:</p>
  * <ul>
- *   <li>User avatar upload</li>
- *   <li>Post image upload (supports multiple images)</li>
- *   <li>Image resource management and cleanup</li>
+ *   <li>Uploading user avatars.</li>
+ *   <li>Uploading post images (supports multiple images).</li>
+ *   <li>Managing and cleaning up image assets.</li>
  * </ul>
  *
- * @author
- * Flavora Team
+ * @author Flavora Team
  * @version 1.0
  * @since 1.0
  */
 public class StorageRepository {
-    /** Singleton instance */
+    /** Singleton instance. */
     private static StorageRepository instance;
-    /** Firebase Storage instance */
+    /** Firebase Storage instance. */
     private final FirebaseStorage storage;
-    /** Root storage reference */
+    /** Root storage reference. */
     private final StorageReference storageRef;
 
     /**
-     * Private constructor
+     * Private constructor.
      * <p>
-     * Initializes the Firebase Storage instance and root storage reference.
-     * Private to prevent external instantiation and enforce the Singleton pattern.
+     * Initializes Firebase Storage and the root reference while keeping the singleton invariant.
      * </p>
      */
     private StorageRepository() {
@@ -59,12 +56,12 @@ public class StorageRepository {
     }
 
     /**
-     * Returns the singleton instance of StorageRepository
+     * Returns the singleton StorageRepository instance.
      * <p>
      * Uses double-checked locking (DCL) for thread-safe lazy initialization.
      * </p>
      *
-     * @return the unique instance of StorageRepository
+     * @return The unique StorageRepository instance.
      */
     public static StorageRepository getInstance() {
         if (instance == null) {
@@ -80,70 +77,75 @@ public class StorageRepository {
     /**
      * Uploads multiple images to Firebase Storage.
      * <p>
-     * Supports uploading multiple images concurrently. Each image is given a
-     * unique filename generated via UUID. After all uploads complete, returns
-     * the list of download URLs.
+     * Supports uploading several images concurrently, each with a UUID filename.
+     * Returns the list of download URLs once every upload finishes.
      * </p>
      *
      * <p>Upload steps:</p>
      * <ol>
-     *   <li>Validate input; if the list is empty, return an empty list</li>
-     *   <li>Generate a unique filename (UUID) for each image</li>
-     *   <li>Create an upload task for each image and add it to the task list</li>
-     *   <li>Wait for all upload tasks to complete</li>
-     *   <li>Collect and return all image download URLs</li>
+     *   <li>Validate input; return an empty list when no images are provided.</li>
+     *   <li>Generate a unique filename (UUID) for each image.</li>
+     *   <li>Create an upload task per image and collect them.</li>
+     *   <li>Wait for all upload tasks to finish.</li>
+     *   <li>Return the download URLs for every image.</li>
      * </ol>
      *
-     * <p>Filename rule:</p>
+     * <p>Naming convention:</p>
      * <pre>
      * images/[UUID].jpg
-     * e.g. images/550e8400-e29b-41d4-a716-446655440000.jpg
+     * Example: images/550e8400-e29b-41d4-a716-446655440000.jpg
      * </pre>
      *
-     * @param imageUris list of image URIs selected from local storage or gallery
-     * @param listener  completion listener:
-     *                  on success, returns a list of download URL strings;
-     *                  on failure, returns an exception
+     * @param imageUris Image URIs selected from local storage or gallery.
+     * @param listener Completion listener.
+     *                 Returns the list of download URLs on success.
+     *                 Returns the exception on failure.
      */
     public void uploadImages(List<Uri> imageUris, OnCompleteListener<List<String>> listener) {
-        // Validate parameters: check whether the image list is empty
+        // Validate input: ensure the list is not empty.
         if (imageUris == null || imageUris.isEmpty()) {
             listener.onComplete(Tasks.forResult(new ArrayList<>()));
             return;
         }
 
-        // Prepare tasks for concurrent uploads
+        // Collect upload tasks so images can upload in parallel.
         List<Task<Uri>> uploadTasks = new ArrayList<>();
 
-        // Create an upload task for each image
+        // Create an individual upload task for each image.
         for (Uri imageUri : imageUris) {
-            // Generate a unique filename to avoid conflicts
+            // Generate a unique filename to avoid collisions.
             String filename = "images/" + UUID.randomUUID().toString() + ".jpg";
             StorageReference imageRef = storageRef.child(filename);
 
-            // Chain: upload file -> get download URL
+            // Upload the file then fetch its download URL.
             Task<Uri> uploadTask = imageRef.putFile(imageUri)
                     .continueWithTask(task -> {
+                        // Ensure the upload succeeded.
                         if (!task.isSuccessful() && task.getException() != null) {
                             throw task.getException();
                         }
+                        // Return the download URL after a successful upload.
                         return imageRef.getDownloadUrl();
                     });
 
             uploadTasks.add(uploadTask);
         }
 
-        // Wait for all uploads to succeed
+        // Wait for every upload task to complete.
         Tasks.whenAllSuccess(uploadTasks).addOnCompleteListener(task -> {
             if (task.isSuccessful() && task.getResult() != null) {
+                // Collect each download URL.
                 List<String> downloadUrls = new ArrayList<>();
                 for (Object result : task.getResult()) {
+                    // Type-check: ensure the result is a Uri.
                     if (result instanceof Uri) {
                         downloadUrls.add(result.toString());
                     }
                 }
+                // Return the successful result.
                 listener.onComplete(Tasks.forResult(downloadUrls));
             } else {
+                // Return the failure reason.
                 listener.onComplete(Tasks.forException(
                         task.getException() != null ? task.getException() :
                                 new Exception("Failed to upload images")));
@@ -154,46 +156,49 @@ public class StorageRepository {
     /**
      * Uploads a single image to Firebase Storage.
      * <p>
-     * Intended for single-image scenarios such as avatar upload.
-     * Returns a publicly accessible download URL upon success.
+     * Ideal for scenarios like avatar uploads. Returns the download URL when complete.
      * </p>
      *
      * <p>Upload steps:</p>
      * <ol>
-     *   <li>Validate that the image URI is not null</li>
-     *   <li>Generate a unique filename</li>
-     *   <li>Upload the image file</li>
-     *   <li>Fetch and return the download URL</li>
+     *   <li>Validate that the image URI is not null.</li>
+     *   <li>Generate a unique filename.</li>
+     *   <li>Upload the file.</li>
+     *   <li>Return the download URL.</li>
      * </ol>
      *
-     * @param imageUri the image URI to upload
-     * @param listener completion listener:
-     *                 on success, returns the download URL as a string;
-     *                 on failure, returns an exception (e.g., network error, permission denied)
+     * @param imageUri Image URI to upload.
+     * @param listener Completion listener.
+     *                 Returns the download URL string on success.
+     *                 Returns the exception on failure (network issues, permission errors, etc.).
      */
     public void uploadImage(Uri imageUri, OnCompleteListener<String> listener) {
-        // Validate parameter
+        // Validate that the URI is present.
         if (imageUri == null) {
             listener.onComplete(Tasks.forException(new IllegalArgumentException("Image URI is null")));
             return;
         }
 
-        // Generate a unique filename
+        // Generate a unique filename.
         String filename = "images/" + UUID.randomUUID().toString() + ".jpg";
         StorageReference imageRef = storageRef.child(filename);
 
-        // Execute upload
+        // Perform the upload.
         imageRef.putFile(imageUri)
                 .continueWithTask(task -> {
+                    // Ensure the upload succeeded.
                     if (!task.isSuccessful() && task.getException() != null) {
                         throw task.getException();
                     }
+                    // Return the download URL.
                     return imageRef.getDownloadUrl();
                 })
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful() && task.getResult() != null) {
+                        // Return the download URL as a string.
                         listener.onComplete(Tasks.forResult(task.getResult().toString()));
                     } else {
+                        // Return the failure exception.
                         listener.onComplete(Tasks.forException(
                                 task.getException() != null ? task.getException() :
                                         new Exception("Failed to upload image")));
@@ -204,39 +209,39 @@ public class StorageRepository {
     /**
      * Deletes an image from Firebase Storage.
      * <p>
-     * Deletes the file by its download URL. Commonly used when a user deletes a post
-     * or changes avatar to clean up the old image resource.
+     * Removes the file referenced by the download URL; useful when posts are deleted or avatars replaced.
      * </p>
      *
      * <p>Deletion steps:</p>
      * <ol>
-     *   <li>Validate that the image URL is valid</li>
-     *   <li>Resolve a Storage reference from the URL</li>
-     *   <li>Perform the delete operation</li>
-     *   <li>Return the deletion result</li>
+     *   <li>Validate that the image URL is valid.</li>
+     *   <li>Resolve a storage reference from the URL.</li>
+     *   <li>Execute the delete operation.</li>
+     *   <li>Return the result.</li>
      * </ol>
      *
-     * <p>Cautions:</p>
+     * <p>Caveats:</p>
      * <ul>
-     *   <li>Deletion is irreversible—use with care</li>
-     *   <li>If the file does not exist, Firebase returns a 404 error</li>
-     *   <li>After a successful deletion, the original download URL becomes invalid</li>
+     *   <li>Deletion is irreversible.</li>
+     *   <li>If the file is missing, Firebase returns a 404 error.</li>
+     *   <li>After deletion, the original download URL no longer works.</li>
      * </ul>
      *
-     * @param imageUrl the download URL of the image to delete
-     * @param listener completion listener:
-     *                 on success returns null;
-     *                 on failure returns an exception (e.g., not found, permission denied)
+     * @param imageUrl Download URL of the image to remove.
+     * @param listener Completion listener.
+     *                 Returns null on success.
+     *                 Returns the exception on failure (e.g., missing file, insufficient permissions).
      */
     public void deleteImage(String imageUrl, OnCompleteListener<Void> listener) {
-        // Validate parameter
+        // Validate that the URL is usable.
         if (imageUrl == null || imageUrl.isEmpty()) {
             listener.onComplete(Tasks.forException(new IllegalArgumentException("Image URL is null or empty")));
             return;
         }
 
-        // Resolve reference and delete
+        // Resolve a storage reference from the download URL.
         StorageReference imageRef = storage.getReferenceFromUrl(imageUrl);
+        // Perform the delete operation.
         imageRef.delete().addOnCompleteListener(listener);
     }
 }

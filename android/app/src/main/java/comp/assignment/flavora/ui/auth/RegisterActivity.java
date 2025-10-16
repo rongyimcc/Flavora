@@ -11,32 +11,32 @@ import comp.assignment.flavora.databinding.ActivityRegisterBinding;
 import comp.assignment.flavora.repository.AuthRepository;
 
 /**
- * Register Activity - new user sign-up screen.
+ * Registration screen for new users.
  *
- * <p>Features:</p>
+ * <p>Highlights:</p>
  * <ul>
- *   <li>Provides a registration form with username, email, password, and confirm password.</li>
- *   <li>Validates input (username pattern, email format, password strength, etc.).</li>
- *   <li>Registers the user via AuthRepository.</li>
- *   <li>Auto-login on success and navigate to the main screen.</li>
+ *   <li>Collects username, email, password, and confirmation.</li>
+ *   <li>Validates username pattern, email format, and password strength.</li>
+ *   <li>Registers via {@link AuthRepository}.</li>
+ *   <li>Automatically logs in and navigates to the main screen when successful.</li>
  *   <li>Provides a link back to the login screen.</li>
  * </ul>
  *
  * <p>Validation rules:</p>
  * <ul>
- *   <li>Username: required, at least 3 chars, letters/numbers/underscore only.</li>
+ *   <li>Username: required, at least 3 characters, letters/digits/underscore only.</li>
  *   <li>Email: required and must match email format.</li>
- *   <li>Password: required and at least 6 chars.</li>
- *   <li>Confirm password: required and must match password.</li>
+ *   <li>Password: required and at least 6 characters.</li>
+ *   <li>Confirm password: required and must match the password.</li>
  * </ul>
  *
- * <p>Technical notes:</p>
+ * <p>Implementation notes:</p>
  * <ul>
- *   <li>Uses ViewBinding.</li>
- *   <li>Uses Task for async registration.</li>
- *   <li>Shows loading state and disables inputs during request.</li>
- *   <li>Uses TextInputLayout to display errors.</li>
- *   <li>Uses regex to validate username format.</li>
+ *   <li>Uses ViewBinding for view access.</li>
+ *   <li>Processes registration asynchronously with Task.</li>
+ *   <li>Shows a loading state while disabling input.</li>
+ *   <li>Displays validation errors with TextInputLayout.</li>
+ *   <li>Validates username using a regular expression.</li>
  * </ul>
  *
  * @author Flavora Team
@@ -45,72 +45,76 @@ import comp.assignment.flavora.repository.AuthRepository;
  */
 public class RegisterActivity extends AppCompatActivity {
 
-    /** ViewBinding for accessing views in the layout. */
+    /** ViewBinding instance for accessing layout views. */
     private ActivityRegisterBinding binding;
-    /** Auth repository that performs registration logic. */
+    /** Authentication repository handling registration logic. */
     private AuthRepository authRepository;
 
     /**
-     * Activity lifecycle - called on create.
+     * Activity lifecycle entry point.
      *
-     * <p>Flow:</p>
+     * <p>Steps:</p>
      * <ol>
-     *   <li>Initialize ViewBinding and set content view.</li>
-     *   <li>Obtain AuthRepository singleton.</li>
-     *   <li>Set click listeners for register button and login link.</li>
+     *   <li>Inflate ViewBinding and set the content view.</li>
+     *   <li>Obtain the AuthRepository singleton.</li>
+     *   <li>Attach handlers to the register button and login link.</li>
      * </ol>
      *
-     * @param savedInstanceState saved state for restoring Activity.
+     * @param savedInstanceState Saved bundle for restoration.
      */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        // Initialize ViewBinding.
         binding = ActivityRegisterBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
+        // Obtain the auth repository instance.
         authRepository = AuthRepository.getInstance();
 
+        // Attach listeners.
         binding.buttonRegister.setOnClickListener(v -> attemptRegister());
         binding.textViewLogin.setOnClickListener(v -> finish());
     }
 
     /**
-     * Attempt to register a new user with provided info.
+     * Attempts to register a new user with the provided data.
      *
-     * <p>Flow:</p>
+     * <p>Steps:</p>
      * <ol>
-     *   <li>Clear previous errors.</li>
-     *   <li>Read username, email, password, confirm password.</li>
-     *   <li>Validate inputs.</li>
+     *   <li>Clear previous error messages.</li>
+     *   <li>Read username, email, password, and confirmation.</li>
+     *   <li>Validate the inputs.</li>
      *   <li>If valid, call AuthRepository to register.</li>
-     *   <li>Navigate to main or show error based on result.</li>
+     *   <li>Navigate to the main screen or show an error accordingly.</li>
      * </ol>
      *
      * <p>Validation rules:</p>
      * <ul>
-     *   <li>Username: required, ≥3 chars, letters/numbers/underscore only.</li>
-     *   <li>Email: required, valid format.</li>
-     *   <li>Password: required, ≥6 chars.</li>
-     *   <li>Confirm password: required, must match.</li>
+     *   <li>Username: required, at least 3 characters, letters/digits/underscore only.</li>
+     *   <li>Email: required and must match email format.</li>
+     *   <li>Password: required and at least 6 characters.</li>
+     *   <li>Confirm password: required and must match the password.</li>
      * </ul>
      */
     private void attemptRegister() {
-        // Clear previous errors
+        // Clear previous errors.
         binding.textInputLayoutUsername.setError(null);
         binding.textInputLayoutEmail.setError(null);
         binding.textInputLayoutPassword.setError(null);
         binding.textInputLayoutConfirmPassword.setError(null);
 
-        // Read inputs
+        // Read user input.
         String username = binding.editTextUsername.getText().toString().trim();
         String email = binding.editTextEmail.getText().toString().trim();
         String password = binding.editTextPassword.getText().toString().trim();
         String confirmPassword = binding.editTextConfirmPassword.getText().toString().trim();
 
+        // Validate input.
         boolean hasError = false;
 
-        // Validate Username
+        // Validate username.
         if (TextUtils.isEmpty(username)) {
             binding.textInputLayoutUsername.setError("Username is required");
             hasError = true;
@@ -122,7 +126,7 @@ public class RegisterActivity extends AppCompatActivity {
             hasError = true;
         }
 
-        // Validate Email
+        // Validate email.
         if (TextUtils.isEmpty(email)) {
             binding.textInputLayoutEmail.setError("Email is required");
             hasError = true;
@@ -131,7 +135,7 @@ public class RegisterActivity extends AppCompatActivity {
             hasError = true;
         }
 
-        // Validate Password
+        // Validate password.
         if (TextUtils.isEmpty(password)) {
             binding.textInputLayoutPassword.setError("Password is required");
             hasError = true;
@@ -140,7 +144,7 @@ public class RegisterActivity extends AppCompatActivity {
             hasError = true;
         }
 
-        // Validate Confirm Password
+        // Validate confirmation.
         if (TextUtils.isEmpty(confirmPassword)) {
             binding.textInputLayoutConfirmPassword.setError("Please confirm your password");
             hasError = true;
@@ -149,20 +153,25 @@ public class RegisterActivity extends AppCompatActivity {
             hasError = true;
         }
 
+        // Abort if any validation failed.
         if (hasError) {
             return;
         }
 
+        // Show loading UI.
         setLoading(true);
 
-        // Try register
+        // Attempt registration.
         authRepository.register(email, password, username)
                 .addOnCompleteListener(this, task -> {
+                    // Hide loading UI.
                     setLoading(false);
 
                     if (task.isSuccessful()) {
+                        // Success: navigate to the main screen.
                         navigateToMain();
                     } else {
+                        // Failure: show error message.
                         String errorMessage = "Registration failed. Please try again.";
                         if (task.getException() != null) {
                             errorMessage = task.getException().getMessage();
@@ -173,19 +182,19 @@ public class RegisterActivity extends AppCompatActivity {
     }
 
     /**
-     * Set loading state for the register UI.
+     * Controls the loading state of the registration form.
      *
      * <p>When loading:</p>
      * <ul>
-     *   <li>Disable register button.</li>
-     *   <li>Show progress bar.</li>
-     *   <li>Disable all inputs.</li>
-     *   <li>Disable login link.</li>
+     *   <li>Disable the register button.</li>
+     *   <li>Show the progress indicator.</li>
+     *   <li>Disable all input fields.</li>
+     *   <li>Disable the login link.</li>
      * </ul>
      *
-     * <p>Prevents duplicate submissions or input changes during the request.</p>
+     * <p>Prevents repeated submissions while the request is ongoing.</p>
      *
-     * @param loading true to show loading, false to hide.
+     * @param loading true to enable loading state; false to restore the form.
      */
     private void setLoading(boolean loading) {
         binding.buttonRegister.setEnabled(!loading);
@@ -198,15 +207,12 @@ public class RegisterActivity extends AppCompatActivity {
     }
 
     /**
-     * Navigate to the main screen and clear back stack.
+     * Navigates to the main activity and clears the back stack after registration succeeds.
      *
-     * <p>Called after successful registration. Uses intent flags to clear
-     * previous activities so the user cannot go back to this screen.</p>
-     *
-     * <p>Intent flags used:</p>
+     * <p>Intent flags:</p>
      * <ul>
-     *   <li>FLAG_ACTIVITY_NEW_TASK - create a new task</li>
-     *   <li>FLAG_ACTIVITY_CLEAR_TASK - clear the existing task</li>
+     *   <li>FLAG_ACTIVITY_NEW_TASK - start a new task.</li>
+     *   <li>FLAG_ACTIVITY_CLEAR_TASK - clear existing activities.</li>
      * </ul>
      */
     private void navigateToMain() {
@@ -217,9 +223,7 @@ public class RegisterActivity extends AppCompatActivity {
     }
 
     /**
-     * Activity lifecycle - called on destroy.
-     *
-     * <p>Clears the ViewBinding reference to avoid memory leaks.</p>
+     * Lifecycle cleanup; clears the binding reference to avoid leaks.
      */
     @Override
     protected void onDestroy() {

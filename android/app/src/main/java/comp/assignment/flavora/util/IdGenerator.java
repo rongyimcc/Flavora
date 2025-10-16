@@ -1,25 +1,25 @@
 package comp.assignment.flavora.util;
 
 /**
- * ID Generation Utility
+ * ID generation utility.
  * <p>
- * Provides centralized ID generation logic to avoid ad-hoc string concatenation.
- * All composite IDs should be generated via this class to ensure a consistent format.
+ * Centralizes ID generation logic to avoid duplicating string concatenation.
+ * Use this class for every composite ID to keep formats consistent.
  *
  * @author Flavora Team
  */
 public class IdGenerator {
 
     /**
-     * Generates a composite ID for a like record.
+     * Generates the composite ID for a like record.
      * <p>
-     * Format: userId_postId
-     * Uniquely identifies a user's like action on a specific post.
+     * Format: userId_postId.
+     * Uniquely identifies the like for a given user/post pair.
      *
-     * @param userId the user ID
-     * @param postId the post ID
-     * @return the unique like record ID
-     * @throws IllegalArgumentException if userId or postId is null or empty
+     * @param userId User ID.
+     * @param postId Post ID.
+     * @return Unique ID for the like.
+     * @throws IllegalArgumentException If userId or postId is null or blank.
      */
     public static String generateLikeId(String userId, String postId) {
         validateId(userId, "userId");
@@ -28,15 +28,15 @@ public class IdGenerator {
     }
 
     /**
-     * Generates a composite ID for a favorite record.
+     * Generates the composite ID for a favorite record.
      * <p>
-     * Format: userId_postId
-     * Uniquely identifies a user's favorite (bookmark) on a specific post.
+     * Format: userId_postId.
+     * Uniquely identifies the favorite for a given user/post pair.
      *
-     * @param userId the user ID
-     * @param postId the post ID
-     * @return the unique favorite record ID
-     * @throws IllegalArgumentException if userId or postId is null or empty
+     * @param userId User ID.
+     * @param postId Post ID.
+     * @return Unique ID for the favorite.
+     * @throws IllegalArgumentException If userId or postId is null or blank.
      */
     public static String generateFavoriteId(String userId, String postId) {
         validateId(userId, "userId");
@@ -45,11 +45,11 @@ public class IdGenerator {
     }
 
     /**
-     * Validates an ID string.
+     * Validates whether the ID is usable.
      *
-     * @param id        the ID value
-     * @param fieldName the field name (for error messages)
-     * @throws IllegalArgumentException if the ID is null or empty
+     * @param id ID string.
+     * @param fieldName Field name (used in error messages).
+     * @throws IllegalArgumentException If the ID is null or blank.
      */
     private static void validateId(String id, String fieldName) {
         if (id == null || id.trim().isEmpty()) {

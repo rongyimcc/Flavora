@@ -1,101 +1,149 @@
+package comp.assignment.flavora;
+
+import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.os.Bundle;
+import android.view.View;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatDelegate;
+import androidx.navigation.NavController;
+import androidx.navigation.Navigation;
+import androidx.navigation.ui.AppBarConfiguration;
+import androidx.navigation.ui.NavigationUI;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
+import comp.assignment.flavora.databinding.ActivityMainBinding;
+import comp.assignment.flavora.repository.AuthRepository;
+import comp.assignment.flavora.ui.auth.LoginActivity;
+
+/**
+ * Main activity that hosts the primary UI for Flavora.
+ *
+ * <p>Responsibilities:</p>
+ * <ul>
+ *   <li>Manages the main navigation structure (bottom nav + fragment switching).</li>
+ *   <li>Validates the user's login state and redirects to login when necessary.</li>
+ *   <li>Applies the saved theme preference (dark/light).</li>
+ *   <li>Provides the top toolbar with create-post and settings actions.</li>
+ *   <li>Uses the Navigation Component for fragment navigation.</li>
+ * </ul>
+ *
+ * <p>Navigation destinations:</p>
+ * <ul>
+ *   <li>Discover - browse food posts.</li>
+ *   <li>Profile - view personal information.</li>
+ * </ul>
+ *
+ * <p>Implementation notes:</p>
+ * <ul>
+ *   <li>Relies on ViewBinding instead of findViewById.</li>
+ *   <li>Stores theme preferences in SharedPreferences.</li>
+ *   <li>Leverages the Navigation Component for fragment transitions.</li>
+ *   <li>Shows BottomSheets for creating posts and opening settings.</li>
+ * </ul>
+ *
+ * @author Flavora Team
+ * @version 1.0
+ * @since 1.0
+ */
 public class MainActivity extends AppCompatActivity {
 
-    /** SharedPreferences file name */
+    /** SharedPreferences file name. */
     private static final String PREFS_NAME = "AppPreferences";
-    /** Key name for dark theme setting */
+    /** Preference key for the dark theme toggle. */
     private static final String KEY_DARK_THEME = "dark_theme";
 
-    /** ViewBinding object for accessing views in the layout */
+    /** ViewBinding instance for accessing the layout's views. */
     private ActivityMainBinding binding;
-    /** Authentication repository for managing user login status */
+    /** Authentication repository used to check login state. */
     private AuthRepository authRepository;
 
     /**
-     * Activity lifecycle method - called on creation
+     * Activity lifecycle entry point for creation.
      *
-     * <p>Execution flow:</p>
+     * <p>Sequence:</p>
      * <ol>
-     *   <li>Apply saved theme settings before super.onCreate()</li>
-     *   <li>Check user login status, redirect to login if not logged in</li>
-     *   <li>Initialize ViewBinding and set content view</li>
-     *   <li>Configure top toolbar, hide default title</li>
-     *   <li>Set up bottom navigation bar and Navigation Component</li>
-     *   <li>Configure navigation listener to update toolbar buttons based on current page</li>
-     *   <li>Set up click events for create post and settings buttons</li>
+     *   <li>Apply the saved theme before calling super.onCreate().</li>
+     *   <li>Check whether the user is logged in; redirect if not.</li>
+     *   <li>Inflate ViewBinding and set the content view.</li>
+     *   <li>Configure the toolbar (hide the default title).</li>
+     *   <li>Set up the bottom navigation and Navigation Component.</li>
+     *   <li>Add a destination listener to adjust toolbar actions.</li>
+     *   <li>Wire up the create-post and settings button handlers.</li>
      * </ol>
      *
-     * <p>Important notes:</p>
+     * <p>Notes:</p>
      * <ul>
-     *   <li>Must call applyTheme() before super.onCreate() to correctly apply theme</li>
-     *   <li>If user is not logged in, method returns early without initializing UI</li>
+     *   <li>Call applyTheme() before super.onCreate() so the theme is applied correctly.</li>
+     *   <li>If the user is not logged in, the method returns early without initializing the UI.</li>
      * </ul>
      *
-     * @param savedInstanceState Saved instance state for restoring Activity state
+     * @param savedInstanceState Saved state bundle used to restore the Activity.
      */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        // Load and apply theme before calling super.onCreate()
+        // Load and apply the saved theme before super.onCreate().
         applyTheme();
 
         super.onCreate(savedInstanceState);
 
-        // Check if user is logged in
+        // Verify that the user is logged in.
         authRepository = AuthRepository.getInstance();
         if (!authRepository.isLoggedIn()) {
-            // User not logged in, redirect to login screen
+            // User not logged in; redirect to the login screen.
             navigateToLogin();
             return;
         }
 
-        // Initialize ViewBinding
+        // Initialize ViewBinding.
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
-        // Set up toolbar
+        // Configure the toolbar.
         setSupportActionBar(binding.toolbar);
         if (getSupportActionBar() != null) {
-            // Hide default title, use custom title TextView
+            // Hide the default title and rely on the custom TextView.
             getSupportActionBar().setDisplayShowTitleEnabled(false);
         }
 
-        // Get bottom navigation view
+        // Grab the bottom navigation view.
         BottomNavigationView navView = findViewById(R.id.nav_view);
 
-        // Configure top-level destinations, these pages won't show back button
+        // Configure top-level destinations so they do not show the Up button.
         AppBarConfiguration appBarConfiguration = new AppBarConfiguration.Builder(
                 R.id.navigation_discover, R.id.navigation_profile)
                 .build();
 
-        // Get NavController and associate with bottom navigation bar
+        // Obtain the NavController and connect it to the bottom navigation.
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_activity_main);
         NavigationUI.setupWithNavController(binding.navView, navController);
 
-        // Add navigation destination change listener to update toolbar title and buttons based on current page
+        // Listen for navigation changes to update toolbar labels and actions.
         navController.addOnDestinationChangedListener((controller, destination, arguments) -> {
             if (destination.getId() == R.id.navigation_discover) {
-                // Discover page: show "Discover" title and create post button
+                // Discover screen: show "Discover" and the create-post button.
                 binding.toolbarTitle.setText("Discover");
                 binding.buttonCreatePost.setVisibility(View.VISIBLE);
                 binding.buttonSettings.setVisibility(View.GONE);
             } else if (destination.getId() == R.id.navigation_profile) {
-                // Profile page: show "Profile" title and settings button
+                // Profile screen: show "Profile" and the settings button.
                 binding.toolbarTitle.setText("Profile");
                 binding.buttonCreatePost.setVisibility(View.GONE);
                 binding.buttonSettings.setVisibility(View.VISIBLE);
             }
         });
 
-        // Set up create post button click listener
+        // Hook up the create-post button.
         binding.buttonCreatePost.setOnClickListener(v -> {
-            // Open create post BottomSheet dialog
+            // Open the BottomSheet used to create a post.
             comp.assignment.flavora.ui.post.CreatePostBottomSheet bottomSheet =
                     new comp.assignment.flavora.ui.post.CreatePostBottomSheet();
             bottomSheet.show(getSupportFragmentManager(), "CreatePostBottomSheet");
         });
 
-        // Set up settings button click listener
+        // Hook up the settings button.
         binding.buttonSettings.setOnClickListener(v -> {
-            // Open settings BottomSheet dialog
+            // Open the settings BottomSheet dialog.
             comp.assignment.flavora.ui.profile.SettingsBottomSheet settingsBottomSheet =
                     new comp.assignment.flavora.ui.profile.SettingsBottomSheet();
             settingsBottomSheet.show(getSupportFragmentManager(), "SettingsBottomSheet");
@@ -103,16 +151,15 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * Navigate to login screen and clear back stack
+     * Redirects to the login activity and clears the back stack.
      *
-     * <p>This method is used to redirect to the login screen when user is not logged in. Uses
-     * special Intent flags to clear all previous Activities, preventing users from returning
-     * to the main screen via the back button.</p>
+     * <p>Used when the user is not authenticated. Applies intent flags so the user cannot
+     * navigate back to the main screen.</p>
      *
-     * <p>Intent flags used:</p>
+     * <p>Intent flags:</p>
      * <ul>
-     *   <li>FLAG_ACTIVITY_NEW_TASK - Create a new task stack</li>
-     *   <li>FLAG_ACTIVITY_CLEAR_TASK - Clear all Activities in the task stack</li>
+     *   <li>FLAG_ACTIVITY_NEW_TASK - start a new task.</li>
+     *   <li>FLAG_ACTIVITY_CLEAR_TASK - clear any existing activities.</li>
      * </ul>
      */
     private void navigateToLogin() {
@@ -123,15 +170,15 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * Apply saved theme preference settings
+     * Applies the saved theme preference.
      *
-     * <p>Reads the user's saved theme settings from SharedPreferences and applies them to the application.
-     * This method must be called before super.onCreate() to ensure the theme is applied when the Activity is created.</p>
+     * <p>Reads the user's theme setting from SharedPreferences and applies it. Must be called
+     * before super.onCreate() so the theme takes effect during Activity creation.</p>
      *
      * <p>Theme options:</p>
      * <ul>
-     *   <li>Dark theme - MODE_NIGHT_YES</li>
-     *   <li>Light theme - MODE_NIGHT_NO (default)</li>
+     *   <li>Dark theme - MODE_NIGHT_YES.</li>
+     *   <li>Light theme - MODE_NIGHT_NO (default).</li>
      * </ul>
      */
     private void applyTheme() {
@@ -139,10 +186,10 @@ public class MainActivity extends AppCompatActivity {
         boolean isDarkTheme = preferences.getBoolean(KEY_DARK_THEME, false);
 
         if (isDarkTheme) {
-            // Apply dark theme
+            // Apply dark theme.
             AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
         } else {
-            // Apply light theme
+            // Apply light theme.
             AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
         }
     }

@@ -8,28 +8,28 @@ import java.util.List;
 
 /**
  * Post model class.
- * Represents a food post in the Flavora app, including photos, description, rating, and related metadata.
+ * Represents a Flavora food post that includes photos, description, rating, and metadata.
  *
  * @author Flavora Team
  * @version 1.0
  */
 @IgnoreExtraProperties
 public class Post implements HasUUID {
-    /** Unique identifier of the post. */
+    /** Unique identifier for the post. */
     private String postId;
     /** Author's user ID. */
     private String userId;
-    /** Author's username (denormalized for display to avoid extra lookups). */
+    /** Author's username (stored redundantly for display to avoid extra lookups). */
     private String username;
-    /** Author's avatar URL (denormalized for display to avoid extra lookups). */
+    /** Author's avatar URL (stored redundantly for display to avoid extra lookups). */
     private String userAvatarUrl;
     /** Post title. */
     private String title;
-    /** Post description/content. */
+    /** Post description content. */
     private String description;
     /** List of image URLs stored in Firebase Storage. */
     private List<String> imageUrls;
-    /** Rating in the range 1–5 stars. */
+    /** Rating in the range of 1-5 stars. */
     private double rating;
     /** Creation timestamp. */
     private Timestamp createdAt;
@@ -38,32 +38,31 @@ public class Post implements HasUUID {
     /** Number of favorites. */
     private int favoriteCount;
 
-    /** Whether the current user has liked this post (client-side only; not stored in Firestore). */
+    /** Whether the current user liked the post (client-side only, not stored in Firestore). */
     private transient boolean isLikedByCurrentUser;
-    /** Whether the current user has favorited this post (client-side only; not stored in Firestore). */
+    /** Whether the current user favorited the post (client-side only, not stored in Firestore). */
     private transient boolean isFavoritedByCurrentUser;
 
     /**
-     * No-args constructor.
-     * Required for Firestore deserialization.
+     * No-arg constructor required by Firestore for deserialization.
      */
     public Post() {
     }
 
     /**
-     * All-args constructor.
+     * Full-argument constructor.
      *
-     * @param postId         Post ID
-     * @param userId         Author's user ID
-     * @param username       Author's username
-     * @param userAvatarUrl  Author's avatar URL
-     * @param title          Post title
-     * @param description    Post description
-     * @param imageUrls      List of image URLs
-     * @param rating         Rating (1–5 stars)
-     * @param createdAt      Creation timestamp
-     * @param likeCount      Number of likes
-     * @param favoriteCount  Number of favorites
+     * @param postId Post ID.
+     * @param userId Author user ID.
+     * @param username Author username.
+     * @param userAvatarUrl Author avatar URL.
+     * @param title Post title.
+     * @param description Post description.
+     * @param imageUrls Image URL list.
+     * @param rating Rating (1-5 stars).
+     * @param createdAt Creation timestamp.
+     * @param likeCount Number of likes.
+     * @param favoriteCount Number of favorites.
      */
     public Post(String postId, String userId, String username, String userAvatarUrl,
                 String title, String description, List<String> imageUrls, double rating,
@@ -82,10 +81,10 @@ public class Post implements HasUUID {
     }
 
     /**
-     * Returns the unique identifier of this object.
-     * Implements the HasUUID interface.
+     * Returns the unique identifier for this object.
+     * Implements the HasUUID contract.
      *
-     * @return post ID as the UUID
+     * @return Post ID treated as the UUID.
      */
     @Override
     @Exclude
@@ -94,10 +93,10 @@ public class Post implements HasUUID {
     }
 
     /**
-     * Placeholder UUID setter.
-     * Exists to prevent Firestore warnings; UUID is managed via postId.
+     * Setter for the UUID (placeholder).
+     * Prevents Firestore warnings; the real UUID is handled via postId.
      *
-     * @param uuid UUID value (ignored)
+     * @param uuid UUID value (ignored).
      */
     @Exclude
     public void setUuid(String uuid) {
@@ -105,7 +104,7 @@ public class Post implements HasUUID {
 
     /**
      * Gets the post ID.
-     * @return unique post identifier
+     * @return Unique identifier of the post.
      */
     public String getPostId() {
         return postId;
@@ -113,55 +112,55 @@ public class Post implements HasUUID {
 
     /**
      * Sets the post ID.
-     * @param postId unique post identifier
+     * @param postId Unique identifier of the post.
      */
     public void setPostId(String postId) {
         this.postId = postId;
     }
 
     /**
-     * Gets the author's user ID.
-     * @return user ID
+     * Gets the author user ID.
+     * @return User ID.
      */
     public String getUserId() {
         return userId;
     }
 
     /**
-     * Sets the author's user ID.
-     * @param userId user ID
+     * Sets the author user ID.
+     * @param userId User ID.
      */
     public void setUserId(String userId) {
         this.userId = userId;
     }
 
     /**
-     * Gets the author's username.
-     * @return username
+     * Gets the author username.
+     * @return Username.
      */
     public String getUsername() {
         return username;
     }
 
     /**
-     * Sets the author's username.
-     * @param username username
+     * Sets the author username.
+     * @param username Username.
      */
     public void setUsername(String username) {
         this.username = username;
     }
 
     /**
-     * Gets the author's avatar URL.
-     * @return avatar URL
+     * Gets the author avatar URL.
+     * @return Avatar URL.
      */
     public String getUserAvatarUrl() {
         return userAvatarUrl;
     }
 
     /**
-     * Sets the author's avatar URL.
-     * @param userAvatarUrl avatar URL
+     * Sets the author avatar URL.
+     * @param userAvatarUrl Avatar URL.
      */
     public void setUserAvatarUrl(String userAvatarUrl) {
         this.userAvatarUrl = userAvatarUrl;
@@ -169,7 +168,7 @@ public class Post implements HasUUID {
 
     /**
      * Gets the post title.
-     * @return title text
+     * @return Title text.
      */
     public String getTitle() {
         return title;
@@ -177,7 +176,7 @@ public class Post implements HasUUID {
 
     /**
      * Sets the post title.
-     * @param title title text
+     * @param title Title text.
      */
     public void setTitle(String title) {
         this.title = title;
@@ -185,7 +184,7 @@ public class Post implements HasUUID {
 
     /**
      * Gets the post description.
-     * @return description content
+     * @return Description content.
      */
     public String getDescription() {
         return description;
@@ -193,7 +192,7 @@ public class Post implements HasUUID {
 
     /**
      * Sets the post description.
-     * @param description description content
+     * @param description Description content.
      */
     public void setDescription(String description) {
         this.description = description;
@@ -201,7 +200,7 @@ public class Post implements HasUUID {
 
     /**
      * Gets the list of image URLs.
-     * @return collection of image URLs
+     * @return Collection of image URLs.
      */
     public List<String> getImageUrls() {
         return imageUrls;
@@ -209,7 +208,7 @@ public class Post implements HasUUID {
 
     /**
      * Sets the list of image URLs.
-     * @param imageUrls collection of image URLs
+     * @param imageUrls Collection of image URLs.
      */
     public void setImageUrls(List<String> imageUrls) {
         this.imageUrls = imageUrls;
@@ -217,7 +216,7 @@ public class Post implements HasUUID {
 
     /**
      * Gets the rating.
-     * @return rating value (1–5 stars)
+     * @return Rating value (1-5 stars).
      */
     public double getRating() {
         return rating;
@@ -225,7 +224,7 @@ public class Post implements HasUUID {
 
     /**
      * Sets the rating.
-     * @param rating rating value (1–5 stars)
+     * @param rating Rating value (1-5 stars).
      */
     public void setRating(double rating) {
         this.rating = rating;
@@ -233,7 +232,7 @@ public class Post implements HasUUID {
 
     /**
      * Gets the creation timestamp.
-     * @return Firebase Timestamp
+     * @return Firebase timestamp.
      */
     public Timestamp getCreatedAt() {
         return createdAt;
@@ -241,71 +240,71 @@ public class Post implements HasUUID {
 
     /**
      * Sets the creation timestamp.
-     * @param createdAt Firebase Timestamp
+     * @param createdAt Firebase timestamp.
      */
     public void setCreatedAt(Timestamp createdAt) {
         this.createdAt = createdAt;
     }
 
     /**
-     * Gets the like count.
-     * @return total likes
+     * Gets the number of likes.
+     * @return Total likes.
      */
     public int getLikeCount() {
         return likeCount;
     }
 
     /**
-     * Sets the like count.
-     * @param likeCount total likes
+     * Sets the number of likes.
+     * @param likeCount Total likes.
      */
     public void setLikeCount(int likeCount) {
         this.likeCount = likeCount;
     }
 
     /**
-     * Gets the favorite count.
-     * @return total favorites
+     * Gets the number of favorites.
+     * @return Total favorites.
      */
     public int getFavoriteCount() {
         return favoriteCount;
     }
 
     /**
-     * Sets the favorite count.
-     * @param favoriteCount total favorites
+     * Sets the number of favorites.
+     * @param favoriteCount Total favorites.
      */
     public void setFavoriteCount(int favoriteCount) {
         this.favoriteCount = favoriteCount;
     }
 
     /**
-     * Checks whether the current user has liked this post.
-     * @return true if liked; false otherwise
+     * Checks whether the current user liked the post.
+     * @return true if liked, false otherwise.
      */
     public boolean isLikedByCurrentUser() {
         return isLikedByCurrentUser;
     }
 
     /**
-     * Sets the current user's like state.
-     * @param likedByCurrentUser true if liked; false otherwise
+     * Sets whether the current user liked the post.
+     * @param likedByCurrentUser true if liked, false otherwise.
      */
     public void setLikedByCurrentUser(boolean likedByCurrentUser) {
         isLikedByCurrentUser = likedByCurrentUser;
     }
 
     /**
-     * Checks whether the current user has favorited this post.
-     * @return true if favorited; false otherwise
+     * Checks whether the current user favorited the post.
+     * @return true if favorited, false otherwise.
      */
     public boolean isFavoritedByCurrentUser() {
         return isFavoritedByCurrentUser;
     }
 
     /**
-     * Sets the current user's favorite state.
-     * @param favoritedByCurrentUser true if favorited; false otherwise
+     * Sets whether the current user favorited the post.
+     * @param favoritedByCurrentUser true if favorited, false otherwise.
      */
     public void setFavoritedByCurrentUser(boolean favoritedByCurrentUser) {
         isFavoritedByCurrentUser = favoritedByCurrentUser;

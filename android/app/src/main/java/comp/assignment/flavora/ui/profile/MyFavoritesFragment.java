@@ -23,41 +23,34 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * My Favorites Fragment
+ * Fragment displaying posts favorited by the current user.
  * <p>
- * Displays a list of posts that the current user has favorited.
- * Users can view, like, and remove posts from their favorites.
+ * Allows viewing, liking, and removing favorites. Data refreshes whenever the fragment becomes visible.
  * </p>
  *
- * <p>Main features:</p>
- * <ul>
- *   <li>Display all posts favorited by the current user</li>
- *   <li>Support for liking posts</li>
- *   <li>Support for unfavoriting (removes the post from the list)</li>
- *   <li>Navigate to post details by clicking on a post</li>
- *   <li>Automatically refresh data each time the fragment becomes visible</li>
- * </ul>
- *
- * @author Flavora Team
  * @version 1.0
  */
 public class MyFavoritesFragment extends Fragment implements PostsAdapter.OnPostInteractionListener {
 
+    /** RecyclerView displaying the list of favorites. */
     private RecyclerView recyclerView;
 
+    /** Progress bar shown while loading. */
     private View progressBar;
 
+    /** Empty-state text shown when no favorites exist. */
     private TextView textEmpty;
 
+    /** Adapter used to render the posts. */
     private PostsAdapter postsAdapter;
 
     /**
-     * Create the fragment's view
+     * Inflates the fragment view.
      *
-     * @param inflater LayoutInflater for inflating the layout
-     * @param container Parent view container
-     * @param savedInstanceState Saved instance state
-     * @return The created root view
+     * @param inflater LayoutInflater for inflation.
+     * @param container Parent container.
+     * @param savedInstanceState Saved state bundle.
+     * @return Root view instance.
      */
     @Nullable
     @Override
@@ -65,8 +58,7 @@ public class MyFavoritesFragment extends Fragment implements PostsAdapter.OnPost
                              @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_post_list, container, false);
 
-
-        // Initialize view references
+        // Initialize view references.
         recyclerView = view.findViewById(R.id.recycler_view_posts);
         progressBar = view.findViewById(R.id.progress_bar);
         textEmpty = view.findViewById(R.id.text_empty);
@@ -77,19 +69,17 @@ public class MyFavoritesFragment extends Fragment implements PostsAdapter.OnPost
     }
 
     /**
-     * Called when the fragment resumes.
-     * Reloads data each time the fragment becomes visible to ensure freshness.
+     * Reloads the data whenever the fragment resumes.
      */
     @Override
     public void onResume() {
         super.onResume();
-        // 当Fragment变为可见时重新加载数据
+        // Reload data when the fragment becomes visible.
         loadMyFavorites();
     }
 
     /**
-     * Set up the RecyclerView
-     * Initializes the adapter and layout manager.
+     * Configures the RecyclerView, adapter, and layout manager.
      */
     private void setupRecyclerView() {
         postsAdapter = new PostsAdapter();
@@ -99,15 +89,7 @@ public class MyFavoritesFragment extends Fragment implements PostsAdapter.OnPost
     }
 
     /**
-     * Load all favorited posts for the current user
-     * <p>
-     * Steps:
-     * 1. Get the current user's ID
-     * 2. Load all favorited posts from the database
-     * 3. Load the user's like and favorite status
-     * 4. Update each post's interaction state
-     * 5. Display posts in the list
-     * </p>
+     * Loads all posts favorited by the current user and updates interaction states.
      */
     private void loadMyFavorites() {
         progressBar.setVisibility(View.VISIBLE);
@@ -121,7 +103,7 @@ public class MyFavoritesFragment extends Fragment implements PostsAdapter.OnPost
             return;
         }
 
-        // Load user's favorited posts
+        // Fetch favorites for the user.
         PostFacade.getFavoritedPostsByUser(userId, task -> {
             if (!task.isSuccessful() || task.getResult() == null) {
                 progressBar.setVisibility(View.GONE);
@@ -132,7 +114,7 @@ public class MyFavoritesFragment extends Fragment implements PostsAdapter.OnPost
 
             List<Post> posts = task.getResult();
 
-            // Load user interaction states (likes and favorites)）
+            // Load like/favorite interaction states.
             PostInteractionFacade.getLikedPostIds(likedTask -> {
                 PostInteractionFacade.getFavoritedPostIds(favoritedTask -> {
                     progressBar.setVisibility(View.GONE);
@@ -142,9 +124,11 @@ public class MyFavoritesFragment extends Fragment implements PostsAdapter.OnPost
                     List<String> favoritedPostIds = favoritedTask.isSuccessful() && favoritedTask.getResult() != null
                             ? favoritedTask.getResult() : new ArrayList<>();
 
+                    // Convert to sets for faster lookups.
                     java.util.Set<String> likedSet = new java.util.HashSet<>(likedPostIds);
                     java.util.Set<String> favoritedSet = new java.util.HashSet<>(favoritedPostIds);
 
+                    // Update each post with the user's interaction state.
                     for (Post post : posts) {
                         post.setLikedByCurrentUser(likedSet.contains(post.getPostId()));
                         post.setFavoritedByCurrentUser(favoritedSet.contains(post.getPostId()));
@@ -152,6 +136,7 @@ public class MyFavoritesFragment extends Fragment implements PostsAdapter.OnPost
 
                     postsAdapter.setPosts(posts);
 
+                    // Show empty state when no favorites remain.
                     if (postsAdapter.getItemCount() == 0) {
                         textEmpty.setVisibility(View.VISIBLE);
                         textEmpty.setText("No favorites yet");
@@ -164,10 +149,9 @@ public class MyFavoritesFragment extends Fragment implements PostsAdapter.OnPost
     }
 
     /**
-     * Handle post click events
-     * Navigates to the post detail screen.
+     * Opens the post detail screen when a post is tapped.
      *
-     * @param post The clicked post
+     * @param post Selected post.
      */
     @Override
     public void onPostClicked(Post post) {
@@ -177,22 +161,21 @@ public class MyFavoritesFragment extends Fragment implements PostsAdapter.OnPost
     }
 
     /**
-     * Handle like button click events
-     * Toggles the like status of a post and updates its like count.
+     * Handles like button interactions and updates counts.
      *
-     * @param post The post being liked/unliked
-     * @param position The position of the post in the list
+     * @param post Post being liked/unliked.
+     * @param position Item position.
      */
     @Override
     public void onLikeClicked(Post post, int position) {
-        // Toggle like status
+        // Toggle like state.
         boolean currentStatus = post.isLikedByCurrentUser();
         PostInteractionFacade.toggleLike(post.getPostId(), currentStatus, task -> {
             if (task.isSuccessful() && task.getResult() != null) {
                 boolean newStatus = task.getResult();
                 post.setLikedByCurrentUser(newStatus);
 
-                // Update like count
+                // Adjust like count.
                 if (newStatus) {
                     post.setLikeCount(post.getLikeCount() + 1);
                 } else {
@@ -205,26 +188,23 @@ public class MyFavoritesFragment extends Fragment implements PostsAdapter.OnPost
     }
 
     /**
-     * Handle favorite button click events
-     * <p>
-     * Special case: In the favorites list, if the user removes a favorite,
-     * reload the list to remove the post from view.
-     * (Normally, adding a favorite should not occur here since all posts are already favorited.)
-     * </p>
+     * Handles favorite button interactions. When a favorite is removed, the list is reloaded
+     * to drop the post from the favorites view.
      *
-     * @param post The post being favorited/unfavorited
-     * @param position The position of the post in the list
+     * @param post Post being favorited/unfavorited.
+     * @param position Item position.
      */
     @Override
     public void onFavoriteClicked(Post post, int position) {
-        // Toggle favorite status
+        // Toggle favorite state.
         boolean currentStatus = post.isFavoritedByCurrentUser();
         PostInteractionFacade.toggleFavorite(post.getPostId(), currentStatus, task -> {
             if (task.isSuccessful() && task.getResult() != null) {
                 boolean newStatus = task.getResult();
 
+                // If unfavorited, reload to remove the item; otherwise just refresh counts.
                 if (!newStatus) {
-
+                    // Reload to remove the unfavorited post.
                     loadMyFavorites();
                 } else {
                     post.setFavoritedByCurrentUser(newStatus);
@@ -236,13 +216,12 @@ public class MyFavoritesFragment extends Fragment implements PostsAdapter.OnPost
     }
 
     /**
-     * Called when the fragment's view is destroyed
-     * Clears all view references to prevent memory leaks.
+     * Clears view references when the fragment view is destroyed to prevent leaks.
      */
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        // Clear references to prevent memory leaks
+        // Release view references to avoid leaks.
         recyclerView = null;
         progressBar = null;
         textEmpty = null;

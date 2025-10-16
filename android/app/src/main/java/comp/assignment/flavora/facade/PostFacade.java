@@ -11,23 +11,23 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * Facade class for post operations
+ * Facade for post operations.
  * <p>
- * This class provides a simplified API interface for post management, following the Facade design pattern.
- * Coordinates complex operations involving multiple DAOs, such as creating posts and updating user statistics.
+ * Provides a simplified API for managing posts, following the facade pattern.
+ * Coordinates multi-DAO workflows such as creating posts while updating user statistics.
  * </p>
  *
- * <p>Main features:</p>
+ * <p>Main capabilities:</p>
  * <ul>
- *   <li>Create and delete posts while updating user post counts</li>
- *   <li>Query post lists (by time, by user, by favorites, etc.)</li>
- *   <li>Retrieve individual post details</li>
- *   <li>Update post information</li>
- *   <li>Calculate total likes received by a user</li>
+ *   <li>Create and delete posts while keeping the user's post count in sync.</li>
+ *   <li>Query posts (by time, by user, by favorites, etc.).</li>
+ *   <li>Fetch single post details.</li>
+ *   <li>Update post information.</li>
+ *   <li>Aggregate total likes earned by a user.</li>
  * </ul>
  *
- * <p>This class uses static methods and can be used without instantiation. All methods use
- * asynchronous callback mechanism, returning operation results through {@link OnCompleteListener}.</p>
+ * <p>This class exposes only static methods. Results are returned asynchronously through
+ * {@link OnCompleteListener} callbacks.</p>
  *
  * @author Flavora Team
  * @version 1.0
@@ -38,49 +38,48 @@ import java.util.UUID;
 public class PostFacade {
 
     /**
-     * Create a new post and update the user's post count
+     * Creates a post and updates the author's post count.
      * <p>
-     * This is a coordinated operation that ensures post creation and user statistics update
-     * are executed as atomically as possible. This method automatically generates a post ID,
-     * initializes like and favorite counts to 0, and records the current timestamp.
+     * Coordinates post creation with user statistics to keep data consistent.
+     * Generates the post ID, initializes like/favorite counts to zero, and records the current timestamp.
      * </p>
      *
-     * <p>Operation flow:</p>
+     * <p>Workflow:</p>
      * <ol>
-     *   <li>Validate required parameters (user ID and title)</li>
-     *   <li>Generate a unique post ID (UUID)</li>
-     *   <li>Create Post object and initialize all fields</li>
-     *   <li>Add the post to the database</li>
-     *   <li>If addition is successful, increment the user's post count</li>
-     *   <li>Return the newly created post ID through callback</li>
+     *   <li>Validate required parameters (user ID and title).</li>
+     *   <li>Generate a unique post ID (UUID).</li>
+     *   <li>Construct the Post object with all fields initialized.</li>
+     *   <li>Add the post to the database.</li>
+     *   <li>If insertion succeeds, increment the user's post count.</li>
+     *   <li>Return the new post ID through the callback.</li>
      * </ol>
      *
-     * <p>Note: Even if the user count update fails, success will be returned with the post ID.
-     * This design ensures post creation is not rolled back due to statistics update failure.</p>
+     * <p>Note: even if the count update fails, the post ID is still returned.
+     * This avoids rolling back the post creation when stats fail.</p>
      *
-     * @param userId        User ID (post author)
-     * @param username      Username (for data denormalization to avoid extra queries)
-     * @param userAvatarUrl User avatar URL (for data denormalization)
-     * @param title         Post title (required)
-     * @param description   Post description content
-     * @param imageUrls     List of image URLs
-     * @param rating        Rating (1-5 points)
-     * @param listener      Completion callback, returns newly created post ID on success, exception on failure
+     * @param userId        Author's user ID.
+     * @param username      Username (denormalized for display).
+     * @param userAvatarUrl Avatar URL (denormalized for display).
+     * @param title         Post title (required).
+     * @param description   Post description.
+     * @param imageUrls     Image URL list.
+     * @param rating        Rating (1-5).
+     * @param listener      Completion listener; returns the new post ID on success or the exception on failure.
      */
     public static void createPost(String userId, String username, String userAvatarUrl,
                                   String title, String description, List<String> imageUrls,
                                   double rating, OnCompleteListener<String> listener) {
-
+        // Validate required parameters.
         if (userId == null || title == null || title.trim().isEmpty()) {
             listener.onComplete(Tasks.forException(
                     new IllegalArgumentException("User ID and title are required")));
             return;
         }
 
-
+        // Generate a unique post ID.
         String postId = UUID.randomUUID().toString();
 
-
+        // Build the post object with zeroed like and favorite counts.
         Post post = new Post(
                 postId,
                 userId,
@@ -91,20 +90,20 @@ public class PostFacade {
                 imageUrls,
                 rating,
                 Timestamp.now(),
-                0,  // Initial like count
-                0   // Initial favorite count
+                0,  // Initial like count.
+                0   // Initial favorite count.
         );
 
-
+        // Add the post to the database.
         PostDAO.getInstance().add(post, task -> {
             if (task.isSuccessful()) {
-
+                // Update the user's post count.
                 UserDAO.getInstance().incrementPostsCount(userId, updateTask -> {
                     if (updateTask.isSuccessful()) {
                         listener.onComplete(Tasks.forResult(postId));
                     } else {
-                        // Post created but count update failed
-                        // Rollback logic can be implemented here if needed
+                        // Post created but the count update failed.
+                        // Implement rollback here if desired.
                         listener.onComplete(Tasks.forResult(postId));
                     }
                 });
@@ -114,31 +113,29 @@ public class PostFacade {
         });
     }
 
-
     /**
-     * Delete a post and update the user's post count
+     * Deletes a post and decrements the author's post count.
      * <p>
-     * This method first deletes the specified post from the database. If deletion is successful
-     * and a user ID is provided, it will automatically decrement that user's post count.
+     * Removes the specified post; when a user ID is provided, also decrements that user's post count.
      * </p>
      *
-     * @param postId   ID of the post to delete (required)
-     * @param userId   User ID (for updating count, if null only deletes post without updating count)
-     * @param listener Completion callback, returns null on success, exception on failure
+     * @param postId   Post ID to remove (required).
+     * @param userId   User ID for adjusting the post count; if null, only the post is deleted.
+     * @param listener Completion listener returning null on success or an exception on failure.
      */
     public static void deletePost(String postId, String userId,
                                   OnCompleteListener<Void> listener) {
-        // Validate post ID
+        // Validate the post ID.
         if (postId == null) {
             listener.onComplete(Tasks.forException(
                     new IllegalArgumentException("Post ID is required")));
             return;
         }
 
-        // Delete post
+        // Delete the post.
         PostDAO.getInstance().delete(postId, task -> {
             if (task.isSuccessful() && userId != null) {
-                // Decrement user's post count
+                // Decrement the user's post count.
                 UserDAO.getInstance().decrementPostsCount(userId, listener);
             } else {
                 listener.onComplete(task);
@@ -147,22 +144,22 @@ public class PostFacade {
     }
 
     /**
-     * Get all posts ordered by creation time descending (newest first)
+     * Retrieves all posts ordered by creation time (newest first).
      *
-     * @param listener Completion callback, returns list of posts
+     * @param listener Completion listener returning the post list.
      */
     public static void getAllPosts(OnCompleteListener<List<Post>> listener) {
         PostDAO.getInstance().getPostsOrderByTime(listener);
     }
 
     /**
-     * Get all posts created by a specified user
+     * Retrieves every post created by the specified user.
      * <p>
-     * If user ID is null, will return an empty list rather than throwing an exception.
+     * Returns an empty list when the user ID is null instead of throwing.
      * </p>
      *
-     * @param userId   User ID
-     * @param listener Completion callback, returns list of posts by this user
+     * @param userId   User ID.
+     * @param listener Completion listener returning the user's posts.
      */
     public static void getUserPosts(String userId, OnCompleteListener<List<Post>> listener) {
         if (userId == null) {
@@ -174,27 +171,26 @@ public class PostFacade {
     }
 
     /**
-     * Get all posts created by a specified user (alias method for getUserPosts)
+     * Alias for {@link #getUserPosts(String, OnCompleteListener)}.
      * <p>
-     * This method has identical functionality to {@link #getUserPosts(String, OnCompleteListener)}.
-     * This alias is provided for code readability and backward compatibility.
+     * Provided for readability and backward compatibility.
      * </p>
      *
-     * @param userId   User ID
-     * @param listener Completion callback, returns list of posts by this user
+     * @param userId   User ID.
+     * @param listener Completion listener returning the user's posts.
      */
     public static void getPostsByUser(String userId, OnCompleteListener<List<Post>> listener) {
         getUserPosts(userId, listener);
     }
 
     /**
-     * Get all posts favorited by a specified user
+     * Retrieves every post the user has favorited.
      * <p>
-     * Returns a list of all posts marked as favorites by this user. If user ID is null, returns empty list.
+     * Returns an empty list when the user ID is null.
      * </p>
      *
-     * @param userId   User ID
-     * @param listener Completion callback, returns list of posts favorited by the user
+     * @param userId   User ID.
+     * @param listener Completion listener returning the user's favorite posts.
      */
     public static void getFavoritedPostsByUser(String userId, OnCompleteListener<List<Post>> listener) {
         if (userId == null) {
@@ -206,14 +202,13 @@ public class PostFacade {
     }
 
     /**
-     * Get the total number of likes received on all posts by a specified user
+     * Retrieves the total likes earned across all posts by the user.
      * <p>
-     * This method calculates the sum of all likes received on posts created by the user,
-     * which can be used to display the user's popularity. If user ID is null, returns 0.
+     * Useful for showing popularity metrics. Returns 0 when the user ID is null.
      * </p>
      *
-     * @param userId   User ID
-     * @param listener Completion callback, returns total number of likes
+     * @param userId   User ID.
+     * @param listener Completion listener returning the total like count.
      */
     public static void getTotalLikesForUser(String userId, OnCompleteListener<Integer> listener) {
         if (userId == null) {
@@ -225,10 +220,10 @@ public class PostFacade {
     }
 
     /**
-     * Get detailed information for a single post by ID
+     * Retrieves the post details for the given ID.
      *
-     * @param postId   Post ID (required)
-     * @param listener Completion callback, returns Post object, or null if it does not exist
+     * @param postId   Post ID (required).
+     * @param listener Completion listener returning the post or null if it does not exist.
      */
     public static void getPost(String postId, OnCompleteListener<Post> listener) {
         if (postId == null) {
@@ -241,14 +236,13 @@ public class PostFacade {
     }
 
     /**
-     * Update information for an existing post
+     * Updates an existing post.
      * <p>
-     * Updates the post record in the database using the provided Post object.
-     * Note: The post ID must exist and cannot be null.
+     * Persists the provided Post entity. The post must already have an ID.
      * </p>
      *
-     * @param post     Post object containing updated data (required, and postId cannot be null)
-     * @param listener Completion callback, returns null on success, exception on failure
+     * @param post     Post containing updated data (postId must be non-null).
+     * @param listener Completion listener returning null on success or an exception on failure.
      */
     public static void updatePost(Post post, OnCompleteListener<Void> listener) {
         if (post == null || post.getPostId() == null) {

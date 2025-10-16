@@ -1,1 +1,20 @@
-<!-- TODO -->
+<resources>
+    <!-- Base application theme. -->
+    <style name="Theme.Flavora" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <!-- Primary brand color - yellow toolbar in dark mode too -->
+        <item name="colorPrimary">@color/yellow_700</item>
+        <item name="colorPrimaryVariant">@color/yellow_700</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <!-- Secondary brand color - yellow accent -->
+        <item name="colorSecondary">@color/yellow_200</item>
+        <item name="colorSecondaryVariant">@color/yellow_500</item>
+        <item name="colorOnSecondary">@color/dark_text</item>
+        <!-- Status bar color. -->
+        <item name="android:statusBarColor">@color/yellow_700</item>
+        <!-- Background colors -->
+        <item name="android:windowBackground">@color/dark_background</item>
+        <item name="colorSurface">@color/dark_surface</item>
+        <item name="colorOnSurface">@color/white</item>
+        <!-- Customize your theme here. -->
+    </style>
+</resources>

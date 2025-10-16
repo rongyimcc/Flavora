@@ -9,37 +9,23 @@ import com.bumptech.glide.Glide;
 import java.util.List;
 
 /**
- * Post Image Adapter
- * <p>
- * This adapter is used to display post images in a ViewPager2 carousel.
- * It uses Glide to load images from URLs and applies CENTER_CROP scaling
- * to preserve aspect ratio while filling the view.
- * @author Flavora Team
- * @version 1.0
- * @since 1.0
+ * Adapter that powers the ViewPager2 image carousel for posts.
+ * Loads images with Glide using CENTER_CROP to fill the view.
  */
 public class PostImageAdapter extends RecyclerView.Adapter<PostImageAdapter.ImageViewHolder> {
 
+    /** List of image URLs. */
     private final List<String> imageUrls;
 
     /**
-     * Constructor
-     *
-     * @param imageUrls List of image URLs
+     * Creates the adapter with the given image URLs.
      */
     public PostImageAdapter(List<String> imageUrls) {
         this.imageUrls = imageUrls;
     }
 
     /**
-     * Create a ViewHolder
-     * <p>
-     * Dynamically creates an ImageView, sets layout parameters and scaling type.
-     * </p>
-     *
-     * @param parent Parent ViewGroup
-     * @param viewType View type (not used)
-     * @return An instance of ImageViewHolder
+     * Creates the ImageView backing each carousel page.
      */
     @NonNull
     @Override
@@ -53,13 +39,7 @@ public class PostImageAdapter extends RecyclerView.Adapter<PostImageAdapter.Imag
     }
 
     /**
-     * Bind data to the ViewHolder
-     * <p>
-     * Uses Glide to load the image URL at the specified position into the ImageView.
-     * </p>
-     *
-     * @param holder ViewHolder instance
-     * @param position Image position in the list
+     * Loads the image URL into the view for the given position.
      */
     @Override
     public void onBindViewHolder(@NonNull ImageViewHolder holder, int position) {
@@ -71,9 +51,7 @@ public class PostImageAdapter extends RecyclerView.Adapter<PostImageAdapter.Imag
     }
 
     /**
-     * Get the number of images
-     *
-     * @return Size of the image list
+     * Number of images in the carousel.
      */
     @Override
     public int getItemCount() {
@@ -81,18 +59,14 @@ public class PostImageAdapter extends RecyclerView.Adapter<PostImageAdapter.Imag
     }
 
     /**
-     * Image ViewHolder
-     * <p>
-     * A simple ViewHolder that holds an ImageView for displaying an image.
-     * </p>
+     * Simple ViewHolder containing the ImageView.
      */
     static class ImageViewHolder extends RecyclerView.ViewHolder {
+        /** Image view displayed in the pager. */
         final ImageView imageView;
 
         /**
-         * ViewHolder constructor
-         *
-         * @param imageView The ImageView to be held
+         * Binds the ImageView to the holder.
          */
         ImageViewHolder(@NonNull ImageView imageView) {
             super(imageView);

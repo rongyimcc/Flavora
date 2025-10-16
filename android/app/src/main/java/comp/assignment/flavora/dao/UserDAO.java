@@ -7,17 +7,17 @@ import comp.assignment.flavora.model.User;
 import java.util.List;
 
 /**
- * User Data Access Object (DAO)
- * Handles all data access operations related to User entities.
- * Implements the Singleton pattern and follows the reference-app design conventions.
+ * Data access object for users.
+ * Handles persistence operations for user entities.
+ * Implements the singleton pattern in line with the reference-app design.
  *
  * @author Flavora Team
  * @version 1.0
  */
 public class UserDAO extends DAO<User> {
-    /** Singleton instance */
+    /** Singleton instance. */
     private static UserDAO instance;
-    /** Firebase data source instance */
+    /** Firebase data source instance. */
     private final FirebaseDataSource dataSource;
 
     /**
@@ -29,10 +29,10 @@ public class UserDAO extends DAO<User> {
     }
 
     /**
-     * Returns the singleton instance of UserDAO.
-     * Implements thread-safe lazy initialization using Double-Checked Locking (DCL).
+     * Returns the singleton UserDAO instance.
+     * Uses double-checked locking (DCL) for thread-safe lazy initialization.
      *
-     * @return UserDAO singleton instance
+     * @return Singleton UserDAO instance.
      */
     public static UserDAO getInstance() {
         if (instance == null) {
@@ -48,8 +48,8 @@ public class UserDAO extends DAO<User> {
     /**
      * Adds a user to the database.
      *
-     * @param user     the user to add
-     * @param listener completion listener for operation callback
+     * @param user     User to add.
+     * @param listener Completion callback.
      */
     @Override
     public void add(User user, OnCompleteListener<Void> listener) {
@@ -59,8 +59,8 @@ public class UserDAO extends DAO<User> {
     /**
      * Retrieves a user by ID.
      *
-     * @param id       the user ID
-     * @param listener completion listener returning the User object
+     * @param id       User ID.
+     * @param listener Completion callback returning the user.
      */
     @Override
     public void get(String id, OnCompleteListener<User> listener) {
@@ -68,9 +68,9 @@ public class UserDAO extends DAO<User> {
     }
 
     /**
-     * Retrieves all users.
+     * Retrieves every user.
      *
-     * @param listener completion listener returning a list of all users
+     * @param listener Completion callback with the user list.
      */
     @Override
     public void getAll(OnCompleteListener<List<User>> listener) {
@@ -80,8 +80,8 @@ public class UserDAO extends DAO<User> {
     /**
      * Deletes a user by ID.
      *
-     * @param id       the user ID
-     * @param listener completion listener for operation callback
+     * @param id       User ID.
+     * @param listener Completion callback.
      */
     @Override
     public void delete(String id, OnCompleteListener<Void> listener) {
@@ -91,8 +91,8 @@ public class UserDAO extends DAO<User> {
     /**
      * Updates user information.
      *
-     * @param user     the user object containing updated data
-     * @param listener completion listener for operation callback
+     * @param user     User containing the updated data.
+     * @param listener Completion callback.
      */
     @Override
     public void update(User user, OnCompleteListener<Void> listener) {
@@ -102,28 +102,28 @@ public class UserDAO extends DAO<User> {
     /**
      * Retrieves a user by username.
      *
-     * @param username the username to search for
-     * @param listener completion listener returning the matching User object
+     * @param username Username to search for.
+     * @param listener Completion callback returning the matched user.
      */
     public void getUserByUsername(String username, OnCompleteListener<User> listener) {
         dataSource.getUserByUsername(username, listener);
     }
 
     /**
-     * Increments the user's post count.
+     * Increments a user's post count.
      *
-     * @param userId   the user ID
-     * @param listener completion listener for operation callback
+     * @param userId   User ID.
+     * @param listener Completion callback.
      */
     public void incrementPostsCount(String userId, OnCompleteListener<Void> listener) {
         dataSource.incrementUserPostsCount(userId, listener);
     }
 
     /**
-     * Decrements the user's post count.
+     * Decrements a user's post count.
      *
-     * @param userId   the user ID
-     * @param listener completion listener for operation callback
+     * @param userId   User ID.
+     * @param listener Completion callback.
      */
     public void decrementPostsCount(String userId, OnCompleteListener<Void> listener) {
         dataSource.decrementUserPostsCount(userId, listener);

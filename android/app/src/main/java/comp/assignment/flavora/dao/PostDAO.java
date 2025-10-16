@@ -7,18 +7,17 @@ import comp.assignment.flavora.model.Post;
 import java.util.List;
 
 /**
- * Post Data Access Object (DAO)
- * Handles all data access operations related to Post entities.
- * Implements the Singleton pattern and follows the reference-app design conventions.
+ * Data access object for posts.
+ * Handles persistence operations for post entities.
+ * Implements the singleton pattern in line with the reference-app design.
  *
- * @author
- * Flavora Team
+ * @author Flavora Team
  * @version 1.0
  */
 public class PostDAO extends DAO<Post> {
-    /** Singleton instance */
+    /** Singleton instance. */
     private static PostDAO instance;
-    /** Firebase data source instance */
+    /** Firebase data source instance. */
     private final FirebaseDataSource dataSource;
 
     /**
@@ -30,10 +29,10 @@ public class PostDAO extends DAO<Post> {
     }
 
     /**
-     * Returns the singleton instance of PostDAO.
-     * Implements thread-safe lazy initialization using Double-Checked Locking (DCL).
+     * Returns the singleton PostDAO instance.
+     * Uses double-checked locking (DCL) for thread-safe lazy initialization.
      *
-     * @return PostDAO singleton instance
+     * @return Singleton PostDAO instance.
      */
     public static PostDAO getInstance() {
         if (instance == null) {
@@ -49,8 +48,8 @@ public class PostDAO extends DAO<Post> {
     /**
      * Adds a post to the database.
      *
-     * @param post     the post to add
-     * @param listener completion listener for operation callback
+     * @param post     Post to add.
+     * @param listener Completion callback.
      */
     @Override
     public void add(Post post, OnCompleteListener<Void> listener) {
@@ -60,8 +59,8 @@ public class PostDAO extends DAO<Post> {
     /**
      * Retrieves a post by ID.
      *
-     * @param id       the post ID
-     * @param listener completion listener returning the Post object
+     * @param id       Post ID.
+     * @param listener Completion callback returning the post.
      */
     @Override
     public void get(String id, OnCompleteListener<Post> listener) {
@@ -69,9 +68,9 @@ public class PostDAO extends DAO<Post> {
     }
 
     /**
-     * Retrieves all posts.
+     * Retrieves every post.
      *
-     * @param listener completion listener returning a list of posts
+     * @param listener Completion callback with the post list.
      */
     @Override
     public void getAll(OnCompleteListener<List<Post>> listener) {
@@ -81,8 +80,8 @@ public class PostDAO extends DAO<Post> {
     /**
      * Deletes a post by ID.
      *
-     * @param id       the post ID
-     * @param listener completion listener for operation callback
+     * @param id       Post ID.
+     * @param listener Completion callback.
      */
     @Override
     public void delete(String id, OnCompleteListener<Void> listener) {
@@ -92,8 +91,8 @@ public class PostDAO extends DAO<Post> {
     /**
      * Updates post information.
      *
-     * @param post     the post object containing updated data
-     * @param listener completion listener for operation callback
+     * @param post     Post containing the updated data.
+     * @param listener Completion callback.
      */
     @Override
     public void update(Post post, OnCompleteListener<Void> listener) {
@@ -101,10 +100,10 @@ public class PostDAO extends DAO<Post> {
     }
 
     /**
-     * Retrieves all posts published by a specific user.
+     * Retrieves all posts authored by the specified user.
      *
-     * @param userId   the user ID
-     * @param listener completion listener returning the user's posts
+     * @param userId   User ID.
+     * @param listener Completion callback with the user's posts.
      */
     public void getPostsByUser(String userId, OnCompleteListener<List<Post>> listener) {
         dataSource.getPostsByUser(userId, listener);
@@ -113,47 +112,47 @@ public class PostDAO extends DAO<Post> {
     /**
      * Retrieves all posts ordered by creation time (newest first).
      *
-     * @param listener completion listener returning a time-ordered list of posts
+     * @param listener Completion callback with the time-sorted list.
      */
     public void getPostsOrderByTime(OnCompleteListener<List<Post>> listener) {
         dataSource.getPostsOrderByTime(listener);
     }
 
     /**
-     * Increments a post's like count.
+     * Increments the like count for a post.
      *
-     * @param postId   the post ID
-     * @param listener completion listener for operation callback
+     * @param postId   Post ID.
+     * @param listener Completion callback.
      */
     public void incrementLikeCount(String postId, OnCompleteListener<Void> listener) {
         dataSource.incrementPostLikeCount(postId, listener);
     }
 
     /**
-     * Decrements a post's like count.
+     * Decrements the like count for a post.
      *
-     * @param postId   the post ID
-     * @param listener completion listener for operation callback
+     * @param postId   Post ID.
+     * @param listener Completion callback.
      */
     public void decrementLikeCount(String postId, OnCompleteListener<Void> listener) {
         dataSource.decrementPostLikeCount(postId, listener);
     }
 
     /**
-     * Retrieves all posts favorited by a specific user.
+     * Retrieves every post favorited by the specified user.
      *
-     * @param userId   the user ID
-     * @param listener completion listener returning a list of favorited posts
+     * @param userId   User ID.
+     * @param listener Completion callback with the user's favorites.
      */
     public void getFavoritedPostsByUser(String userId, OnCompleteListener<List<Post>> listener) {
         dataSource.getFavoritedPostsByUser(userId, listener);
     }
 
     /**
-     * Retrieves the total number of likes received across all posts of a user.
+     * Retrieves the total number of likes received across a user's posts.
      *
-     * @param userId   the user ID
-     * @param listener completion listener returning the total like count
+     * @param userId   User ID.
+     * @param listener Completion callback with the total like count.
      */
     public void getTotalLikesForUser(String userId, OnCompleteListener<Integer> listener) {
         dataSource.getTotalLikesForUser(userId, listener);

@@ -11,15 +11,15 @@ import comp.assignment.flavora.databinding.ActivityLoginBinding;
 import comp.assignment.flavora.repository.AuthRepository;
 
 /**
- * Login Activity - user authentication screen.
+ * Login screen for user authentication.
  *
- * <p>Features:</p>
+ * <p>Highlights:</p>
  * <ul>
- *   <li>Provides a login form with email and password inputs.</li>
- *   <li>Validates user input (email format, password length, etc.).</li>
- *   <li>Authenticates via AuthRepository.</li>
+ *   <li>Provides email/password input fields.</li>
+ *   <li>Validates email format and password length.</li>
+ *   <li>Authenticates via {@link AuthRepository}.</li>
  *   <li>Navigates to the main screen on success.</li>
- *   <li>Provides an entry to the registration screen.</li>
+ *   <li>Offers a link to the registration screen.</li>
  * </ul>
  *
  * <p>Validation rules:</p>
@@ -28,12 +28,12 @@ import comp.assignment.flavora.repository.AuthRepository;
  *   <li>Password: required and at least 6 characters.</li>
  * </ul>
  *
- * <p>Technical notes:</p>
+ * <p>Implementation notes:</p>
  * <ul>
- *   <li>Uses ViewBinding.</li>
- *   <li>Uses Task for async login.</li>
- *   <li>Shows loading state during login and disables inputs.</li>
- *   <li>Uses TextInputLayout for error messages.</li>
+ *   <li>Uses ViewBinding for view access.</li>
+ *   <li>Handles login asynchronously with Task.</li>
+ *   <li>Shows a loading state that disables inputs.</li>
+ *   <li>Displays errors through TextInputLayout.</li>
  * </ul>
  *
  * @author Flavora Team
@@ -42,48 +42,49 @@ import comp.assignment.flavora.repository.AuthRepository;
  */
 public class LoginActivity extends AppCompatActivity {
 
-    /** ViewBinding for accessing views in the layout. */
+    /** ViewBinding instance for accessing layout views. */
     private ActivityLoginBinding binding;
-    /** Auth repository handling login logic. */
+    /** Authentication repository handling login logic. */
     private AuthRepository authRepository;
 
     /**
-     * Activity lifecycle - called on create.
+     * Activity lifecycle entry point.
      *
-     * <p>Flow:</p>
+     * <p>Steps:</p>
      * <ol>
-     *   <li>Initialize ViewBinding and set content view.</li>
-     *   <li>Obtain AuthRepository singleton.</li>
-     *   <li>Set click listeners for login and register actions.</li>
+     *   <li>Inflate ViewBinding and set the content view.</li>
+     *   <li>Obtain the AuthRepository singleton.</li>
+     *   <li>Attach listeners to the login button and register link.</li>
      * </ol>
      *
-     * @param savedInstanceState saved state for restoring Activity.
+     * @param savedInstanceState Saved bundle for restoration.
      */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        // Initialize ViewBinding.
         binding = ActivityLoginBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
-        // Get auth repository instance
+        // Obtain the auth repository instance.
         authRepository = AuthRepository.getInstance();
 
-        // Set listeners
+        // Attach listeners.
         binding.buttonLogin.setOnClickListener(v -> attemptLogin());
         binding.textViewRegister.setOnClickListener(v -> navigateToRegister());
     }
 
     /**
-     * Attempt to login with the provided credentials.
+     * Attempts to log in with the provided credentials.
      *
-     * <p>Flow:</p>
+     * <p>Steps:</p>
      * <ol>
-     *   <li>Clear previous errors.</li>
-     *   <li>Read email and password.</li>
-     *   <li>Validate input.</li>
-     *   <li>If valid, call AuthRepository to login.</li>
-     *   <li>Navigate to main screen on success or show error on failure.</li>
+     *   <li>Clear previous error messages.</li>
+     *   <li>Read the email and password inputs.</li>
+     *   <li>Validate the input.</li>
+     *   <li>If valid, invoke AuthRepository to log in.</li>
+     *   <li>Navigate to the main screen or show the error.</li>
      * </ol>
      *
      * <p>Validation rules:</p>
@@ -93,16 +94,18 @@ public class LoginActivity extends AppCompatActivity {
      * </ul>
      */
     private void attemptLogin() {
-
+        // Clear previous errors.
         binding.textInputLayoutEmail.setError(null);
         binding.textInputLayoutPassword.setError(null);
 
+        // Read user input.
         String email = binding.editTextEmail.getText().toString().trim();
         String password = binding.editTextPassword.getText().toString().trim();
 
+        // Validate input.
         boolean hasError = false;
 
-        // Validate email
+        // Validate email.
         if (TextUtils.isEmpty(email)) {
             binding.textInputLayoutEmail.setError("Email is required");
             hasError = true;
@@ -111,7 +114,7 @@ public class LoginActivity extends AppCompatActivity {
             hasError = true;
         }
 
-        // Validate password
+        // Validate password.
         if (TextUtils.isEmpty(password)) {
             binding.textInputLayoutPassword.setError("Password is required");
             hasError = true;
@@ -120,20 +123,25 @@ public class LoginActivity extends AppCompatActivity {
             hasError = true;
         }
 
+        // Abort if any validation failed.
         if (hasError) {
             return;
         }
 
+        // Show loading UI.
         setLoading(true);
 
-        // Try login
+        // Attempt login.
         authRepository.login(email, password)
                 .addOnCompleteListener(this, task -> {
+                    // Hide loading UI.
                     setLoading(false);
 
                     if (task.isSuccessful()) {
+                        // Success: navigate to the main screen.
                         navigateToMain();
                     } else {
+                        // Failure: show error message.
                         String errorMessage = "Login failed. Please check your credentials.";
                         if (task.getException() != null) {
                             errorMessage = task.getException().getMessage();
@@ -144,19 +152,19 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     /**
-     * Set loading state for the login UI.
+     * Controls the loading state of the login form.
      *
      * <p>When loading:</p>
      * <ul>
-     *   <li>Disable login button.</li>
-     *   <li>Show progress bar.</li>
-     *   <li>Disable all inputs.</li>
-     *   <li>Disable register link.</li>
+     *   <li>Disable the login button.</li>
+     *   <li>Show the progress indicator.</li>
+     *   <li>Disable the input fields.</li>
+     *   <li>Disable the register link.</li>
      * </ul>
      *
-     * <p>Prevents duplicate submissions or input changes during the request.</p>
+     * <p>Prevents duplicate submissions while the request is in flight.</p>
      *
-     * @param loading true to show loading, false to hide.
+     * @param loading true to show loading state; false to restore the form.
      */
     private void setLoading(boolean loading) {
         binding.buttonLogin.setEnabled(!loading);
@@ -167,9 +175,7 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     /**
-     * Navigate to the registration screen.
-     *
-     * <p>Called when the user taps the "Register" link.</p>
+     * Opens the registration screen when the user taps the link.
      */
     private void navigateToRegister() {
         Intent intent = new Intent(this, RegisterActivity.class);
@@ -177,15 +183,14 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     /**
-     * Navigate to the main screen and clear back stack.
+     * Navigates to the main activity and clears the back stack.
      *
-     * <p>Called after a successful login. Uses intent flags to clear previous
-     * activities so the user cannot navigate back to the login screen.</p>
+     * <p>Called after a successful login so the user cannot return to the login screen.</p>
      *
-     * <p>Intent flags used:</p>
+     * <p>Intent flags:</p>
      * <ul>
-     *   <li>FLAG_ACTIVITY_NEW_TASK - create a new task</li>
-     *   <li>FLAG_ACTIVITY_CLEAR_TASK - clear the existing task</li>
+     *   <li>FLAG_ACTIVITY_NEW_TASK - start a new task.</li>
+     *   <li>FLAG_ACTIVITY_CLEAR_TASK - clear existing activities.</li>
      * </ul>
      */
     private void navigateToMain() {
@@ -196,9 +201,7 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     /**
-     * Activity lifecycle - called on destroy.
-     *
-     * <p>Clears the ViewBinding reference to avoid memory leaks.</p>
+     * Lifecycle callback for cleanup; clears the binding reference to avoid leaks.
      */
     @Override
     protected void onDestroy() {

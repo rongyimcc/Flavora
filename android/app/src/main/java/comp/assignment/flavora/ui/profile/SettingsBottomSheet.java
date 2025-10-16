@@ -17,45 +17,30 @@ import comp.assignment.flavora.repository.AuthRepository;
 import comp.assignment.flavora.ui.auth.LoginActivity;
 
 /**
- * Settings bottom sheet.
+ * Bottom sheet for app settings.
  * <p>
- * A bottom-sheet dialog showing app settings, including:
- * - Dark theme toggle
- * - Logout button
- * </p>
- * <p>
- * Theme preference is persisted with SharedPreferences and applied in real time via AppCompatDelegate.
+ * Provides a dark-theme toggle and a logout action. Theme preferences are stored in
+ * SharedPreferences and applied through AppCompatDelegate.
  * </p>
  *
- * @author Flavora Team
  * @version 1.0
- * @since 1.0
  */
 public class SettingsBottomSheet extends BottomSheetDialogFragment {
 
-    /** SharedPreferences name */
+    /** SharedPreferences file name. */
     private static final String PREFS_NAME = "AppPreferences";
 
-    /** Preference key for dark theme. */
+    /** Preference key for the dark theme toggle. */
     private static final String KEY_DARK_THEME = "dark_theme";
 
-    /** Dark theme switch. */
+    /** Switch controlling dark theme. */
     private SwitchMaterial switchDarkTheme;
 
     /** SharedPreferences instance. */
     private SharedPreferences preferences;
 
     /**
-     * Create view.
-     * <p>
-     * Inflate the settings layout, initialize views and SharedPreferences,
-     * attach listeners, and load the saved theme setting.
-     * </p>
-     *
-     * @param inflater layout inflater
-     * @param container parent container
-     * @param savedInstanceState saved instance state
-     * @return created view
+     * Inflates the bottom sheet layout, wires up controls, and applies saved theme state.
      */
     @Nullable
     @Override
@@ -63,26 +48,27 @@ public class SettingsBottomSheet extends BottomSheetDialogFragment {
                              @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.bottom_sheet_settings, container, false);
 
-        // Initialize SharedPreferences
+        // Prepare SharedPreferences.
         preferences = requireContext().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
 
+        // Bind view references.
         switchDarkTheme = view.findViewById(R.id.switch_dark_theme);
         View buttonClose = view.findViewById(R.id.button_close);
         View buttonLogout = view.findViewById(R.id.button_logout);
 
-        // Load current theme state
+        // Load current theme preference.
         boolean isDarkTheme = preferences.getBoolean(KEY_DARK_THEME, false);
         switchDarkTheme.setChecked(isDarkTheme);
 
-        // Close button listener
+        // Close button handler.
         buttonClose.setOnClickListener(v -> dismiss());
 
-        // Theme toggle listener
+        // Theme toggle handler.
         switchDarkTheme.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            // Persist theme preference
+            // Persist the preference.
             preferences.edit().putBoolean(KEY_DARK_THEME, isChecked).apply();
 
-            // Apply
+            // Apply the theme immediately.
             if (isChecked) {
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
             } else {
@@ -90,34 +76,29 @@ public class SettingsBottomSheet extends BottomSheetDialogFragment {
             }
         });
 
-        // Logout button listener
+        // Logout button handler.
         buttonLogout.setOnClickListener(v -> {
             logout();
             dismiss();
         });
 
         return view;
-                             }
+    }
 
     /**
-     * Perform logout.
-     * <p>
-     * Calls AuthRepository to sign out, clears the user session, and navigates to Login.
-     * Uses FLAG_ACTIVITY_NEW_TASK and FLAG_ACTIVITY_CLEAR_TASK to clear the back stack
-     * and prevent returning to signed-out pages.
-     * </p>
+     * Logs the user out and navigates back to the login screen, clearing the back stack.
      */
     private void logout() {
-        // Sign out
+        // Perform logout.
         AuthRepository.getInstance().logout();
 
-        // Navigate to Login
+        // Navigate to the login activity.
         Intent intent = new Intent(getActivity(), LoginActivity.class);
-        // Clear activity stack to prevent back navigation
+        // Clear the activity stack to prevent back navigation.
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);
 
-        // Finish current Activity
+        // Finish the hosting activity.
         if (getActivity() != null) {
             getActivity().finish();
         }

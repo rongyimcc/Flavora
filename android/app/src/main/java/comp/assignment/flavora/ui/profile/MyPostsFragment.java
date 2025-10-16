@@ -25,19 +25,18 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * My Posts Fragment
+ * Fragment displaying posts authored by the current user.
  * <p>
- * Displays all posts published by the current user.
  * Users can view, like, favorite, and delete their own posts.
  * </p>
  *
  * <p>Main features:</p>
  * <ul>
- *   <li>Display all posts created by the current user</li>
- *   <li>Support liking and favoriting operations</li>
- *   <li>Allow deleting user’s own posts (with confirmation dialog)</li>
- *   <li>Navigate to post details by clicking on a post</li>
- *   <li>Automatically refresh data each time the fragment becomes visible</li>
+ *   <li>Shows every post created by the logged-in user.</li>
+ *   <li>Supports like and favorite interactions.</li>
+ *   <li>Allows deleting posts with confirmation.</li>
+ *   <li>Opens the detail page when a post is tapped.</li>
+ *   <li>Refreshes data whenever the fragment becomes visible.</li>
  * </ul>
  *
  * @author Flavora Team
@@ -45,21 +44,25 @@ import java.util.List;
  */
 public class MyPostsFragment extends Fragment implements PostsAdapter.OnPostInteractionListener {
 
+    /** RecyclerView displaying the post list. */
     private RecyclerView recyclerView;
 
+    /** Progress bar shown during loading. */
     private View progressBar;
 
+    /** Empty-state text shown when there are no posts. */
     private TextView textEmpty;
 
+    /** Adapter for the post list. */
     private PostsAdapter postsAdapter;
 
     /**
-     * Create the fragment view
+     * Inflates the fragment view.
      *
-     * @param inflater LayoutInflater used to inflate the layout
-     * @param container Parent view container
-     * @param savedInstanceState Saved instance state
-     * @return The created root view
+     * @param inflater LayoutInflater for inflation.
+     * @param container Parent container.
+     * @param savedInstanceState Saved state bundle.
+     * @return Root view for the fragment.
      */
     @Nullable
     @Override
@@ -67,7 +70,7 @@ public class MyPostsFragment extends Fragment implements PostsAdapter.OnPostInte
                              @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_post_list, container, false);
 
-        // 初始化视图引用
+        // Initialize view references.
         recyclerView = view.findViewById(R.id.recycler_view_posts);
         progressBar = view.findViewById(R.id.progress_bar);
         textEmpty = view.findViewById(R.id.text_empty);
@@ -78,40 +81,35 @@ public class MyPostsFragment extends Fragment implements PostsAdapter.OnPostInte
     }
 
     /**
-     * Called when the fragment resumes.
-     * Reloads the data each time the fragment becomes visible to ensure the list is up to date.
+     * Reloads data whenever the fragment resumes to keep content fresh.
      */
     @Override
     public void onResume() {
         super.onResume();
-        // Reload data when the fragment becomes visible
+        // Reload data when the fragment is visible again.
         loadMyPosts();
     }
 
     /**
-     * Set up the RecyclerView
-     * <p>
-     * Initializes the adapter and layout manager, and enables the delete button
-     * since this fragment shows the user's own posts.
-     * </p>
+     * Configures the RecyclerView, adapter, and delete-button behavior.
      */
     private void setupRecyclerView() {
         postsAdapter = new PostsAdapter();
         postsAdapter.setOnPostInteractionListener(this);
-        postsAdapter.setShowDeleteButton(true); // 为"我的帖子"启用删除按钮
+        postsAdapter.setShowDeleteButton(true); // Enable delete button for "My Posts".
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         recyclerView.setAdapter(postsAdapter);
     }
 
     /**
-     * Load all posts created by the current user
+     * Loads all posts created by the current user.
      * <p>
      * Steps:
-     * 1. Get the current logged-in user's ID
-     * 2. Fetch all posts published by that user
-     * 3. Load the user's like and favorite states
-     * 4. Update each post's interaction status
-     * 5. Display the posts in the list
+     * 1. Retrieve the user ID.
+     * 2. Fetch the user's posts.
+     * 3. Load like and favorite states.
+     * 4. Update each post with the interaction state.
+     * 5. Display the results.
      * </p>
      */
     private void loadMyPosts() {
@@ -126,7 +124,7 @@ public class MyPostsFragment extends Fragment implements PostsAdapter.OnPostInte
             return;
         }
 
-        // Load posts published by the user
+        // Fetch posts authored by the user.
         PostFacade.getPostsByUser(userId, task -> {
             if (!task.isSuccessful() || task.getResult() == null) {
                 progressBar.setVisibility(View.GONE);
@@ -137,7 +135,7 @@ public class MyPostsFragment extends Fragment implements PostsAdapter.OnPostInte
 
             List<Post> posts = task.getResult();
 
-            // Load user interaction states (likes and favorites)
+            // Load interaction states (likes and favorites).
             PostInteractionFacade.getLikedPostIds(likedTask -> {
                 PostInteractionFacade.getFavoritedPostIds(favoritedTask -> {
                     progressBar.setVisibility(View.GONE);
@@ -147,9 +145,11 @@ public class MyPostsFragment extends Fragment implements PostsAdapter.OnPostInte
                     List<String> favoritedPostIds = favoritedTask.isSuccessful() && favoritedTask.getResult() != null
                             ? favoritedTask.getResult() : new ArrayList<>();
 
+                    // Convert to sets for faster lookups.
                     java.util.Set<String> likedSet = new java.util.HashSet<>(likedPostIds);
                     java.util.Set<String> favoritedSet = new java.util.HashSet<>(favoritedPostIds);
 
+                    // Update each post with the user's interaction state.
                     for (Post post : posts) {
                         post.setLikedByCurrentUser(likedSet.contains(post.getPostId()));
                         post.setFavoritedByCurrentUser(favoritedSet.contains(post.getPostId()));
@@ -157,6 +157,7 @@ public class MyPostsFragment extends Fragment implements PostsAdapter.OnPostInte
 
                     postsAdapter.setPosts(posts);
 
+                    // Show empty state if there are no posts.
                     if (postsAdapter.getItemCount() == 0) {
                         textEmpty.setVisibility(View.VISIBLE);
                         textEmpty.setText("No posts yet");
@@ -169,10 +170,9 @@ public class MyPostsFragment extends Fragment implements PostsAdapter.OnPostInte
     }
 
     /**
-     * Handle post click event
-     * Navigates to the post detail screen.
+     * Handles post taps by navigating to the detail screen.
      *
-     * @param post The clicked post
+     * @param post Selected post.
      */
     @Override
     public void onPostClicked(Post post) {
@@ -182,21 +182,21 @@ public class MyPostsFragment extends Fragment implements PostsAdapter.OnPostInte
     }
 
     /**
-     * Handle like button click event
-     * Toggles the like status of a post and updates the like count.
+     * Handles like button taps; toggles the state and updates the count.
      *
-     * @param post The post being liked or unliked
-     * @param position The post's position in the list
+     * @param post Post being liked/unliked.
+     * @param position Position in the list.
      */
     @Override
     public void onLikeClicked(Post post, int position) {
+        // Toggle like state.
         boolean currentStatus = post.isLikedByCurrentUser();
         PostInteractionFacade.toggleLike(post.getPostId(), currentStatus, task -> {
             if (task.isSuccessful() && task.getResult() != null) {
                 boolean newStatus = task.getResult();
                 post.setLikedByCurrentUser(newStatus);
 
-                // Update like count
+                // Adjust like count.
                 if (newStatus) {
                     post.setLikeCount(post.getLikeCount() + 1);
                 } else {
@@ -209,22 +209,21 @@ public class MyPostsFragment extends Fragment implements PostsAdapter.OnPostInte
     }
 
     /**
-     * Handle favorite button click event
-     * Toggles the favorite status of a post and updates the favorite count.
+     * Handles favorite button taps; toggles the state and updates the count.
      *
-     * @param post The post being favorited or unfavorited
-     * @param position The post's position in the list
+     * @param post Post being favorited/unfavorited.
+     * @param position Position in the list.
      */
     @Override
     public void onFavoriteClicked(Post post, int position) {
-        // Toggle favorite status
+        // Toggle favorite state.
         boolean currentStatus = post.isFavoritedByCurrentUser();
         PostInteractionFacade.toggleFavorite(post.getPostId(), currentStatus, task -> {
             if (task.isSuccessful() && task.getResult() != null) {
                 boolean newStatus = task.getResult();
                 post.setFavoritedByCurrentUser(newStatus);
 
-                // Update favorite count
+                // Adjust favorite count.
                 if (newStatus) {
                     post.setFavoriteCount(post.getFavoriteCount() + 1);
                 } else {
@@ -237,36 +236,33 @@ public class MyPostsFragment extends Fragment implements PostsAdapter.OnPostInte
     }
 
     /**
-     * Handle delete button click event
-     * <p>
-     * Displays a confirmation dialog. If confirmed, deletes the post.
-     * </p>
+     * Handles delete button taps by confirming and removing the post.
      *
-     * @param post The post to delete
-     * @param position The post's position in the list
+     * @param post Post to delete.
+     * @param position Position in the list.
      */
     @Override
     public void onDeleteClicked(Post post, int position) {
-        // Show confirmation dialog
+        // Show confirmation dialog.
         new AlertDialog.Builder(requireContext())
                 .setTitle("Delete Post")
                 .setMessage("Are you sure you want to delete this post? This action cannot be undone.")
                 .setPositiveButton("Delete", (dialog, which) -> {
-                    // Delete the post
+                    // Delete the post.
                     String userId = AuthRepository.getInstance().getCurrentUserId();
                     if (userId == null) {
                         Toast.makeText(getContext(), "Not logged in", Toast.LENGTH_SHORT).show();
                         return;
                     }
 
-                    // Use PostFacade to delete the post
+                    // Delegate to the facade to remove the post.
                     PostFacade.deletePost(post.getPostId(), userId, task -> {
                         if (task.isSuccessful()) {
-                            // 从适配器中移除
+                            // Remove from the adapter.
                             postsAdapter.removePost(position);
                             Toast.makeText(getContext(), "Post deleted", Toast.LENGTH_SHORT).show();
 
-                            // 如果没有剩余帖子，显示空状态提示
+                            // Show empty state if no posts remain.
                             if (postsAdapter.getItemCount() == 0) {
                                 textEmpty.setVisibility(View.VISIBLE);
                                 textEmpty.setText("No posts yet");
@@ -281,13 +277,12 @@ public class MyPostsFragment extends Fragment implements PostsAdapter.OnPostInte
     }
 
     /**
-     * Called when the fragment's view is destroyed
-     * Clears all view references to prevent memory leaks.
+     * Clears view references when the fragment view is destroyed to avoid leaks.
      */
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        // Clear references to prevent memory leaks
+        // Release view references to prevent leaks.
         recyclerView = null;
         progressBar = null;
         textEmpty = null;

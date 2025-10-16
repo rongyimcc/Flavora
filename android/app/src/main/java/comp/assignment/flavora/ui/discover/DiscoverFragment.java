@@ -25,55 +25,29 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * Discover Fragment
- * <p>
- * This fragment displays all posts and provides search and interaction features.
- * Users can browse all posts, search, like, favorite, and view post details.
- * </p>
- *
- * <p>Main Features:</p>
- * <ul>
- *   <li>Display a list of all user-posted posts</li>
- *   <li>Real-time search (by title, description, or username)</li>
- *   <li>Pull-to-refresh functionality</li>
- *   <li>Like and favorite interactions</li>
- *   <li>Navigate to post detail page</li>
- * </ul>
- * @author Flavora Team
- * @version 1.0
- * @since 1.0
+ * Fragment that shows the discover feed with search, refresh, and interaction capabilities.
  */
 public class DiscoverFragment extends Fragment implements PostsAdapter.OnPostInteractionListener {
 
+    /** ViewBinding instance. */
     private FragmentDiscoverBinding binding;
 
+    /** Adapter for the posts list. */
     private PostsAdapter postsAdapter;
 
+    /** Cached list of all posts for search filtering. */
     private List<Post> allPosts = new ArrayList<>();
 
-    /**
-     * Create the view for the fragment
-     *
-     * @param inflater LayoutInflater to inflate the layout
-     * @param container Parent view container
-     * @param savedInstanceState Saved instance state
-     * @return The root view created
-     */
+    /** Inflates the fragment layout with ViewBinding. */
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
                              @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-            binding = FragmentDiscoverBinding.inflate(inflater, container, false);
-            return binding.getRoot();
-                             }
+        binding = FragmentDiscoverBinding.inflate(inflater, container, false);
+        return binding.getRoot();
+    }
 
-    /**
-     * Callback after the view is created.
-     * Initializes RecyclerView, pull-to-refresh, search bar, and loads post data.
-     *
-     * @param view The created view
-     * @param savedInstanceState Saved instance state
-     */
+    /** Configures UI components once the view is created. */
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
@@ -84,10 +58,7 @@ public class DiscoverFragment extends Fragment implements PostsAdapter.OnPostInt
         loadPosts();
     }
 
-    /**
-     * Set up the RecyclerView
-     * Initialize adapter and layout manager
-     */
+    /** Sets up the RecyclerView and adapter. */
     private void setupRecyclerView() {
         postsAdapter = new PostsAdapter();
         postsAdapter.setOnPostInteractionListener(this);
@@ -95,50 +66,39 @@ public class DiscoverFragment extends Fragment implements PostsAdapter.OnPostInt
         binding.recyclerViewPosts.setAdapter(postsAdapter);
     }
 
-    /**
-     * Set up pull-to-refresh feature
-     * Reload post list when user pulls down
-     */
+    /** Enables pull-to-refresh to reload posts. */
     private void setupSwipeRefresh() {
         binding.swipeRefresh.setOnRefreshListener(this::loadPosts);
     }
 
-    /**
-     * Set up the search bar
-     * Listen for text changes and filter posts in real-time
-     */
+    /** Configures the search bar to filter posts on text changes. */
     private void setupSearchBar() {
         binding.searchEditText.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-                // 文本改变前的回调（未使用）
+                // Not used.
             }
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                // 文本改变时立即过滤帖子
+                // Filter as the user types.
                 filterPosts(s.toString());
             }
 
             @Override
             public void afterTextChanged(Editable s) {
-                // 文本改变后的回调（未使用）
+                // Not used.
             }
         });
     }
 
-    /**
-     * Filter posts based on the search query.
-     * Match against post title, description, and username.
-     *
-     * @param query Search keyword
-     */
+    /** Filters posts by title, description, or username. */
     private void filterPosts(String query) {
         if (query == null || query.trim().isEmpty()) {
-            // 如果搜索框为空，显示所有帖子
+            // Show all posts when there's no query.
             postsAdapter.setPosts(allPosts);
         } else {
-            // 根据标题、描述或用户名过滤帖子
+            // Filter based on text matches.
             String lowerQuery = query.toLowerCase().trim();
             List<Post> filteredPosts = allPosts.stream()
                     .filter(post ->
@@ -151,23 +111,13 @@ public class DiscoverFragment extends Fragment implements PostsAdapter.OnPostInt
         }
     }
 
-    /**
-     * Load all post data
-     * <p>
-     * Steps:
-     * 1. Load all posts from the database
-     * 2. Load current user's liked post IDs
-     * 3. Load current user's favorited post IDs
-     * 4. Update each post's like and favorite status
-     * 5. Apply current search filter (if any)
-     * </p>
-     */
+    /** Loads posts along with the user's like/favorite state and reapplies the current filter. */
     private void loadPosts() {
         binding.swipeRefresh.setRefreshing(true);
 
-        // 第一步：加载所有帖子
+        // Step 1: load all posts.
         PostFacade.getAllPosts(postsTask -> {
-            // 生命周期检查：确保Fragment仍然附加且binding有效
+            // Lifecycle guard.
             if (!isAdded() || binding == null) return;
 
             if (!postsTask.isSuccessful() || postsTask.getResult() == null) {
@@ -178,13 +128,13 @@ public class DiscoverFragment extends Fragment implements PostsAdapter.OnPostInt
 
             List<Post> posts = postsTask.getResult();
 
-            // 第二步：加载用户交互状态（点赞和收藏）
+            // Step 2: load interaction state.
             PostInteractionFacade.getLikedPostIds(likedTask -> {
-                // 生命周期检查：确保Fragment仍然附加且binding有效
+                // Lifecycle guard.
                 if (!isAdded() || binding == null) return;
 
                 PostInteractionFacade.getFavoritedPostIds(favoritedTask -> {
-                    // 生命周期检查：确保Fragment仍然附加且binding有效
+                    // Lifecycle guard.
                     if (!isAdded() || binding == null) return;
 
                     binding.swipeRefresh.setRefreshing(false);
@@ -194,20 +144,20 @@ public class DiscoverFragment extends Fragment implements PostsAdapter.OnPostInt
                     List<String> favoritedPostIds = favoritedTask.isSuccessful() && favoritedTask.getResult() != null
                             ? favoritedTask.getResult() : List.of();
 
-                    // 转换为Set以提高查找效率
+                    // Convert to sets for efficient lookups.
                     Set<String> likedSet = new HashSet<>(likedPostIds);
                     Set<String> favoritedSet = new HashSet<>(favoritedPostIds);
 
-                    // 更新每个帖子的用户交互状态
+                    // Apply interaction state to each post.
                     for (Post post : posts) {
                         post.setLikedByCurrentUser(likedSet.contains(post.getPostId()));
                         post.setFavoritedByCurrentUser(favoritedSet.contains(post.getPostId()));
                     }
 
-                    // 保存所有帖子用于搜索过滤
+                    // Cache posts for search filtering.
                     allPosts = new ArrayList<>(posts);
 
-                    // 应用当前的搜索过滤（如果有）
+                    // Reapply any active search query.
                     String currentQuery = binding.searchEditText.getText().toString();
                     if (currentQuery.trim().isEmpty()) {
                         postsAdapter.setPosts(posts);
@@ -219,12 +169,7 @@ public class DiscoverFragment extends Fragment implements PostsAdapter.OnPostInt
         });
     }
 
-    /**
-     * Handle post click event
-     * Navigate to the post detail page
-     *
-     * @param post The clicked post
-     */
+    /** Opens the post detail screen when a post row is tapped. */
     @Override
     public void onPostClicked(Post post) {
         Intent intent = new Intent(getContext(), PostDetailActivity.class);
@@ -232,23 +177,17 @@ public class DiscoverFragment extends Fragment implements PostsAdapter.OnPostInt
         startActivity(intent);
     }
 
-    /**
-     * Handle like button click event
-     * Toggle like status and update like count
-     *
-     * @param post The post to like/unlike
-     * @param position The post's position in the list
-     */
+    /** Handles like toggles and updates the list item. */
     @Override
     public void onLikeClicked(Post post, int position) {
-        // 切换点赞状态
+        // Toggle like state.
         boolean currentStatus = post.isLikedByCurrentUser();
         PostInteractionFacade.toggleLike(post.getPostId(), currentStatus, task -> {
             if (task.isSuccessful() && task.getResult() != null) {
                 boolean newStatus = task.getResult();
                 post.setLikedByCurrentUser(newStatus);
 
-                // 更新点赞数
+                // Update counts.
                 if (newStatus) {
                     post.setLikeCount(post.getLikeCount() + 1);
                 } else {
@@ -266,23 +205,17 @@ public class DiscoverFragment extends Fragment implements PostsAdapter.OnPostInt
         });
     }
 
-    /**
-     * Handle favorite button click event
-     * Toggle favorite status and update favorite count
-     *
-     * @param post The post to favorite/unfavorite
-     * @param position The post's position in the list
-     */
+    /** Handles favorite toggles and updates the list item. */
     @Override
     public void onFavoriteClicked(Post post, int position) {
-        // 切换收藏状态
+        // Toggle favorite state.
         boolean currentStatus = post.isFavoritedByCurrentUser();
         PostInteractionFacade.toggleFavorite(post.getPostId(), currentStatus, task -> {
             if (task.isSuccessful() && task.getResult() != null) {
                 boolean newStatus = task.getResult();
                 post.setFavoritedByCurrentUser(newStatus);
 
-                // 更新收藏数
+                // Update counts.
                 if (newStatus) {
                     post.setFavoriteCount(post.getFavoriteCount() + 1);
                 } else {
@@ -300,10 +233,7 @@ public class DiscoverFragment extends Fragment implements PostsAdapter.OnPostInt
         });
     }
 
-    /**
-     * Callback when fragment view is destroyed
-     * Clear the ViewBinding reference to prevent memory leaks
-     */
+    /** Clears the binding reference when the view is destroyed to avoid leaks. */
     @Override
     public void onDestroyView() {
         super.onDestroyView();

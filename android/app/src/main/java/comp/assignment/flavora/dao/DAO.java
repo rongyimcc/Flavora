@@ -6,53 +6,52 @@ import comp.assignment.flavora.model.HasUUID;
 import java.util.List;
 
 /**
- * Abstract base class for Data Access Objects (DAO).
- * Provides a generic interface for all data access operations, 
- * abstracting the details of the underlying data source (Firebase in this project).
- * Follows the reference-app DAO abstraction pattern.
+ * Abstract base class for data access objects (DAO).
+ * Provides a common interface for CRUD operations while hiding the underlying data source (Firebase in this project).
+ * Follows the reference-app pattern for data access abstraction.
  *
- * @param <T> The entity type managed by this DAO, must implement HasUUID.
+ * @param <T> Entity type managed by the DAO, must implement HasUUID.
  * @author Flavora Team
  * @version 1.0
  */
 public abstract class DAO<T extends HasUUID> {
 
     /**
-     * Adds an entity to the data store.
+     * Adds an entity to the backing store.
      *
-     * @param element  the entity to add
-     * @param listener completion listener handling the operation result
+     * @param element  Entity to add.
+     * @param listener Completion callback invoked with the result.
      */
     public abstract void add(T element, OnCompleteListener<Void> listener);
 
     /**
      * Retrieves an entity by its unique identifier.
      *
-     * @param id       the unique identifier of the entity
-     * @param listener completion listener returning the retrieved entity
+     * @param id       Entity identifier.
+     * @param listener Completion callback returning the fetched entity.
      */
     public abstract void get(String id, OnCompleteListener<T> listener);
 
     /**
-     * Retrieves all entities of this type.
+     * Retrieves every entity of this type.
      *
-     * @param listener completion listener returning a list of all entities
+     * @param listener Completion callback returning the entity list.
      */
     public abstract void getAll(OnCompleteListener<List<T>> listener);
 
     /**
      * Deletes an entity by its unique identifier.
      *
-     * @param id       the unique identifier of the entity to delete
-     * @param listener completion listener handling the operation result
+     * @param id       Identifier of the entity to remove.
+     * @param listener Completion callback invoked with the result.
      */
     public abstract void delete(String id, OnCompleteListener<Void> listener);
 
     /**
      * Updates an existing entity.
      *
-     * @param element  the entity containing updated data
-     * @param listener completion listener handling the operation result
+     * @param element  Entity containing updated data.
+     * @param listener Completion callback invoked with the result.
      */
     public abstract void update(T element, OnCompleteListener<Void> listener);
 }

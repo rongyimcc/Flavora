@@ -4,16 +4,15 @@ import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.viewpager2.adapter.FragmentStateAdapter;
 
-
 /**
- * Profile Pager Adapter
+ * Pager adapter for the profile screen.
  * <p>
- * Used to manage the two tabs in the ViewPager2 of the profile screen:
- * - My Posts (MyPostsFragment)
- * - My Favorites (MyFavoritesFragment)
+ * Hosts two tabs within ViewPager2:
+ * - My Posts ({@link MyPostsFragment})
+ * - My Favorites ({@link MyFavoritesFragment})
  * </p>
  * <p>
- * Implements lazy loading and state saving for fragments using FragmentStateAdapter.
+ * Uses FragmentStateAdapter for lazy loading and state retention.
  * </p>
  *
  * @author Flavora Team
@@ -23,23 +22,23 @@ import androidx.viewpager2.adapter.FragmentStateAdapter;
 public class ProfilePagerAdapter extends FragmentStateAdapter {
 
     /**
-     * Constructor
+     * Creates the adapter.
      *
-     * @param fragment The parent fragment (ProfileFragment)
+     * @param fragment Parent ProfileFragment.
      */
     public ProfilePagerAdapter(@NonNull Fragment fragment) {
         super(fragment);
     }
 
     /**
-     * Creates the fragment for the given position
+     * Creates the fragment associated with the supplied position.
      * <p>
-     * Position 0: MyPostsFragment<br>
-     * Position 1: MyFavoritesFragment
+     * Position 0: MyPostsFragment.
+     * Position 1: MyFavoritesFragment.
      * </p>
      *
-     * @param position The tab index (0 or 1)
-     * @return The corresponding fragment instance
+     * @param position Tab index (0 or 1).
+     * @return Fragment for the requested position.
      */
     @NonNull
     @Override
@@ -52,9 +51,9 @@ public class ProfilePagerAdapter extends FragmentStateAdapter {
     }
 
     /**
-     * Returns the number of tabs
+     * Returns the number of tabs.
      *
-     * @return Always returns 2 (My Posts + My Favorites)
+     * @return Always 2 (My Posts + My Favorites).
      */
     @Override
     public int getItemCount() {

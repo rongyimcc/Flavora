@@ -8,18 +8,17 @@ import comp.assignment.flavora.model.Like;
 import java.util.List;
 
 /**
- * Like Data Access Object (DAO)
- * Handles all data access operations related to Like entities.
- * Implements the Singleton pattern and follows the reference-app design conventions.
+ * Data access object for likes.
+ * Handles persistence operations for like entities.
+ * Implements the singleton pattern in line with the reference-app design.
  *
- * @author
- * Flavora Team
+ * @author Flavora Team
  * @version 1.0
  */
 public class LikeDAO extends DAO<Like> {
-    /** Singleton instance */
+    /** Singleton instance. */
     private static LikeDAO instance;
-    /** Firebase data source instance */
+    /** Firebase data source instance. */
     private final FirebaseDataSource dataSource;
 
     /**
@@ -31,10 +30,10 @@ public class LikeDAO extends DAO<Like> {
     }
 
     /**
-     * Returns the singleton instance of LikeDAO.
-     * Implements thread-safe lazy initialization using Double-Checked Locking (DCL).
+     * Returns the singleton LikeDAO instance.
+     * Uses double-checked locking (DCL) for thread-safe lazy initialization.
      *
-     * @return LikeDAO singleton instance
+     * @return Singleton LikeDAO instance.
      */
     public static LikeDAO getInstance() {
         if (instance == null) {
@@ -47,11 +46,11 @@ public class LikeDAO extends DAO<Like> {
         return instance;
     }
 
-    /**
+   /**
      * Adds a like record to the database.
      *
-     * @param like     the Like object to add
-     * @param listener completion listener for operation callback
+     * @param like     Like to add.
+     * @param listener Completion callback.
      */
     @Override
     public void add(Like like, OnCompleteListener<Void> listener) {
@@ -59,10 +58,10 @@ public class LikeDAO extends DAO<Like> {
     }
 
     /**
-     * Retrieves a like record by ID.
+     * Retrieves a like by ID.
      *
-     * @param id       the like record ID
-     * @param listener completion listener returning the Like object
+     * @param id       Like ID.
+     * @param listener Completion callback returning the like.
      */
     @Override
     public void get(String id, OnCompleteListener<Like> listener) {
@@ -70,9 +69,9 @@ public class LikeDAO extends DAO<Like> {
     }
 
     /**
-     * Retrieves all like records.
+     * Retrieves every like record.
      *
-     * @param listener completion listener returning a list of likes
+     * @param listener Completion callback with the like list.
      */
     @Override
     public void getAll(OnCompleteListener<List<Like>> listener) {
@@ -82,8 +81,8 @@ public class LikeDAO extends DAO<Like> {
     /**
      * Deletes a like record by ID.
      *
-     * @param id       the like record ID
-     * @param listener completion listener for operation callback
+     * @param id       Like ID.
+     * @param listener Completion callback.
      */
     @Override
     public void delete(String id, OnCompleteListener<Void> listener) {
@@ -91,10 +90,10 @@ public class LikeDAO extends DAO<Like> {
     }
 
     /**
-     * Updates a like record (not typically needed for likes, returns success immediately).
+     * Updates a like (no-op because likes seldom change; resolves immediately).
      *
-     * @param like     the Like object
-     * @param listener completion listener for operation callback
+     * @param like     Like entity.
+     * @param listener Completion callback.
      */
     @Override
     public void update(Like like, OnCompleteListener<Void> listener) {
@@ -102,53 +101,53 @@ public class LikeDAO extends DAO<Like> {
     }
 
     /**
-     * Atomic operation: adds a like record and increments the corresponding post's like count.
+     * Atomic operation: add a like and increment the post's like count.
      *
-     * @param userId   the user ID
-     * @param postId   the post ID
-     * @param listener completion listener for operation callback
+     * @param userId   User ID.
+     * @param postId   Post ID.
+     * @param listener Completion callback.
      */
     public void addLikeWithIncrement(String userId, String postId, OnCompleteListener<Void> listener) {
         dataSource.addLikeAndIncrementCount(userId, postId, listener);
     }
 
     /**
-     * Atomic operation: removes a like record and decrements the corresponding post's like count.
+     * Atomic operation: remove a like and decrement the post's like count.
      *
-     * @param userId   the user ID
-     * @param postId   the post ID
-     * @param listener completion listener for operation callback
+     * @param userId   User ID.
+     * @param postId   Post ID.
+     * @param listener Completion callback.
      */
     public void removeLikeWithDecrement(String userId, String postId, OnCompleteListener<Void> listener) {
         dataSource.removeLikeAndDecrementCount(userId, postId, listener);
     }
 
     /**
-     * Checks whether a user has liked a specific post.
+     * Checks whether the user has already liked the post.
      *
-     * @param userId   the user ID
-     * @param postId   the post ID
-     * @param listener completion listener returning a boolean result
+     * @param userId   User ID.
+     * @param postId   Post ID.
+     * @param listener Completion callback returning a boolean result.
      */
     public void hasLiked(String userId, String postId, OnCompleteListener<Boolean> listener) {
         dataSource.checkLikeExists(userId, postId, listener);
     }
 
     /**
-     * Retrieves all like records for a given post.
+     * Retrieves every like record for the specified post.
      *
-     * @param postId   the post ID
-     * @param listener completion listener returning a list of likes
+     * @param postId   Post ID.
+     * @param listener Completion callback with the like list.
      */
     public void getLikesByPost(String postId, OnCompleteListener<List<Like>> listener) {
         dataSource.getLikesByPost(postId, listener);
     }
 
     /**
-     * Retrieves all post IDs liked by a specific user.
+     * Retrieves all post IDs liked by the specified user.
      *
-     * @param userId   the user ID
-     * @param listener completion listener returning a list of post IDs
+     * @param userId   User ID.
+     * @param listener Completion callback with the list of post IDs.
      */
     public void getLikesByUser(String userId, OnCompleteListener<List<String>> listener) {
         dataSource.getLikesByUser(userId, listener);

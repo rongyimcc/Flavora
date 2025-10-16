@@ -21,97 +21,58 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Posts Adapter
- * <p>
- * Used to display a list of posts in a RecyclerView.
- * Supports displaying, clicking, liking, favoriting, and deleting posts.
- * Each post includes user info, image carousel, title, description, rating, and interaction buttons.
- * </p>
- * @author Flavora Team
- * @version 1.0
- * @since 1.0
+ * RecyclerView adapter for rendering posts with full interaction support (like, favorite, delete).
  */
 public class PostsAdapter extends RecyclerView.Adapter<PostsAdapter.PostViewHolder> {
 
+    /** Backing list of posts. */
     private final List<Post> posts = new ArrayList<>();
 
+    /** Listener for post interactions. */
     private OnPostInteractionListener interactionListener;
 
+    /** Whether the delete button should be shown (e.g., on "My Posts"). */
     private boolean showDeleteButton = false;
 
     /**
-     * Listener interface for post interactions
-     * <p>
-     * Defines all post-related callbacks including click, like, favorite, and delete.
-     * </p>
+     * Callbacks for handling post interactions.
      */
     public interface OnPostInteractionListener {
         /**
-         * Called when a post is clicked
-         *
-         * @param post The clicked post
+         * Triggered when a post row is tapped.
          */
         void onPostClicked(Post post);
 
         /**
-         * Called when the favorite button is clicked
-         *
-         * @param post The favorited post
-         * @param position The position of the post in the list
+         * Triggered when the like button is pressed.
          */
         void onLikeClicked(Post post, int position);
 
         /**
-         * Called when the favorite button is clicked
-         *
-         * @param post The favorited post
-         * @param position The position of the post in the list
+         * Triggered when the favorite button is pressed.
          */
         void onFavoriteClicked(Post post, int position);
 
         /**
-         * Called when the delete button is clicked (optional)
-         *
-         * @param post The deleted post
-         * @param position The position of the post in the list
+         * Triggered when the delete button is pressed (optional).
          */
         default void onDeleteClicked(Post post, int position) {
-            // Default implementation: do nothing
+            // Default no-op.
         }
     }
 
-    /**
-     * Set the interaction listener
-     *
-     * @param listener The listener instance
-     */
+    /** Assigns the interaction listener. */
     public void setOnPostInteractionListener(OnPostInteractionListener listener) {
         this.interactionListener = listener;
     }
 
-    /**
-     * Set whether to show the delete button
-     * <p>
-     * The delete button is shown in the personal posts page and hidden in the discover page.
-     * This method will trigger a UI refresh.
-     * </p>
-     *
-     * @param show true to show the delete button, false to hide
-     */
+    /** Controls visibility of the delete button and refreshes the list. */
     public void setShowDeleteButton(boolean show) {
         this.showDeleteButton = show;
         notifyDataSetChanged();
     }
 
-    /**
-     * Set the list of posts
-     * <p>
-     * Clears existing data and adds new posts, then refreshes the entire list.
-     * Note: This method calls notifyDataSetChanged(), which may impact performance.
-     * </p>
-     *
-     * @param newPosts The new list of posts (null to clear)
-     */
+    /** Replaces the dataset and refreshes the list. */
     public void setPosts(List<Post> newPosts) {
         posts.clear();
         if (newPosts != null) {
@@ -120,14 +81,7 @@ public class PostsAdapter extends RecyclerView.Adapter<PostsAdapter.PostViewHold
         notifyDataSetChanged();
     }
 
-    /**
-     * Remove a post from the list by position
-     * <p>
-     * Calls notifyItemRemoved() to trigger a deletion animation.
-     * </p>
-     *
-     * @param position The index of the post to remove
-     */
+    /** Removes a post at the given index with animation. */
     public void removePost(int position) {
         if (position >= 0 && position < posts.size()) {
             posts.remove(position);
@@ -135,15 +89,7 @@ public class PostsAdapter extends RecyclerView.Adapter<PostsAdapter.PostViewHold
         }
     }
 
-    /**
-     * Update a specific post in the list
-     * <p>
-     * Used to update like/favorite status or other dynamic post attributes.
-     * </p>
-     *
-     * @param position The index of the post to update
-     * @param post The updated post object
-     */
+    /** Updates a post at the specified index (e.g., like/favorite state). */
     public void updatePost(int position, Post post) {
         if (position >= 0 && position < posts.size()) {
             posts.set(position, post);
@@ -151,16 +97,7 @@ public class PostsAdapter extends RecyclerView.Adapter<PostsAdapter.PostViewHold
         }
     }
 
-    /**
-     * Create a new ViewHolder
-     * <p>
-     * Inflates the item_post layout and returns a PostViewHolder instance.
-     * </p>
-     *
-     * @param parent The parent ViewGroup
-     * @param viewType The type of view (not used)
-     * @return A new PostViewHolder
-     */
+    /** Inflates the post row layout. */
     @NonNull
     @Override
     public PostViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -169,60 +106,52 @@ public class PostsAdapter extends RecyclerView.Adapter<PostsAdapter.PostViewHold
         return new PostViewHolder(view);
     }
 
-    /**
-     * Bind data to the ViewHolder
-     * <p>
-     * Displays post information at the specified position.
-     * </p>
-     *
-     * @param holder The ViewHolder instance
-     * @param position The position of the post
-     */
+    /** Binds the post for the given position. */
     @Override
     public void onBindViewHolder(@NonNull PostViewHolder holder, int position) {
         Post post = posts.get(position);
         holder.bind(post, position, interactionListener, showDeleteButton);
     }
 
-    /**
-     * Get the total number of posts
-     *
-     * @return The number of posts
-     */
+    /** Number of posts displayed. */
     @Override
     public int getItemCount() {
         return posts.size();
     }
 
     /**
-     * Post ViewHolder
-     * <p>
-     * Holds and manages all view components of a single post item, including
-     * user info, image carousel, text content, rating bar, and interaction buttons.
-     * Provides methods to bind post data and update the UI.
-     * </p>
+     * ViewHolder that manages all UI elements for a post row.
      */
     static class PostViewHolder extends RecyclerView.ViewHolder {
+        /** Avatar image. */
         private final ImageView imageAvatar;
+        /** Username label. */
+        private final TextView textUsername;
+        /** Delete button. */
         private final ImageButton buttonDelete;
+        /** Image carousel view pager. */
         private final ViewPager2 viewPagerImages;
+        /** Image indicator showing current position. */
         private final TextView textImageIndicator;
+        /** Post title label. */
         private final TextView textTitle;
+        /** Post description label. */
         private final TextView textDescription;
+        /** Rating bar. */
         private final RatingBar ratingBar;
+        /** Like button. */
         private final ImageButton buttonLike;
+        /** Like count label. */
         private final TextView textLikeCount;
+        /** Favorite button. */
         private final ImageButton buttonFavorite;
+        /** Favorite count label. */
         private final TextView textFavoriteCount;
+        /** Publish time label. */
         private final TextView textTime;
 
         /**
-         * Constructor for PostViewHolder
-         * <p>
-         * Initializes and binds all view components.
-         * </p>
-         *
-         * @param itemView The root view of the item
+         * Binds all view references for the row layout.
          */
         PostViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -242,40 +171,32 @@ public class PostsAdapter extends RecyclerView.Adapter<PostsAdapter.PostViewHold
         }
 
         /**
-         * Bind post data to the view
-         * <p>
-         * Binds all post information such as user details, images, text, ratings,
-         * like/favorite status, and sets up interaction listeners.
-         * </p>
-         *
-         * @param post The post to display
-         * @param position The position of the post in the list
-         * @param listener The interaction listener
-         * @param showDelete Whether to show the delete button
+         * Binds the post data to each view and sets up listeners.
          */
         void bind(Post post, int position, OnPostInteractionListener listener, boolean showDelete) {
-
+            // Bind username.
             textUsername.setText(post.getUsername());
 
-
+            // Toggle delete button visibility.
             buttonDelete.setVisibility(showDelete ? View.VISIBLE : View.GONE);
 
-            // Set up image carousel
+            // Bind avatar.
             if (post.getUserAvatarUrl() != null && !post.getUserAvatarUrl().isEmpty()) {
                 Glide.with(imageAvatar.getContext())
                         .load(post.getUserAvatarUrl())
                         .circleCrop()
                         .into(imageAvatar);
             } else {
+                // Fallback to default avatar.
                 imageAvatar.setImageResource(R.drawable.ic_person_24);
             }
 
-            // Set up image carousel
+            // Configure image carousel.
             if (post.getImageUrls() != null && !post.getImageUrls().isEmpty()) {
                 PostImageAdapter imageAdapter = new PostImageAdapter(post.getImageUrls());
                 viewPagerImages.setAdapter(imageAdapter);
 
-                // Update image indicator when page changes
+                // Update indicator when pages change.
                 viewPagerImages.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
                     @Override
                     public void onPageSelected(int position) {
@@ -284,26 +205,28 @@ public class PostsAdapter extends RecyclerView.Adapter<PostsAdapter.PostViewHold
                     }
                 });
 
-
+                // Initial indicator text.
                 textImageIndicator.setText("1/" + post.getImageUrls().size());
+                // Show indicator only when more than one image exists.
                 textImageIndicator.setVisibility(post.getImageUrls().size() > 1 ? View.VISIBLE : View.GONE);
             }
 
-
+            // Bind title and description.
             textTitle.setText(post.getTitle());
             textDescription.setText(post.getDescription());
 
+            // Bind rating.
             ratingBar.setRating((float) post.getRating());
 
-
+            // Bind like state/count.
             updateLikeButton(post.isLikedByCurrentUser());
             textLikeCount.setText(String.valueOf(post.getLikeCount()));
 
-
+            // Bind favorite state/count.
             updateFavoriteButton(post.isFavoritedByCurrentUser());
             textFavoriteCount.setText(String.valueOf(post.getFavoriteCount()));
 
-            // Set post time (relative time)
+            // Bind relative publish time.
             if (post.getCreatedAt() != null) {
                 long timeMillis = post.getCreatedAt().toDate().getTime();
                 CharSequence timeAgo = DateUtils.getRelativeTimeSpanString(
@@ -314,7 +237,7 @@ public class PostsAdapter extends RecyclerView.Adapter<PostsAdapter.PostViewHold
                 textTime.setText(timeAgo);
             }
 
-            // Set click listeners
+            // Attach listeners.
             itemView.setOnClickListener(v -> {
                 if (listener != null) {
                     listener.onPostClicked(post);
@@ -341,48 +264,34 @@ public class PostsAdapter extends RecyclerView.Adapter<PostsAdapter.PostViewHold
         }
 
         /**
-         * Update the like button state
-         * <p>
-         * Changes the icon and color based on like status:
-         * - Liked: solid icon + brand yellow
-         * - Not liked: outlined icon + default color
-         * </p>
-         *
-         * @param isLiked Whether the post is liked
+         * Updates the like button icon/tint based on state.
          */
         private void updateLikeButton(boolean isLiked) {
             if (isLiked) {
                 buttonLike.setImageResource(R.drawable.ic_thumb_up_24);
-                // 设置品牌颜色（黄色）
+                // Use brand accent color when liked.
                 int brandColor = ContextCompat.getColor(itemView.getContext(), R.color.yellow_500);
                 buttonLike.setImageTintList(ColorStateList.valueOf(brandColor));
             } else {
                 buttonLike.setImageResource(R.drawable.ic_thumb_up_border_24);
-                // 设置默认图标颜色（自动适配主题）
+                // Use default icon tint when not liked.
                 int defaultColor = ContextCompat.getColor(itemView.getContext(), R.color.icon_color);
                 buttonLike.setImageTintList(ColorStateList.valueOf(defaultColor));
             }
         }
 
         /**
-         * Update the favorite button state
-         * <p>
-         * Changes the icon and color based on favorite status:
-         * - Favorited: solid icon + brand yellow
-         * - Not favorited: outlined icon + default color
-         * </p>
-         *
-         * @param isFavorited Whether the post is favorited
+         * Updates the favorite button icon/tint based on state.
          */
         private void updateFavoriteButton(boolean isFavorited) {
             if (isFavorited) {
                 buttonFavorite.setImageResource(R.drawable.ic_bookmark_24);
-
+                // Use brand accent color when favorited.
                 int brandColor = ContextCompat.getColor(itemView.getContext(), R.color.yellow_500);
                 buttonFavorite.setImageTintList(ColorStateList.valueOf(brandColor));
             } else {
                 buttonFavorite.setImageResource(R.drawable.ic_bookmark_border_24);
-
+                // Use default icon tint when not favorited.
                 int defaultColor = ContextCompat.getColor(itemView.getContext(), R.color.icon_color);
                 buttonFavorite.setImageTintList(ColorStateList.valueOf(defaultColor));
             }

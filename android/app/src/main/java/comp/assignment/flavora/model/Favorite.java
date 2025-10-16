@@ -7,36 +7,35 @@ import comp.assignment.flavora.util.IdGenerator;
 
 /**
  * Favorite model class.
- * Represents a user's favorite (bookmark) record for a post.
+ * Represents a record of a user bookmarking a post.
  *
  * @author Flavora Team
  * @version 1.0
  */
 @IgnoreExtraProperties
 public class Favorite implements HasUUID {
-    /** Favorite record ID in the format userId_postId; ensures a user can favorite a post only once. */
+    /** Favorite record ID in userId_postId format to ensure one favorite per user/post pair. */
     private String favoriteId;
     /** ID of the user who favorited the post. */
     private String userId;
-    /** ID of the post being favorited. */
+    /** ID of the post that was favorited. */
     private String postId;
     /** Timestamp when the favorite was created. */
     private Timestamp createdAt;
 
     /**
-     * No-args constructor.
-     * Required for Firestore deserialization.
+     * No-arg constructor required by Firestore for deserialization.
      */
     public Favorite() {
     }
 
     /**
-     * Constructs a favorite record.
-     * The favoriteId is automatically generated as userId_postId.
+     * Creates a favorite record.
+     * The favoriteId is generated automatically as userId_postId.
      *
-     * @param userId    ID of the user who favorites the post
-     * @param postId    ID of the post being favorited
-     * @param createdAt Timestamp when the favorite is created
+     * @param userId ID of the user who favorited the post.
+     * @param postId ID of the favorited post.
+     * @param createdAt Timestamp of the favorite.
      */
     public Favorite(String userId, String postId, Timestamp createdAt) {
         this.favoriteId = IdGenerator.generateFavoriteId(userId, postId);
@@ -46,10 +45,10 @@ public class Favorite implements HasUUID {
     }
 
     /**
-     * Returns the unique identifier of this object.
-     * Implements the HasUUID interface.
+     * Returns the unique identifier for this object.
+     * Implements the HasUUID contract.
      *
-     * @return the favorite record ID as the UUID
+     * @return Favorite record ID treated as the UUID.
      */
     @Override
     @Exclude
@@ -58,10 +57,10 @@ public class Favorite implements HasUUID {
     }
 
     /**
-     * Placeholder UUID setter.
-     * Exists to avoid Firestore warnings; UUID is managed via favoriteId.
+     * Setter for the UUID (placeholder).
+     * Prevents Firestore warnings; the real UUID is handled via favoriteId.
      *
-     * @param uuid UUID value (ignored)
+     * @param uuid UUID value (ignored).
      */
     @Exclude
     public void setUuid(String uuid) {
@@ -69,7 +68,7 @@ public class Favorite implements HasUUID {
 
     /**
      * Gets the favorite record ID.
-     * @return the unique identifier (in userId_postId format)
+     * @return Unique identifier in userId_postId format.
      */
     public String getFavoriteId() {
         return favoriteId;
@@ -77,7 +76,7 @@ public class Favorite implements HasUUID {
 
     /**
      * Sets the favorite record ID.
-     * @param favoriteId the unique identifier of the favorite record
+     * @param favoriteId Unique identifier for the favorite.
      */
     public void setFavoriteId(String favoriteId) {
         this.favoriteId = favoriteId;
@@ -85,7 +84,7 @@ public class Favorite implements HasUUID {
 
     /**
      * Gets the ID of the user who favorited the post.
-     * @return user ID
+     * @return User ID.
      */
     public String getUserId() {
         return userId;
@@ -93,7 +92,7 @@ public class Favorite implements HasUUID {
 
     /**
      * Sets the ID of the user who favorited the post.
-     * @param userId user ID
+     * @param userId User ID.
      */
     public void setUserId(String userId) {
         this.userId = userId;
@@ -101,7 +100,7 @@ public class Favorite implements HasUUID {
 
     /**
      * Gets the ID of the favorited post.
-     * @return post ID
+     * @return Post ID.
      */
     public String getPostId() {
         return postId;
@@ -109,23 +108,23 @@ public class Favorite implements HasUUID {
 
     /**
      * Sets the ID of the favorited post.
-     * @param postId post ID
+     * @param postId Post ID.
      */
     public void setPostId(String postId) {
         this.postId = postId;
     }
 
     /**
-     * Gets the creation timestamp of the favorite.
-     * @return Firebase Timestamp
+     * Gets the timestamp when the favorite was created.
+     * @return Firebase timestamp.
      */
     public Timestamp getCreatedAt() {
         return createdAt;
     }
 
     /**
-     * Sets the creation timestamp of the favorite.
-     * @param createdAt Firebase Timestamp
+     * Sets the timestamp when the favorite was created.
+     * @param createdAt Firebase timestamp.
      */
     public void setCreatedAt(Timestamp createdAt) {
         this.createdAt = createdAt;

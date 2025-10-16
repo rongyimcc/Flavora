@@ -17,19 +17,18 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Firebase Data Source
+ * Firebase data source.
  * <p>
- * Encapsulates all Firebase operations and provides an abstraction layer
- * between the DAO layer and Firebase.
- * This makes switching data sources easier and improves maintainability and testability.
+ * Encapsulates every Firebase operation and provides an abstraction layer between Firebase and the DAO.
+ * Makes it easier to swap data sources and improves maintainability and testability.
  * </p>
  *
- * <p>Design Features:</p>
+ * <p>Design highlights:</p>
  * <ul>
- *   <li>Singleton: globally unique instance, thread-safe</li>
- *   <li>Unified interface: all Firebase operations go through this class</li>
- *   <li>Asynchronous operations: uses OnCompleteListener for async callbacks</li>
- *   <li>Atomic operations: uses WriteBatch to ensure data consistency</li>
+ *   <li>Singleton: single global instance with thread safety.</li>
+ *   <li>Unified entry point: all Firebase operations flow through this class.</li>
+ *   <li>Asynchronous operations: uses OnCompleteListener for async callbacks.</li>
+ *   <li>Atomic operations: relies on WriteBatch to keep data consistent.</li>
  * </ul>
  *
  * @author Flavora Team
@@ -37,36 +36,36 @@ import java.util.List;
  * @since 1.0
  */
 public class FirebaseDataSource {
-    /** Log tag */
+    /** Log tag. */
     private static final String TAG = "FirebaseDataSource";
 
-    /** Singleton instance */
+    /** Singleton instance. */
     private static FirebaseDataSource instance;
 
-    /** Firestore database instance */
+    /** Firestore database instance. */
     private final FirebaseFirestore db;
 
-    /** Firebase Auth instance */
+    /** Firebase auth instance. */
     private final FirebaseAuth auth;
 
-    /** Firebase Storage instance */
+    /** Firebase storage instance. */
     private final FirebaseStorage storage;
 
-    /** Collection: users */
+    /** Users collection name. */
     private static final String COLLECTION_USERS = "users";
 
-    /** Collection: posts */
+    /** Posts collection name. */
     private static final String COLLECTION_POSTS = "posts";
 
-    /** Collection: likes */
+    /** Likes collection name. */
     private static final String COLLECTION_LIKES = "likes";
 
-    /** Collection: favorites */
+    /** Favorites collection name. */
     private static final String COLLECTION_FAVORITES = "favorites";
 
     /**
      * Private constructor.
-     * Initializes Firebase-related instances.
+     * Initializes the Firebase components.
      */
     private FirebaseDataSource() {
         this.db = FirebaseFirestore.getInstance();
@@ -75,10 +74,10 @@ public class FirebaseDataSource {
     }
 
     /**
-     * Gets the singleton instance of FirebaseDataSource.
+     * Returns the singleton FirebaseDataSource instance.
      * Uses double-checked locking (DCL) for thread-safe lazy initialization.
      *
-     * @return the singleton FirebaseDataSource instance
+     * @return Singleton FirebaseDataSource instance.
      */
     public static FirebaseDataSource getInstance() {
         if (instance == null) {
@@ -94,10 +93,10 @@ public class FirebaseDataSource {
     // ==================== User Operations ====================
 
     /**
-     * Adds a user to Firestore.
+     * Adds a user to the Firestore database.
      *
-     * @param user     the User object to add
-     * @param listener completion listener invoked on operation completion
+     * @param user User to insert.
+     * @param listener Completion listener invoked when the operation finishes.
      */
     public void addUser(User user, OnCompleteListener<Void> listener) {
         db.collection(COLLECTION_USERS)
@@ -107,10 +106,10 @@ public class FirebaseDataSource {
     }
 
     /**
-     * Retrieves a user by user ID.
+     * Retrieves a user by ID.
      *
-     * @param userId   the user ID
-     * @param listener completion listener returning the User or an exception
+     * @param userId User ID.
+     * @param listener Completion listener returning the User or an exception.
      */
     public void getUser(String userId, OnCompleteListener<User> listener) {
         db.collection(COLLECTION_USERS)
@@ -129,9 +128,9 @@ public class FirebaseDataSource {
     }
 
     /**
-     * Retrieves all users.
+     * Retrieves the full list of users.
      *
-     * @param listener completion listener returning the list of users or an exception
+     * @param listener Completion listener returning the user list or an exception.
      */
     public void getAllUsers(OnCompleteListener<List<User>> listener) {
         db.collection(COLLECTION_USERS)
@@ -149,8 +148,8 @@ public class FirebaseDataSource {
     /**
      * Updates user information.
      *
-     * @param user     the User containing new data
-     * @param listener completion listener invoked on operation completion
+     * @param user User containing the new data.
+     * @param listener Completion listener invoked when the operation finishes.
      */
     public void updateUser(User user, OnCompleteListener<Void> listener) {
         db.collection(COLLECTION_USERS)
@@ -162,8 +161,8 @@ public class FirebaseDataSource {
     /**
      * Deletes a user.
      *
-     * @param userId   the ID of the user to delete
-     * @param listener completion listener invoked on operation completion
+     * @param userId ID of the user to remove.
+     * @param listener Completion listener invoked when the operation finishes.
      */
     public void deleteUser(String userId, OnCompleteListener<Void> listener) {
         db.collection(COLLECTION_USERS)
@@ -175,8 +174,8 @@ public class FirebaseDataSource {
     /**
      * Retrieves a user by username.
      *
-     * @param username the username
-     * @param listener completion listener returning a User or null if not found
+     * @param username Username to search.
+     * @param listener Completion listener returning the User or null if not found.
      */
     public void getUserByUsername(String username, OnCompleteListener<User> listener) {
         db.collection(COLLECTION_USERS)
@@ -194,10 +193,10 @@ public class FirebaseDataSource {
     }
 
     /**
-     * Increments the user's post count.
+     * Increments the post count for a user.
      *
-     * @param userId   the user ID
-     * @param listener completion listener invoked on operation completion
+     * @param userId User ID.
+     * @param listener Completion listener invoked when the operation finishes.
      */
     public void incrementUserPostsCount(String userId, OnCompleteListener<Void> listener) {
         db.collection(COLLECTION_USERS)
@@ -207,10 +206,10 @@ public class FirebaseDataSource {
     }
 
     /**
-     * Decrements the user's post count.
+     * Decrements the post count for a user.
      *
-     * @param userId   the user ID
-     * @param listener completion listener invoked on operation completion
+     * @param userId User ID.
+     * @param listener Completion listener invoked when the operation finishes.
      */
     public void decrementUserPostsCount(String userId, OnCompleteListener<Void> listener) {
         db.collection(COLLECTION_USERS)
@@ -222,10 +221,10 @@ public class FirebaseDataSource {
     // ==================== Post Operations ====================
 
     /**
-     * Adds a post to Firestore.
+     * Adds a post to the Firestore database.
      *
-     * @param post     the Post to add
-     * @param listener completion listener invoked on operation completion
+     * @param post Post to insert.
+     * @param listener Completion listener invoked when the operation finishes.
      */
     public void addPost(Post post, OnCompleteListener<Void> listener) {
         db.collection(COLLECTION_POSTS)
@@ -237,8 +236,8 @@ public class FirebaseDataSource {
     /**
      * Retrieves a post by ID.
      *
-     * @param postId   the post ID
-     * @param listener completion listener returning the Post or an exception
+     * @param postId Post ID.
+     * @param listener Completion listener returning the Post or an exception.
      */
     public void getPost(String postId, OnCompleteListener<Post> listener) {
         db.collection(COLLECTION_POSTS)
@@ -257,9 +256,9 @@ public class FirebaseDataSource {
     }
 
     /**
-     * Retrieves all posts.
+     * Retrieves the full list of posts.
      *
-     * @param listener completion listener returning the list of posts or an exception
+     * @param listener Completion listener returning the post list or an exception.
      */
     public void getAllPosts(OnCompleteListener<List<Post>> listener) {
         db.collection(COLLECTION_POSTS)
@@ -277,7 +276,7 @@ public class FirebaseDataSource {
     /**
      * Retrieves posts ordered by creation time in descending order (newest first).
      *
-     * @param listener completion listener returning the time-sorted list or an exception
+     * @param listener Completion listener returning the time-ordered post list or an exception.
      */
     public void getPostsOrderByTime(OnCompleteListener<List<Post>> listener) {
         db.collection(COLLECTION_POSTS)
@@ -294,10 +293,10 @@ public class FirebaseDataSource {
     }
 
     /**
-     * Retrieves all posts created by a specific user.
+     * Retrieves all posts published by the specified user.
      *
-     * @param userId   the user ID
-     * @param listener completion listener returning the user's posts or an exception
+     * @param userId User ID.
+     * @param listener Completion listener returning the user's posts or an exception.
      */
     public void getPostsByUser(String userId, OnCompleteListener<List<Post>> listener) {
         db.collection(COLLECTION_POSTS)
@@ -315,10 +314,10 @@ public class FirebaseDataSource {
     }
 
     /**
-     * Updates a post.
+     * Updates post information.
      *
-     * @param post     the Post containing new data
-     * @param listener completion listener invoked on operation completion
+     * @param post Post containing the new data.
+     * @param listener Completion listener invoked when the operation finishes.
      */
     public void updatePost(Post post, OnCompleteListener<Void> listener) {
         db.collection(COLLECTION_POSTS)
@@ -330,8 +329,8 @@ public class FirebaseDataSource {
     /**
      * Deletes a post.
      *
-     * @param postId   the post ID to delete
-     * @param listener completion listener invoked on operation completion
+     * @param postId ID of the post to remove.
+     * @param listener Completion listener invoked when the operation finishes.
      */
     public void deletePost(String postId, OnCompleteListener<Void> listener) {
         db.collection(COLLECTION_POSTS)
@@ -341,10 +340,10 @@ public class FirebaseDataSource {
     }
 
     /**
-     * Increments a post's like count.
+     * Increments the like count for a post.
      *
-     * @param postId   the post ID
-     * @param listener completion listener invoked on operation completion
+     * @param postId Post ID.
+     * @param listener Completion listener invoked when the operation finishes.
      */
     public void incrementPostLikeCount(String postId, OnCompleteListener<Void> listener) {
         db.collection(COLLECTION_POSTS)
@@ -354,10 +353,10 @@ public class FirebaseDataSource {
     }
 
     /**
-     * Decrements a post's like count.
+     * Decrements the like count for a post.
      *
-     * @param postId   the post ID
-     * @param listener completion listener invoked on operation completion
+     * @param postId Post ID.
+     * @param listener Completion listener invoked when the operation finishes.
      */
     public void decrementPostLikeCount(String postId, OnCompleteListener<Void> listener) {
         db.collection(COLLECTION_POSTS)
@@ -371,8 +370,8 @@ public class FirebaseDataSource {
     /**
      * Adds a like record.
      *
-     * @param like     the Like object
-     * @param listener completion listener invoked on operation completion
+     * @param like Like entity.
+     * @param listener Completion listener invoked when the operation finishes.
      */
     public void addLike(Like like, OnCompleteListener<Void> listener) {
         db.collection(COLLECTION_LIKES)
@@ -384,8 +383,8 @@ public class FirebaseDataSource {
     /**
      * Retrieves a like record by ID.
      *
-     * @param likeId   the like ID
-     * @param listener completion listener returning a Like or null if not found
+     * @param likeId Like ID.
+     * @param listener Completion listener returning the Like or null when missing.
      */
     public void getLike(String likeId, OnCompleteListener<Like> listener) {
         db.collection(COLLECTION_LIKES)
@@ -402,9 +401,9 @@ public class FirebaseDataSource {
     }
 
     /**
-     * Retrieves all like records.
+     * Retrieves every like record.
      *
-     * @param listener completion listener returning the list of likes or an exception
+     * @param listener Completion listener returning the like list or an exception.
      */
     public void getAllLikes(OnCompleteListener<List<Like>> listener) {
         db.collection(COLLECTION_LIKES)
@@ -422,8 +421,8 @@ public class FirebaseDataSource {
     /**
      * Deletes a like record.
      *
-     * @param likeId   the like ID to delete
-     * @param listener completion listener invoked on operation completion
+     * @param likeId ID of the like to remove.
+     * @param listener Completion listener invoked when the operation finishes.
      */
     public void deleteLike(String likeId, OnCompleteListener<Void> listener) {
         db.collection(COLLECTION_LIKES)
@@ -433,12 +432,12 @@ public class FirebaseDataSource {
     }
 
     /**
-     * Atomic operation: add a like and increment the post's like count.
-     * Uses WriteBatch to ensure both operations succeed or fail together.
+     * Atomic operation: add a like and increment the post like count.
+     * Uses WriteBatch so both updates succeed or fail together, keeping data consistent.
      *
-     * @param userId   user ID
-     * @param postId   post ID
-     * @param listener completion listener invoked on operation completion
+     * @param userId User ID.
+     * @param postId Post ID.
+     * @param listener Completion listener invoked when the operation finishes.
      */
     public void addLikeAndIncrementCount(String userId, String postId, OnCompleteListener<Void> listener) {
         String likeId = IdGenerator.generateLikeId(userId, postId);
@@ -453,12 +452,12 @@ public class FirebaseDataSource {
     }
 
     /**
-     * Atomic operation: remove a like and decrement the post's like count.
-     * Uses WriteBatch for consistency.
+     * Atomic operation: remove a like and decrement the post like count.
+     * Uses WriteBatch so both updates succeed or fail together, keeping data consistent.
      *
-     * @param userId   user ID
-     * @param postId   post ID
-     * @param listener completion listener invoked on operation completion
+     * @param userId User ID.
+     * @param postId Post ID.
+     * @param listener Completion listener invoked when the operation finishes.
      */
     public void removeLikeAndDecrementCount(String userId, String postId, OnCompleteListener<Void> listener) {
         String likeId = IdGenerator.generateLikeId(userId, postId);
@@ -472,11 +471,11 @@ public class FirebaseDataSource {
     }
 
     /**
-     * Checks whether a like exists.
+     * Checks if a like already exists.
      *
-     * @param userId   user ID
-     * @param postId   post ID
-     * @param listener completion listener returning a boolean
+     * @param userId User ID.
+     * @param postId Post ID.
+     * @param listener Completion listener returning whether the like exists.
      */
     public void checkLikeExists(String userId, String postId, OnCompleteListener<Boolean> listener) {
         String likeId = IdGenerator.generateLikeId(userId, postId);
@@ -494,10 +493,10 @@ public class FirebaseDataSource {
     }
 
     /**
-     * Retrieves all likes for a given post.
+     * Retrieves all like records for a post.
      *
-     * @param postId   post ID
-     * @param listener completion listener returning a list of Like objects or an exception
+     * @param postId Post ID.
+     * @param listener Completion listener returning the post's likes or an exception.
      */
     public void getLikesByPost(String postId, OnCompleteListener<List<Like>> listener) {
         db.collection(COLLECTION_LIKES)
@@ -514,10 +513,10 @@ public class FirebaseDataSource {
     }
 
     /**
-     * Retrieves all post IDs liked by a specific user.
+     * Retrieves every post ID liked by the specified user.
      *
-     * @param userId   user ID
-     * @param listener completion listener returning a list of post IDs or an exception
+     * @param userId User ID.
+     * @param listener Completion listener returning the post ID list or an exception.
      */
     public void getLikesByUser(String userId, OnCompleteListener<List<String>> listener) {
         db.collection(COLLECTION_LIKES)
@@ -544,8 +543,8 @@ public class FirebaseDataSource {
     /**
      * Adds a favorite record.
      *
-     * @param favorite the Favorite object
-     * @param listener completion listener invoked on operation completion
+     * @param favorite Favorite entity.
+     * @param listener Completion listener invoked when the operation finishes.
      */
     public void addFavorite(Favorite favorite, OnCompleteListener<Void> listener) {
         db.collection(COLLECTION_FAVORITES)
@@ -557,8 +556,8 @@ public class FirebaseDataSource {
     /**
      * Retrieves a favorite record by ID.
      *
-     * @param favoriteId favorite ID
-     * @param listener   completion listener returning a Favorite or null if not found
+     * @param favoriteId Favorite ID.
+     * @param listener Completion listener returning the Favorite or null when missing.
      */
     public void getFavorite(String favoriteId, OnCompleteListener<Favorite> listener) {
         db.collection(COLLECTION_FAVORITES)
@@ -575,9 +574,9 @@ public class FirebaseDataSource {
     }
 
     /**
-     * Retrieves all favorite records.
+     * Retrieves every favorite record.
      *
-     * @param listener completion listener returning the list of favorites or an exception
+     * @param listener Completion listener returning the favorite list or an exception.
      */
     public void getAllFavorites(OnCompleteListener<List<Favorite>> listener) {
         db.collection(COLLECTION_FAVORITES)
@@ -595,8 +594,8 @@ public class FirebaseDataSource {
     /**
      * Deletes a favorite record.
      *
-     * @param favoriteId favorite ID to delete
-     * @param listener   completion listener invoked on operation completion
+     * @param favoriteId ID of the favorite to remove.
+     * @param listener Completion listener invoked when the operation finishes.
      */
     public void deleteFavorite(String favoriteId, OnCompleteListener<Void> listener) {
         db.collection(COLLECTION_FAVORITES)
@@ -606,12 +605,12 @@ public class FirebaseDataSource {
     }
 
     /**
-     * Atomic operation: add a favorite and increment the post's favorite count.
-     * Uses WriteBatch to ensure both operations succeed or fail together.
+     * Atomic operation: add a favorite and increment the post favorite count.
+     * Uses WriteBatch so both updates succeed or fail together, keeping data consistent.
      *
-     * @param userId   user ID
-     * @param postId   post ID
-     * @param listener completion listener invoked on operation completion
+     * @param userId User ID.
+     * @param postId Post ID.
+     * @param listener Completion listener invoked when the operation finishes.
      */
     public void addFavoriteAndIncrementCount(String userId, String postId, OnCompleteListener<Void> listener) {
         String favoriteId = IdGenerator.generateFavoriteId(userId, postId);
@@ -626,12 +625,12 @@ public class FirebaseDataSource {
     }
 
     /**
-     * Atomic operation: remove a favorite and decrement the post's favorite count.
-     * Uses WriteBatch to ensure both operations succeed or fail together.
+     * Atomic operation: remove a favorite and decrement the post favorite count.
+     * Uses WriteBatch so both updates succeed or fail together, keeping data consistent.
      *
-     * @param userId   user ID
-     * @param postId   post ID
-     * @param listener completion listener invoked on operation completion
+     * @param userId User ID.
+     * @param postId Post ID.
+     * @param listener Completion listener invoked when the operation finishes.
      */
     public void removeFavoriteAndDecrementCount(String userId, String postId, OnCompleteListener<Void> listener) {
         String favoriteId = IdGenerator.generateFavoriteId(userId, postId);
@@ -645,10 +644,10 @@ public class FirebaseDataSource {
     }
 
     /**
-     * Increments a post's favorite count.
+     * Increments the favorite count for a post.
      *
-     * @param postId   the post ID
-     * @param listener completion listener invoked on operation completion
+     * @param postId Post ID.
+     * @param listener Completion listener invoked when the operation finishes.
      */
     public void incrementPostFavoriteCount(String postId, OnCompleteListener<Void> listener) {
         db.collection(COLLECTION_POSTS)
@@ -658,10 +657,10 @@ public class FirebaseDataSource {
     }
 
     /**
-     * Decrements a post's favorite count.
+     * Decrements the favorite count for a post.
      *
-     * @param postId   the post ID
-     * @param listener completion listener invoked on operation completion
+     * @param postId Post ID.
+     * @param listener Completion listener invoked when the operation finishes.
      */
     public void decrementPostFavoriteCount(String postId, OnCompleteListener<Void> listener) {
         db.collection(COLLECTION_POSTS)
@@ -671,11 +670,11 @@ public class FirebaseDataSource {
     }
 
     /**
-     * Checks whether a favorite exists.
+     * Checks if a favorite already exists.
      *
-     * @param userId   user ID
-     * @param postId   post ID
-     * @param listener completion listener returning a boolean
+     * @param userId User ID.
+     * @param postId Post ID.
+     * @param listener Completion listener returning whether the favorite exists.
      */
     public void checkFavoriteExists(String userId, String postId, OnCompleteListener<Boolean> listener) {
         String favoriteId = IdGenerator.generateFavoriteId(userId, postId);
@@ -693,10 +692,10 @@ public class FirebaseDataSource {
     }
 
     /**
-     * Retrieves all post IDs favorited by a specific user.
+     * Retrieves every post ID favorited by the specified user.
      *
-     * @param userId   user ID
-     * @param listener completion listener returning a list of post IDs or an exception
+     * @param userId User ID.
+     * @param listener Completion listener returning the post ID list or an exception.
      */
     public void getFavoritesByUser(String userId, OnCompleteListener<List<String>> listener) {
         db.collection(COLLECTION_FAVORITES)
@@ -719,18 +718,18 @@ public class FirebaseDataSource {
     }
 
     /**
-     * Retrieves all favorited posts by a user (returns full Post objects).
+     * Retrieves every post favorited by the specified user (returns full Post objects).
      * <p>
-     * Two steps:
-     * 1. Fetch the list of favorited post IDs for the user.
-     * 2. Query posts by those IDs to obtain full Post objects.
+     * Two-step flow:
+     * 1. Fetch the list of post IDs the user has favorited.
+     * 2. Query the complete post documents using those IDs.
      * </p>
      *
-     * @param userId   user ID
-     * @param listener completion listener returning a list of posts or an exception
+     * @param userId User ID.
+     * @param listener Completion listener returning the post list or an exception.
      */
     public void getFavoritedPostsByUser(String userId, OnCompleteListener<List<Post>> listener) {
-        // Step 1: get favorited post IDs
+        // Step 1: fetch the IDs of the posts the user favorited.
         getFavoritesByUser(userId, task -> {
             if (task.isSuccessful() && task.getResult() != null) {
                 List<String> postIds = task.getResult();
@@ -739,7 +738,7 @@ public class FirebaseDataSource {
                     return;
                 }
 
-                // Step 2: fetch full posts by IDs
+                // Step 2: fetch the full post objects for those IDs.
                 db.collection(COLLECTION_POSTS)
                         .whereIn(FieldPath.documentId(), postIds)
                         .orderBy(FirestoreFields.CREATED_AT, Query.Direction.DESCENDING)
@@ -759,13 +758,13 @@ public class FirebaseDataSource {
     }
 
     /**
-     * Computes the total number of likes received across all posts by the given user.
+     * Retrieves the total number of likes across all posts by the specified user.
      * <p>
-     * Implementation: query all posts by the user and sum each post's likeCount.
+     * Fetches every post owned by the user and sums their like counts.
      * </p>
      *
-     * @param userId   user ID
-     * @param listener completion listener returning the total like count or an exception
+     * @param userId User ID.
+     * @param listener Completion listener returning the total like count or an exception.
      */
     public void getTotalLikesForUser(String userId, OnCompleteListener<Integer> listener) {
         db.collection(COLLECTION_POSTS)

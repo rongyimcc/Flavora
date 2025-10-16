@@ -6,24 +6,23 @@ import comp.assignment.flavora.datasource.FirebaseDataSource;
 import comp.assignment.flavora.repository.AuthRepository;
 
 /**
- * Facade class for post interaction operations
+ * Facade for post interaction operations.
  * <p>
- * This class provides a simplified API interface for managing user interactions with posts (likes, favorites).
- * All operations are based on the currently logged-in user, with user identity obtained through {@link AuthRepository}.
+ * Provides a simplified API for managing likes and favorites tied to the current user
+ * (retrieved via {@link AuthRepository}).
  * </p>
  *
- * <p>Main features:</p>
+ * <p>Main capabilities:</p>
  * <ul>
- *   <li>Toggle post like status (like/unlike)</li>
- *   <li>Toggle post favorite status (favorite/unfavorite)</li>
- *   <li>Check if current user has liked/favorited a post</li>
- *   <li>Get list of all post IDs liked/favorited by current user</li>
+ *   <li>Toggle like state for a post.</li>
+ *   <li>Toggle favorite state for a post.</li>
+ *   <li>Check whether the current user liked or favorited a post.</li>
+ *   <li>Fetch the lists of post IDs liked or favorited by the user.</li>
  * </ul>
  *
- * <p>This class uses static methods and can be used without instantiation. All methods use
- * asynchronous callback mechanism, returning operation results through {@link OnCompleteListener}.</p>
+ * <p>All methods are static and return results through {@link OnCompleteListener} callbacks.</p>
  *
- * <p>Note: All interaction operations require the user to be logged in, otherwise an exception or default value will be returned.</p>
+ * <p>Note: an authenticated user is required; otherwise an exception or default value is returned.</p>
  *
  * @author Flavora Team
  * @version 1.0
@@ -32,34 +31,33 @@ import comp.assignment.flavora.repository.AuthRepository;
  */
 public class PostInteractionFacade {
 
-    /** Firebase data source instance for executing underlying database operations */
+    /** Firebase data source used for underlying database operations. */
     private static final FirebaseDataSource dataSource = FirebaseDataSource.getInstance();
 
-    /** Authentication repository instance for obtaining current logged-in user information */
+    /** Auth repository used to obtain the current user's information. */
     private static final AuthRepository authRepository = AuthRepository.getInstance();
 
     /**
-     * Toggle the current user's like status for a post
+     * Toggles the like state for the current user and post.
      * <p>
-     * If the post is already liked, it will be unliked; if not liked, it will be liked.
-     * This operation automatically updates the post's like count.
+     * Removes the like if it already exists; otherwise adds it. Automatically keeps the like count in sync.
      * </p>
      *
-     * <p>Operation flow:</p>
+     * <p>Flow:</p>
      * <ol>
-     *   <li>Get current logged-in user ID</li>
-     *   <li>Verify if user is logged in</li>
-     *   <li>Execute like or unlike operation based on current status</li>
-     *   <li>Synchronously update the post's like count</li>
-     *   <li>Return new like status</li>
+     *   <li>Fetch the current user ID.</li>
+     *   <li>Ensure the user is logged in.</li>
+     *   <li>Add or remove the like based on the current state.</li>
+     *   <li>Update the post's like count.</li>
+     *   <li>Return the new like state.</li>
      * </ol>
      *
-     * @param postId   Post ID
-     * @param isLiked  Current like status (true means already liked, false means not liked)
-     * @param listener Completion callback, returns new status after operation (true=liked, false=unliked)
+     * @param postId   Post ID.
+     * @param isLiked  Current like state (true when liked).
+     * @param listener Completion listener returning the new like state.
      */
     public static void toggleLike(String postId, boolean isLiked, OnCompleteListener<Boolean> listener) {
-        // Get current logged-in user ID
+        // Fetch the current user ID.
         String userId = authRepository.getCurrentUserId();
         if (userId == null) {
             listener.onComplete(Tasks.forException(new IllegalStateException("User not logged in")));
@@ -67,19 +65,19 @@ public class PostInteractionFacade {
         }
 
         if (isLiked) {
-            // Unlike: remove like record and decrement count
+            // Unlike: remove the record and decrement the count.
             dataSource.removeLikeAndDecrementCount(userId, postId, task -> {
                 if (task.isSuccessful()) {
-                    listener.onComplete(Tasks.forResult(false)); // Now unliked
+                    listener.onComplete(Tasks.forResult(false)); // Now not liked.
                 } else {
                     listener.onComplete(Tasks.forException(task.getException()));
                 }
             });
         } else {
-            // Like: add like record and increment count
+            // Like: add the record and increment the count.
             dataSource.addLikeAndIncrementCount(userId, postId, task -> {
                 if (task.isSuccessful()) {
-                    listener.onComplete(Tasks.forResult(true)); // Now liked
+                    listener.onComplete(Tasks.forResult(true)); // Now liked.
                 } else {
                     listener.onComplete(Tasks.forException(task.getException()));
                 }
@@ -88,27 +86,26 @@ public class PostInteractionFacade {
     }
 
     /**
-     * Toggle the current user's favorite status for a post
+     * Toggles the favorite state for the current user and post.
      * <p>
-     * If the post is already favorited, it will be unfavorited; if not favorited, it will be favorited.
-     * This operation automatically updates the post's favorite count.
+     * Removes the favorite if it already exists; otherwise adds it. Keeps the favorite count up to date.
      * </p>
      *
-     * <p>Operation flow:</p>
+     * <p>Flow:</p>
      * <ol>
-     *   <li>Get current logged-in user ID</li>
-     *   <li>Verify if user is logged in</li>
-     *   <li>Execute favorite or unfavorite operation based on current status</li>
-     *   <li>Synchronously update the post's favorite count</li>
-     *   <li>Return new favorite status</li>
+     *   <li>Fetch the current user ID.</li>
+     *   <li>Ensure the user is logged in.</li>
+     *   <li>Add or remove the favorite depending on the state.</li>
+     *   <li>Update the post's favorite count.</li>
+     *   <li>Return the new favorite state.</li>
      * </ol>
      *
-     * @param postId      Post ID
-     * @param isFavorited Current favorite status (true means already favorited, false means not favorited)
-     * @param listener    Completion callback, returns new status after operation (true=favorited, false=unfavorited)
+     * @param postId      Post ID.
+     * @param isFavorited Current favorite state (true when favorited).
+     * @param listener    Completion listener returning the new favorite state.
      */
     public static void toggleFavorite(String postId, boolean isFavorited, OnCompleteListener<Boolean> listener) {
-        // Get current logged-in user ID
+        // Fetch the current user ID.
         String userId = authRepository.getCurrentUserId();
         if (userId == null) {
             listener.onComplete(Tasks.forException(new IllegalStateException("User not logged in")));
@@ -116,19 +113,19 @@ public class PostInteractionFacade {
         }
 
         if (isFavorited) {
-            // Unfavorite: remove favorite record and decrement count
+            // Unfavorite: remove the record and decrement the count.
             dataSource.removeFavoriteAndDecrementCount(userId, postId, task -> {
                 if (task.isSuccessful()) {
-                    listener.onComplete(Tasks.forResult(false)); // Now unfavorited
+                    listener.onComplete(Tasks.forResult(false)); // Now not favorited.
                 } else {
                     listener.onComplete(Tasks.forException(task.getException()));
                 }
             });
         } else {
-            // Favorite: add favorite record and increment count
+            // Favorite: add the record and increment the count.
             dataSource.addFavoriteAndIncrementCount(userId, postId, task -> {
                 if (task.isSuccessful()) {
-                    listener.onComplete(Tasks.forResult(true)); // Now favorited
+                    listener.onComplete(Tasks.forResult(true)); // Now favorited.
                 } else {
                     listener.onComplete(Tasks.forException(task.getException()));
                 }
@@ -137,14 +134,13 @@ public class PostInteractionFacade {
     }
 
     /**
-     * Check if the current user has liked a specified post
+     * Checks whether the current user liked the given post.
      * <p>
-     * Queries the database for whether a like record exists for the current user on this post.
-     * If the user is not logged in, directly returns false.
+     * Looks up the like record; returns false when no user is logged in.
      * </p>
      *
-     * @param postId   Post ID
-     * @param listener Completion callback, returns like status (true=liked, false=not liked)
+     * @param postId   Post ID.
+     * @param listener Completion listener returning the like state.
      */
     public static void checkIfLiked(String postId, OnCompleteListener<Boolean> listener) {
         String userId = authRepository.getCurrentUserId();
@@ -156,14 +152,13 @@ public class PostInteractionFacade {
     }
 
     /**
-     * Check if the current user has favorited a specified post
+     * Checks whether the current user favorited the given post.
      * <p>
-     * Queries the database for whether a favorite record exists for the current user on this post.
-     * If the user is not logged in, directly returns false.
+     * Looks up the favorite record; returns false when no user is logged in.
      * </p>
      *
-     * @param postId   Post ID
-     * @param listener Completion callback, returns favorite status (true=favorited, false=not favorited)
+     * @param postId   Post ID.
+     * @param listener Completion listener returning the favorite state.
      */
     public static void checkIfFavorited(String postId, OnCompleteListener<Boolean> listener) {
         String userId = authRepository.getCurrentUserId();
@@ -175,20 +170,19 @@ public class PostInteractionFacade {
     }
 
     /**
-     * Get list of all post IDs liked by the current user
+     * Retrieves the IDs of every post the user has liked.
      * <p>
-     * Returns the collection of IDs for all posts liked by the currently logged-in user.
-     * If the user is not logged in, returns an empty list.
+     * Returns an empty list when no user is logged in.
      * </p>
      *
-     * <p>Usage examples:</p>
+     * <p>Example uses:</p>
      * <ul>
-     *   <li>Batch mark liked status in post lists</li>
-     *   <li>Implement "Posts I Liked" feature page</li>
-     *   <li>Track user like behavior</li>
+     *   <li>Mark liked posts within a feed.</li>
+     *   <li>Build a "posts I liked" view.</li>
+     *   <li>Analyze user like behavior.</li>
      * </ul>
      *
-     * @param listener Completion callback, returns list of post IDs
+     * @param listener Completion listener returning the post ID list.
      */
     public static void getLikedPostIds(OnCompleteListener<java.util.List<String>> listener) {
         String userId = authRepository.getCurrentUserId();
@@ -200,20 +194,19 @@ public class PostInteractionFacade {
     }
 
     /**
-     * Get list of all post IDs favorited by the current user
+     * Retrieves the IDs of every post the user has favorited.
      * <p>
-     * Returns the collection of IDs for all posts favorited by the currently logged-in user.
-     * If the user is not logged in, returns an empty list.
+     * Returns an empty list when no user is logged in.
      * </p>
      *
-     * <p>Usage examples:</p>
+     * <p>Example uses:</p>
      * <ul>
-     *   <li>Batch mark favorited status in post lists</li>
-     *   <li>Implement "My Favorites" feature page</li>
-     *   <li>Track user favorite behavior</li>
+     *   <li>Mark favorited posts in a feed.</li>
+     *   <li>Build a "my favorites" page.</li>
+     *   <li>Analyze favorite behavior.</li>
      * </ul>
      *
-     * @param listener Completion callback, returns list of post IDs
+     * @param listener Completion listener returning the post ID list.
      */
     public static void getFavoritedPostIds(OnCompleteListener<java.util.List<String>> listener) {
         String userId = authRepository.getCurrentUserId();

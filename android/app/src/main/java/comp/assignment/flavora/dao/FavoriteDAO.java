@@ -8,18 +8,17 @@ import comp.assignment.flavora.model.Favorite;
 import java.util.List;
 
 /**
- * Favorite Data Access Object (DAO)
- * Handles all data access operations related to Favorite entities.
- * Implements the Singleton pattern and follows the reference-app design conventions.
+ * Data access object for favorites.
+ * Handles persistence operations for favorite entities.
+ * Implements the singleton pattern to match the reference-app design.
  *
- * @author
- * Flavora Team
+ * @author Flavora Team
  * @version 1.0
  */
 public class FavoriteDAO extends DAO<Favorite> {
-    /** Singleton instance */
+    /** Singleton instance. */
     private static FavoriteDAO instance;
-    /** Firebase data source instance */
+    /** Firebase data source instance. */
     private final FirebaseDataSource dataSource;
 
     /**
@@ -31,10 +30,10 @@ public class FavoriteDAO extends DAO<Favorite> {
     }
 
     /**
-     * Returns the singleton instance of FavoriteDAO.
-     * Implements thread-safe lazy initialization using Double-Checked Locking (DCL).
+     * Returns the singleton FavoriteDAO instance.
+     * Uses double-checked locking (DCL) for thread-safe lazy initialization.
      *
-     * @return FavoriteDAO singleton instance
+     * @return Singleton FavoriteDAO instance.
      */
     public static FavoriteDAO getInstance() {
         if (instance == null) {
@@ -50,8 +49,8 @@ public class FavoriteDAO extends DAO<Favorite> {
     /**
      * Adds a favorite record to the database.
      *
-     * @param favorite the Favorite object to add
-     * @param listener completion listener for operation callback
+     * @param favorite Favorite to add.
+     * @param listener Completion callback.
      */
     @Override
     public void add(Favorite favorite, OnCompleteListener<Void> listener) {
@@ -59,10 +58,10 @@ public class FavoriteDAO extends DAO<Favorite> {
     }
 
     /**
-     * Retrieves a favorite record by ID.
+     * Retrieves a favorite by ID.
      *
-     * @param id       the favorite record ID
-     * @param listener completion listener returning the Favorite object
+     * @param id       Favorite ID.
+     * @param listener Completion callback that receives the favorite.
      */
     @Override
     public void get(String id, OnCompleteListener<Favorite> listener) {
@@ -70,9 +69,9 @@ public class FavoriteDAO extends DAO<Favorite> {
     }
 
     /**
-     * Retrieves all favorite records.
+     * Retrieves every favorite record.
      *
-     * @param listener completion listener returning a list of favorites
+     * @param listener Completion callback with the favorite list.
      */
     @Override
     public void getAll(OnCompleteListener<List<Favorite>> listener) {
@@ -82,8 +81,8 @@ public class FavoriteDAO extends DAO<Favorite> {
     /**
      * Deletes a favorite record by ID.
      *
-     * @param id       the favorite record ID
-     * @param listener completion listener for operation callback
+     * @param id       Favorite ID.
+     * @param listener Completion callback.
      */
     @Override
     public void delete(String id, OnCompleteListener<Void> listener) {
@@ -91,10 +90,10 @@ public class FavoriteDAO extends DAO<Favorite> {
     }
 
     /**
-     * Updates a favorite record (not typically needed for favorites, returns success immediately).
+     * Updates a favorite (no-op because favorites rarely change; resolves immediately).
      *
-     * @param favorite the Favorite object
-     * @param listener completion listener for operation callback
+     * @param favorite Favorite entity.
+     * @param listener Completion callback.
      */
     @Override
     public void update(Favorite favorite, OnCompleteListener<Void> listener) {
@@ -102,43 +101,43 @@ public class FavoriteDAO extends DAO<Favorite> {
     }
 
     /**
-     * Atomic operation: adds a favorite record and increments the post's favorite count.
+     * Atomic operation: add a favorite and increment the post's favorite count.
      *
-     * @param userId   the user ID
-     * @param postId   the post ID
-     * @param listener completion listener for operation callback
+     * @param userId   User ID.
+     * @param postId   Post ID.
+     * @param listener Completion callback.
      */
     public void addFavoriteWithCount(String userId, String postId, OnCompleteListener<Void> listener) {
         dataSource.addFavoriteAndIncrementCount(userId, postId, listener);
     }
 
     /**
-     * Atomic operation: removes a favorite record and decrements the post's favorite count.
+     * Atomic operation: remove a favorite and decrement the post's favorite count.
      *
-     * @param userId   the user ID
-     * @param postId   the post ID
-     * @param listener completion listener for operation callback
+     * @param userId   User ID.
+     * @param postId   Post ID.
+     * @param listener Completion callback.
      */
     public void removeFavoriteWithCount(String userId, String postId, OnCompleteListener<Void> listener) {
         dataSource.removeFavoriteAndDecrementCount(userId, postId, listener);
     }
 
     /**
-     * Checks whether a user has favorited a specific post.
+     * Checks whether the user has already favorited the post.
      *
-     * @param userId   the user ID
-     * @param postId   the post ID
-     * @param listener completion listener returning a boolean result
+     * @param userId   User ID.
+     * @param postId   Post ID.
+     * @param listener Completion callback returning a boolean result.
      */
     public void hasFavorited(String userId, String postId, OnCompleteListener<Boolean> listener) {
         dataSource.checkFavoriteExists(userId, postId, listener);
     }
 
     /**
-     * Retrieves all post IDs favorited by a specific user.
+     * Retrieves all post IDs favorited by the specified user.
      *
-     * @param userId   the user ID
-     * @param listener completion listener returning a list of post IDs
+     * @param userId   User ID.
+     * @param listener Completion callback with the list of post IDs.
      */
     public void getFavoritesByUser(String userId, OnCompleteListener<List<String>> listener) {
         dataSource.getFavoritesByUser(userId, listener);

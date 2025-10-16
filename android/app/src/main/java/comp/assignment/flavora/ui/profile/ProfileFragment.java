@@ -17,20 +17,19 @@ import comp.assignment.flavora.facade.PostFacade;
 import comp.assignment.flavora.model.User;
 import comp.assignment.flavora.repository.AuthRepository;
 
-
 /**
- * Profile Fragment
+ * Fragment for the profile screen.
  * <p>
- * Displays the user's profile information and post management options, including two sub-pages:
- * - My Posts: Posts created by the user
- * - My Favorites: Posts favorited by the user
+ * Shows personal information and post management with two tabs:
+ * - My Posts: posts created by the user.
+ * - My Favorites: posts the user favorited.
  * </p>
  *
- * <p>Main Features:</p>
+ * <p>Main features:</p>
  * <ul>
- *   <li>Show user avatar, username, and ID</li>
- *   <li>Display total number of likes received by the user</li>
- *   <li>Use ViewPager2 and TabLayout to switch between "My Posts" and "My Favorites"</li>
+ *   <li>Displays avatar, username, and ID.</li>
+ *   <li>Shows the total likes the user has received.</li>
+ *   <li>Uses ViewPager2 + TabLayout to switch between "My Posts" and "My Favorites".</li>
  * </ul>
  *
  * @author Flavora Team
@@ -38,17 +37,19 @@ import comp.assignment.flavora.repository.AuthRepository;
  */
 public class ProfileFragment extends Fragment {
 
+    /** ViewBinding instance for accessing layout views. */
     private FragmentProfileBinding binding;
 
+    /** ViewPager2 adapter managing the two profile tabs. */
     private ProfilePagerAdapter pagerAdapter;
 
     /**
-     * Create the fragment's view
+     * Inflates the fragment view.
      *
-     * @param inflater LayoutInflater used to inflate the layout
-     * @param container Parent view container
-     * @param savedInstanceState Saved instance state
-     * @return The created root view
+     * @param inflater LayoutInflater for inflation.
+     * @param container Parent container.
+     * @param savedInstanceState Saved state bundle.
+     * @return Root view instance.
      */
     @Nullable
     @Override
@@ -56,14 +57,13 @@ public class ProfileFragment extends Fragment {
                              @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         binding = FragmentProfileBinding.inflate(inflater, container, false);
         return binding.getRoot();
-                             }
+    }
 
     /**
-     * Callback after the view has been created
-     * Initializes the ViewPager and loads the user's profile data.
+     * Called after the view is created; initializes ViewPager and loads profile data.
      *
-     * @param view The created view
-     * @param savedInstanceState Saved instance state
+     * @param view Created view.
+     * @param savedInstanceState Saved state bundle.
      */
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
@@ -74,14 +74,13 @@ public class ProfileFragment extends Fragment {
     }
 
     /**
-     * Sets up ViewPager2 and TabLayout
-     * Configures two tabs: "My Posts" and "My Favorites"
+     * Configures ViewPager2 and TabLayout for the two profile tabs.
      */
     private void setupViewPager() {
         pagerAdapter = new ProfilePagerAdapter(this);
         binding.viewPager.setAdapter(pagerAdapter);
 
-        // Attach TabLayout to ViewPager2
+        // Link TabLayout with ViewPager2.
         new TabLayoutMediator(binding.tabLayout, binding.viewPager, (tab, position) -> {
             if (position == 0) {
                 tab.setText("My Posts");
@@ -92,12 +91,12 @@ public class ProfileFragment extends Fragment {
     }
 
     /**
-     * Loads user profile data
+     * Loads the user's profile information.
      * <p>
-     * Actions performed:
-     * 1. Get the current user's ID
-     * 2. Load user info from the database (username, avatar, etc.)
-     * 3. Load total number of likes received by the user
+     * Steps:
+     * 1. Retrieve the current user ID.
+     * 2. Fetch user details (username, avatar, etc.).
+     * 3. Load the total likes received.
      * </p>
      */
     private void loadUserProfile() {
@@ -110,7 +109,7 @@ public class ProfileFragment extends Fragment {
             return;
         }
 
-        // Load user info
+        // Load user details.
         UserDAO.getInstance().get(userId, userTask -> {
             if (userTask.isSuccessful() && userTask.getResult() != null) {
                 User user = userTask.getResult();
@@ -121,7 +120,7 @@ public class ProfileFragment extends Fragment {
             }
         });
 
-        // Load total likes received by the user
+        // Load total likes received.
         PostFacade.getTotalLikesForUser(userId, likesTask -> {
             binding.progressBar.setVisibility(View.GONE);
             if (likesTask.isSuccessful() && likesTask.getResult() != null) {
@@ -134,18 +133,17 @@ public class ProfileFragment extends Fragment {
     }
 
     /**
-     * Displays user info on the screen
-     * Includes username, ID, and avatar
+     * Displays user information (username, ID, avatar).
      *
-     * @param user The user object
+     * @param user User entity.
      */
     private void displayUserInfo(User user) {
         binding.textUsername.setText(user.getUsername());
 
-        // Display user ID as a secondary identifier
+        // Show user ID as an auxiliary label.
         binding.textEmail.setText("@" + user.getUsername());
 
-        // Load avatar using Glide
+        // Load the avatar with Glide.
         if (user.getAvatarUrl() != null && !user.getAvatarUrl().isEmpty()) {
             Glide.with(this)
                     .load(user.getAvatarUrl())
@@ -157,8 +155,7 @@ public class ProfileFragment extends Fragment {
     }
 
     /**
-     * Callback when the fragment view is destroyed
-     * Clears ViewBinding to prevent memory leaks
+     * Clears the binding reference when the view is destroyed to avoid leaks.
      */
     @Override
     public void onDestroyView() {

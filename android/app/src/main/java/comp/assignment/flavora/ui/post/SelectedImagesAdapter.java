@@ -13,45 +13,29 @@ import comp.assignment.flavora.R;
 import java.util.List;
 
 /**
- * Selected images adapter.
- * <p>
- * Used in the create-post bottom sheet to show user-selected images
- * in a horizontal list. Each item shows an image preview and a delete
- * button so the user can remove unwanted images before posting.
- * </p>
- *
- * @author Flavora Team
- * @version 1.0
- * @since 1.0
+ * Adapter that renders the selected images list within the create-post bottom sheet.
+ * Each item shows a preview and a remove button.
  */
 public class SelectedImagesAdapter extends RecyclerView.Adapter<SelectedImagesAdapter.ViewHolder> {
 
-    /** List of image URIs (local file URIs). */
+    /** List of local image URIs. */
     private final List<Uri> imageUris;
 
-    /** Listener for image removal. */
+    /** Listener invoked when an image is removed. */
     private final OnImageRemoveListener removeListener;
 
     /**
-     * Listener interface for image removal.
-     * <p>
-     * Triggered when the user taps the delete button.
-     * </p>
+     * Callback for removing an image from the selection.
      */
     public interface OnImageRemoveListener {
         /**
-         * Remove the image at the given position.
-         *
-         * @param position position of the image to remove
+         * Called when the image at the given position should be removed.
          */
         void onRemove(int position);
     }
 
     /**
-     * Constructor method.
-     *
-     * @param imageUris list of image URIs
-     * @param removeListener listener for image removal
+     * Creates the adapter.
      */
     public SelectedImagesAdapter(List<Uri> imageUris, OnImageRemoveListener removeListener) {
         this.imageUris = imageUris;
@@ -59,14 +43,7 @@ public class SelectedImagesAdapter extends RecyclerView.Adapter<SelectedImagesAd
     }
 
     /**
-     * Create a ViewHolder.
-     * <p>
-     * Inflate {@code item_selected_image} and create a ViewHolder instance.
-     * </p>
-     *
-     * @param parent parent ViewGroup
-     * @param viewType view type (unused)
-     * @return ViewHolder instance
+     * Inflates the view holder layout.
      */
     @NonNull
     @Override
@@ -77,20 +54,14 @@ public class SelectedImagesAdapter extends RecyclerView.Adapter<SelectedImagesAd
     }
 
     /**
-     * Bind data to the ViewHolder.
-     * <p>
-     * Set the image preview and configure the delete button click listener.
-     * </p>
-     *
-     * @param holder ViewHolder instance
-     * @param position image position
+     * Binds the preview and remove handler for the given position.
      */
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         Uri imageUri = imageUris.get(position);
-        // Set local image URI directly
+        // Bind the local URI directly.
         holder.imageView.setImageURI(imageUri);
-        // Set delete button click handler
+        // Hook up the remove button.
         holder.buttonRemove.setOnClickListener(v -> {
             if (removeListener != null) {
                 removeListener.onRemove(position);
@@ -99,9 +70,7 @@ public class SelectedImagesAdapter extends RecyclerView.Adapter<SelectedImagesAd
     }
 
     /**
-     * Get number of images.
-     *
-     * @return size of the image list
+     * Number of selected images.
      */
     @Override
     public int getItemCount() {
@@ -109,24 +78,16 @@ public class SelectedImagesAdapter extends RecyclerView.Adapter<SelectedImagesAd
     }
 
     /**
-     * ViewHolder for image items.
-     * <p>
-     * Holds the image preview and the delete button views.
-     * </p>
+     * ViewHolder holding the preview image and remove button.
      */
     static class ViewHolder extends RecyclerView.ViewHolder {
-        /** Image preview. */
+        /** Preview image view. */
         ImageView imageView;
-        /** Delete button. */
+        /** Remove button. */
         ImageButton buttonRemove;
 
         /**
-         * ViewHolder constructor.
-         * <p>
-         * Initialize and bind view components.
-         * </p>
-         *
-         * @param itemView item view
+         * Binds view components for the list item.
          */
         ViewHolder(View itemView) {
             super(itemView);

@@ -1,1 +1,16 @@
-<!-- TODO -->
+<resources>
+    <!-- Base application theme. -->
+    <style name="Theme.Flavora" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <!-- Primary brand color. -->
+        <item name="colorPrimary">@color/yellow_500</item>
+        <item name="colorPrimaryVariant">@color/yellow_500</item>
+        <item name="colorOnPrimary">@color/dark_text</item>
+        <!-- Secondary brand color. -->
+        <item name="colorSecondary">@color/yellow_700</item>
+        <item name="colorSecondaryVariant">@color/yellow_700</item>
+        <item name="colorOnSecondary">@color/white</item>
+        <!-- Status bar color. -->
+        <item name="android:statusBarColor">@color/yellow_500</item>
+        <!-- Customize your theme here. -->
+    </style>
+</resources>

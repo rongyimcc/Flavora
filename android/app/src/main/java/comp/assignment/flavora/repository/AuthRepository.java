@@ -9,39 +9,38 @@ import comp.assignment.flavora.dao.UserDAO;
 import comp.assignment.flavora.model.User;
 
 /**
- * Authentication Repository
+ * Authentication repository.
  * <p>
- * Handles all user authentication operations, including sign-up, sign-in, and sign-out.
- * Uses the Singleton pattern to ensure a single global repository instance.
- * Integrates Firebase Authentication and Firestore data operations.
+ * Handles every authentication-related operation such as register, login, and logout.
+ * Exposed as a singleton so only one repository instance exists.
+ * Bridges Firebase Authentication and Firestore operations.
  * </p>
  *
- * <p>Main features:</p>
+ * <p>Key responsibilities:</p>
  * <ul>
- *   <li>User registration: create a Firebase Auth account and persist user info in Firestore</li>
- *   <li>User login: authenticate with email and password</li>
- *   <li>User logout: clear the current user session</li>
- *   <li>Get current user: provide details of the currently signed-in user</li>
+ *   <li>User registration: create a Firebase auth account and persist user data in Firestore.</li>
+ *   <li>User login: authenticate with email and password.</li>
+ *   <li>User logout: clear the current session.</li>
+ *   <li>Current user info: expose the details of the logged-in user.</li>
  * </ul>
  *
- * @author
- * Flavora Team
+ * @author Flavora Team
  * @version 1.0
  * @since 1.0
  */
 public class AuthRepository {
-    /** Singleton instance */
+    /** Singleton instance. */
     private static AuthRepository instance;
-    /** Firebase Auth instance */
+    /** Firebase auth instance. */
     private final FirebaseAuth auth;
-    /** User DAO */
+    /** User data access object. */
     private final UserDAO userDAO;
 
     /**
-     * Private constructor
+     * Private constructor.
      * <p>
-     * Initializes Firebase Authentication and the UserDAO instance.
-     * Private to prevent external instantiation and enforce Singleton.
+     * Initializes Firebase Authentication and the UserDAO.
+     * Private to enforce the singleton pattern.
      * </p>
      */
     private AuthRepository() {
@@ -50,12 +49,12 @@ public class AuthRepository {
     }
 
     /**
-     * Returns the singleton instance of AuthRepository.
+     * Returns the singleton AuthRepository instance.
      * <p>
      * Uses double-checked locking (DCL) for thread-safe lazy initialization.
      * </p>
      *
-     * @return the unique instance of AuthRepository
+     * @return The unique AuthRepository instance.
      */
     public static AuthRepository getInstance() {
         if (instance == null) {
@@ -71,79 +70,82 @@ public class AuthRepository {
     /**
      * Registers a new user.
      * <p>
-     * Full registration flow:
-     * 1) Create an Auth account in Firebase Authentication
-     * 2) Obtain the generated user UID
-     * 3) Create the corresponding user document in Firestore
+     * Executes the full registration flow:
+     * 1. Create the Firebase Authentication account.
+     * 2. Retrieve the generated UID.
+     * 3. Create the matching Firestore document.
      * </p>
      *
      * <p>Flow details:</p>
      * <ul>
-     *   <li>Call Firebase Auth to create the account</li>
-     *   <li>On success, build a User object and save it to Firestore</li>
-     *   <li>Initial user data includes: username, email, createdAt, etc.</li>
-     *   <li>Avatar, following, followers, and posts count are initialized to defaults</li>
+     *   <li>First call Firebase Auth to create the account.</li>
+     *   <li>If authentication succeeds, build a User object and save it to Firestore.</li>
+     *   <li>Initial user data includes username, email, creation timestamp, and so on.</li>
+     *   <li>Avatar, following, followers, and post counts start with default values.</li>
      * </ul>
      *
-     * @param email user email for login and verification
-     * @param password user password (must meet Firebase requirements, min length 6)
-     * @param username display name shown in the app
-     * @return Task<AuthResult> asynchronous task with the auth result;
-     *         on success contains AuthResult, on failure contains the exception
+     * @param email Email address used for login and verification.
+     * @param password Password that meets Firebase requirements (minimum 6 characters).
+     * @param username Username shown inside the app.
+     * @return Task<AuthResult> representing the async auth result.
+     *         Returns AuthResult with user info on success.
+     *         Carries the error via exception when it fails.
      */
     public Task<AuthResult> register(String email, String password, String username) {
-        // Create user account via Firebase Authentication
+        // Use Firebase Authentication to create the account.
         return auth.createUserWithEmailAndPassword(email, password)
                 .continueWithTask(task -> {
-                    // Ensure auth succeeded and user is not null
+                    // Ensure authentication succeeded and the user object is present.
                     if (task.isSuccessful() && task.getResult().getUser() != null) {
                         FirebaseUser firebaseUser = task.getResult().getUser();
                         String userId = firebaseUser.getUid();
 
-                        // Build user object with initial information
+                        // Create the user object with initial defaults.
                         User user = new User(
                                 userId,
                                 username,
                                 email,
-                                "", // initial avatar URL is empty
-                                Timestamp.now(), // creation time
-                                0, // followers count
-                                0, // following count
-                                0  // posts count
+                                "", // Initial avatar URL is empty.
+                                Timestamp.now(), // Record creation time.
+                                0, // Followers start at 0.
+                                0, // Following starts at 0.
+                                0  // Post count starts at 0.
                         );
 
-                        // Persist user to Firestore
+                        // Persist the user in Firestore.
                         userDAO.add(user, addTask -> {
                             if (!addTask.isSuccessful()) {
-                                // Note: if Firestore write fails, we silently ignore here.
-                                // The user can still sign in, but profile data may be incomplete.
-                                // In production, consider logging or a retry mechanism.
+                                // Note: if Firestore persistence fails, we currently ignore it.
+                                // The user can still sign in, but their profile may be incomplete.
+                                // A production app should log or retry here.
                             }
                         });
                     }
-                    // Return original auth task result
+                    // Return the original auth task result.
                     return task;
                 });
     }
 
     /**
-     * Signs a user in with email and password.
+     * Authenticates an existing user.
      * <p>
-     * Directly delegates to Firebase Authentication.
+     * Uses email and password to sign in via Firebase Authentication.
      * </p>
      *
-     * @param email registered email address
-     * @param password user password
-     * @return Task<AuthResult> asynchronous task with the sign-in result
+     * @param email Email used at registration.
+     * @param password Account password.
+     * @return Task<AuthResult> containing the login result.
+     *         Returns AuthResult with user info on success.
+     *         Returns an exception (e.g., wrong password, user missing) on failure.
      */
     public Task<AuthResult> login(String email, String password) {
         return auth.signInWithEmailAndPassword(email, password);
     }
 
     /**
-     * Signs the current user out.
+     * Signs out the current user.
      * <p>
-     * After calling this, getCurrentUser() will return null.
+     * Clears the active session; after calling this, getCurrentUser() returns null.
      * </p>
      */
     public void logout() {
@@ -151,37 +153,36 @@ public class AuthRepository {
     }
 
     /**
-     * Returns the currently signed-in Firebase user.
+     * Returns the currently authenticated user.
      * <p>
-     * Contains basic information such as UID and email.
+     * Delegates to Firebase Authentication and exposes the current user details (UID, email, etc.).
      * </p>
      *
-     * @return FirebaseUser the current user, or null if not signed in
+     * @return FirebaseUser for the logged-in user, or null if no user is signed in.
      */
     public FirebaseUser getCurrentUser() {
         return auth.getCurrentUser();
     }
 
     /**
-     * Checks whether a user is signed in.
+     * Indicates whether a user is currently signed in.
      * <p>
-     * Useful for guarding routes and conditional rendering.
+     * Useful for gating navigation or rendering conditional UI.
      * </p>
      *
-     * @return true if a user is signed in; false otherwise
+     * @return true when a user is logged in; otherwise false.
      */
     public boolean isLoggedIn() {
         return auth.getCurrentUser() != null;
     }
 
     /**
-     * Returns the UID of the currently signed-in user.
+     * Returns the UID of the current user.
      * <p>
-     * The UID is the unique identifier generated by Firebase for each user and
-     * is commonly used for database lookups and access control.
+     * Firebase generates a unique UID for each user; useful for database queries and access control.
      * </p>
      *
-     * @return the UID as a String, or null if not signed in
+     * @return UID string when logged in, otherwise null.
      */
     public String getCurrentUserId() {
         FirebaseUser user = auth.getCurrentUser();
