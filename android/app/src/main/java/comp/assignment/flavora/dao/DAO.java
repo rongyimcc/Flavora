@@ -6,52 +6,53 @@ import comp.assignment.flavora.model.HasUUID;
 import java.util.List;
 
 /**
- * 数据访问对象（DAO）抽象基类
- * 提供所有数据访问操作的通用接口，抽象了底层数据源的实现细节（本项目使用Firebase）
- * 遵循reference-app的数据访问抽象模式
+ * Abstract base class for Data Access Objects (DAO).
+ * Provides a generic interface for all data access operations, 
+ * abstracting the details of the underlying data source (Firebase in this project).
+ * Follows the reference-app DAO abstraction pattern.
  *
- * @param <T> 此DAO管理的实体类型，必须实现HasUUID接口
+ * @param <T> The entity type managed by this DAO, must implement HasUUID.
  * @author Flavora Team
  * @version 1.0
  */
 public abstract class DAO<T extends HasUUID> {
 
     /**
-     * 添加实体到数据存储
+     * Adds an entity to the data store.
      *
-     * @param element  要添加的实体对象
-     * @param listener 完成回调，用于处理添加操作的结果
+     * @param element  the entity to add
+     * @param listener completion listener handling the operation result
      */
     public abstract void add(T element, OnCompleteListener<Void> listener);
 
     /**
-     * 根据唯一标识符获取实体
+     * Retrieves an entity by its unique identifier.
      *
-     * @param id       实体的唯一标识符
-     * @param listener 完成回调，返回获取到的实体对象
+     * @param id       the unique identifier of the entity
+     * @param listener completion listener returning the retrieved entity
      */
     public abstract void get(String id, OnCompleteListener<T> listener);
 
     /**
-     * 获取此类型的所有实体
+     * Retrieves all entities of this type.
      *
-     * @param listener 完成回调，返回所有实体的列表
+     * @param listener completion listener returning a list of all entities
      */
     public abstract void getAll(OnCompleteListener<List<T>> listener);
 
     /**
-     * 根据唯一标识符删除实体
+     * Deletes an entity by its unique identifier.
      *
-     * @param id       要删除的实体唯一标识符
-     * @param listener 完成回调，用于处理删除操作的结果
+     * @param id       the unique identifier of the entity to delete
+     * @param listener completion listener handling the operation result
      */
     public abstract void delete(String id, OnCompleteListener<Void> listener);
 
     /**
-     * 更新现有实体
+     * Updates an existing entity.
      *
-     * @param element  包含更新数据的实体对象
-     * @param listener 完成回调，用于处理更新操作的结果
+     * @param element  the entity containing updated data
+     * @param listener completion listener handling the operation result
      */
     public abstract void update(T element, OnCompleteListener<Void> listener);
 }

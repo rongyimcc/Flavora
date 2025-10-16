@@ -21,89 +21,95 @@ public class User implements HasUUID {
 
     // Firestore requires a no-argument constructor
     public User() {
-        // TODO
     }
 
     public User(String userId, String username, String email,
                 String avatarUrl, Timestamp createdAt, int followersCount,
                 int followingCount, int postsCount) {
-                    // TODO
-                }
+        this.userId = userId;
+        this.username = username;
+        this.email = email;
+        this.avatarUrl = avatarUrl;
+        this.createdAt = createdAt;
+        this.followersCount = followersCount;
+        this.followingCount = followingCount;
+        this.postsCount = postsCount;
+    }
 
     @Override
     @Exclude
     public String getUUID() {
-        // TODO
+        return userId;
     }
 
     // Dummy setter to prevent Firestore warning
     @Exclude
     public void setUuid(String uuid) {
-        // TODO
+        // Intentionally empty - uuid is handled by userId
     }
 
     // Getters and Setters
     public String getUserId() {
-        // TODO
+        return userId;
     }
 
     public void setUserId(String userId) {
-        // TODO
+        this.userId = userId;
     }
 
     public String getUsername() {
-        // TODO
+        return username;
     }
 
     public void setUsername(String username) {
-        // TODO
+        this.username = username;
     }
 
     public String getEmail() {
-        // TODO
+        return email;
     }
 
     public void setEmail(String email) {
-        // TODO
+        this.email = email;
     }
 
     public String getAvatarUrl() {
-        // TODO
+        return avatarUrl;
     }
 
     public void setAvatarUrl(String avatarUrl) {
-        // TODO
+        this.avatarUrl = avatarUrl;
     }
 
     public Timestamp getCreatedAt() {
-        // TODO
+        return createdAt;
     }
 
     public void setCreatedAt(Timestamp createdAt) {
-        // TODO
+        this.createdAt = createdAt;
     }
 
     public int getFollowersCount() {
-        // TODO
+        return followersCount;
     }
 
     public void setFollowersCount(int followersCount) {
-        // TODO
+        this.followersCount = followersCount;
     }
 
     public int getFollowingCount() {
-        // TODO
+        return followingCount;
     }
 
     public void setFollowingCount(int followingCount) {
-        // TODO
+        this.followingCount = followingCount;
     }
 
     public int getPostsCount() {
-        // TODO
+        return postsCount;
     }
 
     public void setPostsCount(int postsCount) {
-        // TODO
+        this.postsCount = postsCount;
     }
 }
