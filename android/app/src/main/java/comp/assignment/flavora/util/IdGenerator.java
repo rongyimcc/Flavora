@@ -1,53 +1,59 @@
 package comp.assignment.flavora.util;
 
 /**
- * ID生成工具类
+ * ID Generation Utility
  * <p>
- * 提供统一的ID生成逻辑，避免在多处重复拼接字符串。
- * 所有复合ID的生成都应该使用此类，确保格式一致。
+ * Provides centralized ID generation logic to avoid ad-hoc string concatenation.
+ * All composite IDs should be generated via this class to ensure a consistent format.
  *
  * @author Flavora Team
  */
 public class IdGenerator {
 
     /**
-     * 生成点赞记录的复合ID
+     * Generates a composite ID for a like record.
      * <p>
-     * 格式: userId_postId
-     * 用于唯一标识某个用户对某个帖子的点赞记录。
+     * Format: userId_postId
+     * Uniquely identifies a user's like action on a specific post.
      *
-     * @param userId 用户ID
-     * @param postId 帖子ID
-     * @return 点赞记录的唯一ID
-     * @throws IllegalArgumentException 如果userId或postId为null或空字符串
+     * @param userId the user ID
+     * @param postId the post ID
+     * @return the unique like record ID
+     * @throws IllegalArgumentException if userId or postId is null or empty
      */
     public static String generateLikeId(String userId, String postId) {
-        // TODO
+        validateId(userId, "userId");
+        validateId(postId, "postId");
+        return userId + "_" + postId;
     }
 
     /**
-     * 生成收藏记录的复合ID
+     * Generates a composite ID for a favorite record.
      * <p>
-     * 格式: userId_postId
-     * 用于唯一标识某个用户对某个帖子的收藏记录。
+     * Format: userId_postId
+     * Uniquely identifies a user's favorite (bookmark) on a specific post.
      *
-     * @param userId 用户ID
-     * @param postId 帖子ID
-     * @return 收藏记录的唯一ID
-     * @throws IllegalArgumentException 如果userId或postId为null或空字符串
+     * @param userId the user ID
+     * @param postId the post ID
+     * @return the unique favorite record ID
+     * @throws IllegalArgumentException if userId or postId is null or empty
      */
     public static String generateFavoriteId(String userId, String postId) {
-        // TODO
+        validateId(userId, "userId");
+        validateId(postId, "postId");
+        return userId + "_" + postId;
     }
 
     /**
-     * 验证ID的有效性
+     * Validates an ID string.
      *
-     * @param id ID字符串
-     * @param fieldName 字段名称（用于错误信息）
-     * @throws IllegalArgumentException 如果ID为null或空字符串
+     * @param id        the ID value
+     * @param fieldName the field name (for error messages)
+     * @throws IllegalArgumentException if the ID is null or empty
      */
     private static void validateId(String id, String fieldName) {
-        // TODO
+        if (id == null || id.trim().isEmpty()) {
+            throw new IllegalArgumentException(fieldName + " cannot be null or empty");
+        }
     }
 }

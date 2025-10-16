@@ -6,127 +6,128 @@ import com.google.firebase.firestore.IgnoreExtraProperties;
 import comp.assignment.flavora.util.IdGenerator;
 
 /**
- * 收藏模型类
- * 代表用户对帖子的收藏记录
+ * Favorite model class.
+ * Represents a user's favorite (bookmark) record for a post.
  *
  * @author Flavora Team
  * @version 1.0
  */
 @IgnoreExtraProperties
 public class Favorite implements HasUUID {
-    /** 收藏记录ID，格式为 userId_postId，确保用户对同一帖子只能收藏一次 */
+    /** Favorite record ID in the format userId_postId; ensures a user can favorite a post only once. */
     private String favoriteId;
-    /** 收藏用户ID */
+    /** ID of the user who favorited the post. */
     private String userId;
-    /** 被收藏的帖子ID */
+    /** ID of the post being favorited. */
     private String postId;
-    /** 收藏创建时间 */
+    /** Timestamp when the favorite was created. */
     private Timestamp createdAt;
 
     /**
-     * 无参构造函数
-     * Firestore反序列化时需要
+     * No-args constructor.
+     * Required for Firestore deserialization.
      */
     public Favorite() {
-        // TODO
     }
 
     /**
-     * 构造收藏记录
-     * favoriteId会自动生成为 userId_postId 格式
+     * Constructs a favorite record.
+     * The favoriteId is automatically generated as userId_postId.
      *
-     * @param userId 收藏用户ID
-     * @param postId 被收藏的帖子ID
-     * @param createdAt 收藏时间
+     * @param userId    ID of the user who favorites the post
+     * @param postId    ID of the post being favorited
+     * @param createdAt Timestamp when the favorite is created
      */
     public Favorite(String userId, String postId, Timestamp createdAt) {
-        // TODO
+        this.favoriteId = IdGenerator.generateFavoriteId(userId, postId);
+        this.userId = userId;
+        this.postId = postId;
+        this.createdAt = createdAt;
     }
 
     /**
-     * 获取对象的唯一标识符
-     * 实现HasUUID接口的方法
+     * Returns the unique identifier of this object.
+     * Implements the HasUUID interface.
      *
-     * @return 收藏记录ID作为UUID
+     * @return the favorite record ID as the UUID
      */
     @Override
     @Exclude
     public String getUUID() {
-        // TODO
+        return favoriteId;
     }
 
     /**
-     * UUID的setter方法（占位方法）
-     * 用于防止Firestore警告，实际UUID通过favoriteId处理
+     * Placeholder UUID setter.
+     * Exists to avoid Firestore warnings; UUID is managed via favoriteId.
      *
-     * @param uuid UUID值（被忽略）
+     * @param uuid UUID value (ignored)
      */
     @Exclude
     public void setUuid(String uuid) {
-        // TODO
     }
 
     /**
-     * 获取收藏记录ID
-     * @return 收藏记录唯一标识符（userId_postId格式）
+     * Gets the favorite record ID.
+     * @return the unique identifier (in userId_postId format)
      */
     public String getFavoriteId() {
-        // TODO
+        return favoriteId;
     }
 
     /**
-     * 设置收藏记录ID
-     * @param favoriteId 收藏记录唯一标识符
+     * Sets the favorite record ID.
+     * @param favoriteId the unique identifier of the favorite record
      */
     public void setFavoriteId(String favoriteId) {
-        // TODO
+        this.favoriteId = favoriteId;
     }
 
     /**
-     * 获取收藏用户ID
-     * @return 用户ID
+     * Gets the ID of the user who favorited the post.
+     * @return user ID
      */
     public String getUserId() {
-        // TODO
+        return userId;
     }
 
     /**
-     * 设置收藏用户ID
-     * @param userId 用户ID
+     * Sets the ID of the user who favorited the post.
+     * @param userId user ID
      */
     public void setUserId(String userId) {
-        // TODO
+        this.userId = userId;
     }
 
     /**
-     * 获取被收藏的帖子ID
-     * @return 帖子ID
+     * Gets the ID of the favorited post.
+     * @return post ID
      */
     public String getPostId() {
-        // TODO
+        return postId;
     }
 
     /**
-     * 设置被收藏的帖子ID
-     * @param postId 帖子ID
+     * Sets the ID of the favorited post.
+     * @param postId post ID
      */
     public void setPostId(String postId) {
-        // TODO
+        this.postId = postId;
     }
 
     /**
-     * 获取收藏创建时间
-     * @return Firebase时间戳
+     * Gets the creation timestamp of the favorite.
+     * @return Firebase Timestamp
      */
     public Timestamp getCreatedAt() {
-        // TODO
+        return createdAt;
     }
 
     /**
-     * 设置收藏创建时间
-     * @param createdAt Firebase时间戳
+     * Sets the creation timestamp of the favorite.
+     * @param createdAt Firebase Timestamp
      */
     public void setCreatedAt(Timestamp createdAt) {
-        // TODO
+        this.createdAt = createdAt;
     }
 }

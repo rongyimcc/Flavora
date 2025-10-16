@@ -7,299 +7,307 @@ import com.google.firebase.firestore.IgnoreExtraProperties;
 import java.util.List;
 
 /**
- * 帖子模型类
- * 代表Flavora应用中的一条美食帖子，包含美食照片、描述和评分等信息
+ * Post model class.
+ * Represents a food post in the Flavora app, including photos, description, rating, and related metadata.
  *
  * @author Flavora Team
  * @version 1.0
  */
 @IgnoreExtraProperties
 public class Post implements HasUUID {
-    /** 帖子唯一标识符 */
+    /** Unique identifier of the post. */
     private String postId;
-    /** 作者用户ID */
+    /** Author's user ID. */
     private String userId;
-    /** 作者用户名（冗余存储以便显示，避免额外查询） */
+    /** Author's username (denormalized for display to avoid extra lookups). */
     private String username;
-    /** 作者头像URL（冗余存储以便显示，避免额外查询） */
+    /** Author's avatar URL (denormalized for display to avoid extra lookups). */
     private String userAvatarUrl;
-    /** 帖子标题 */
+    /** Post title. */
     private String title;
-    /** 帖子描述内容 */
+    /** Post description/content. */
     private String description;
-    /** 图片URL列表，存储在Firebase Storage中 */
+    /** List of image URLs stored in Firebase Storage. */
     private List<String> imageUrls;
-    /** 评分，范围1-5星 */
+    /** Rating in the range 1–5 stars. */
     private double rating;
-    /** 创建时间戳 */
+    /** Creation timestamp. */
     private Timestamp createdAt;
-    /** 点赞数量 */
+    /** Number of likes. */
     private int likeCount;
-    /** 收藏数量 */
+    /** Number of favorites. */
     private int favoriteCount;
 
-    /** 当前用户是否已点赞（客户端字段，不存储到Firestore） */
+    /** Whether the current user has liked this post (client-side only; not stored in Firestore). */
     private transient boolean isLikedByCurrentUser;
-    /** 当前用户是否已收藏（客户端字段，不存储到Firestore） */
+    /** Whether the current user has favorited this post (client-side only; not stored in Firestore). */
     private transient boolean isFavoritedByCurrentUser;
 
     /**
-     * 无参构造函数
-     * Firestore反序列化时需要
+     * No-args constructor.
+     * Required for Firestore deserialization.
      */
     public Post() {
-        // TODO
     }
 
     /**
-     * 全参构造函数
+     * All-args constructor.
      *
-     * @param postId 帖子ID
-     * @param userId 作者用户ID
-     * @param username 作者用户名
-     * @param userAvatarUrl 作者头像URL
-     * @param title 帖子标题
-     * @param description 帖子描述
-     * @param imageUrls 图片URL列表
-     * @param rating 评分（1-5星）
-     * @param createdAt 创建时间
-     * @param likeCount 点赞数
-     * @param favoriteCount 收藏数
+     * @param postId         Post ID
+     * @param userId         Author's user ID
+     * @param username       Author's username
+     * @param userAvatarUrl  Author's avatar URL
+     * @param title          Post title
+     * @param description    Post description
+     * @param imageUrls      List of image URLs
+     * @param rating         Rating (1–5 stars)
+     * @param createdAt      Creation timestamp
+     * @param likeCount      Number of likes
+     * @param favoriteCount  Number of favorites
      */
     public Post(String postId, String userId, String username, String userAvatarUrl,
                 String title, String description, List<String> imageUrls, double rating,
                 Timestamp createdAt, int likeCount, int favoriteCount) {
-                    // TODO
-                }
+        this.postId = postId;
+        this.userId = userId;
+        this.username = username;
+        this.userAvatarUrl = userAvatarUrl;
+        this.title = title;
+        this.description = description;
+        this.imageUrls = imageUrls;
+        this.rating = rating;
+        this.createdAt = createdAt;
+        this.likeCount = likeCount;
+        this.favoriteCount = favoriteCount;
+    }
 
     /**
-     * 获取对象的唯一标识符
-     * 实现HasUUID接口的方法
+     * Returns the unique identifier of this object.
+     * Implements the HasUUID interface.
      *
-     * @return 帖子ID作为UUID
+     * @return post ID as the UUID
      */
     @Override
     @Exclude
     public String getUUID() {
-        // TODO
+        return postId;
     }
 
     /**
-     * UUID的setter方法（占位方法）
-     * 用于防止Firestore警告，实际UUID通过postId处理
+     * Placeholder UUID setter.
+     * Exists to prevent Firestore warnings; UUID is managed via postId.
      *
-     * @param uuid UUID值（被忽略）
+     * @param uuid UUID value (ignored)
      */
     @Exclude
     public void setUuid(String uuid) {
-        // TODO
     }
 
     /**
-     * 获取帖子ID
-     * @return 帖子唯一标识符
+     * Gets the post ID.
+     * @return unique post identifier
      */
     public String getPostId() {
-        // TODO
+        return postId;
     }
 
     /**
-     * 设置帖子ID
-     * @param postId 帖子唯一标识符
+     * Sets the post ID.
+     * @param postId unique post identifier
      */
     public void setPostId(String postId) {
-        // TODO
+        this.postId = postId;
     }
 
     /**
-     * 获取作者用户ID
-     * @return 用户ID
+     * Gets the author's user ID.
+     * @return user ID
      */
     public String getUserId() {
-        // TODO
+        return userId;
     }
 
     /**
-     * 设置作者用户ID
-     * @param userId 用户ID
+     * Sets the author's user ID.
+     * @param userId user ID
      */
     public void setUserId(String userId) {
-        // TODO
+        this.userId = userId;
     }
 
     /**
-     * 获取作者用户名
-     * @return 用户名
+     * Gets the author's username.
+     * @return username
      */
     public String getUsername() {
-        // TODO
+        return username;
     }
 
     /**
-     * 设置作者用户名
-     * @param username 用户名
+     * Sets the author's username.
+     * @param username username
      */
     public void setUsername(String username) {
-        // TODO
+        this.username = username;
     }
 
     /**
-     * 获取作者头像URL
-     * @return 头像URL地址
+     * Gets the author's avatar URL.
+     * @return avatar URL
      */
     public String getUserAvatarUrl() {
-        // TODO
+        return userAvatarUrl;
     }
 
     /**
-     * 设置作者头像URL
-     * @param userAvatarUrl 头像URL地址
+     * Sets the author's avatar URL.
+     * @param userAvatarUrl avatar URL
      */
     public void setUserAvatarUrl(String userAvatarUrl) {
-        // TODO
+        this.userAvatarUrl = userAvatarUrl;
     }
 
     /**
-     * 获取帖子标题
-     * @return 标题文本
+     * Gets the post title.
+     * @return title text
      */
     public String getTitle() {
-        // TODO
+        return title;
     }
 
     /**
-     * 设置帖子标题
-     * @param title 标题文本
+     * Sets the post title.
+     * @param title title text
      */
     public void setTitle(String title) {
-        // TODO
+        this.title = title;
     }
 
     /**
-     * 获取帖子描述
-     * @return 描述内容
+     * Gets the post description.
+     * @return description content
      */
     public String getDescription() {
-        // TODO
+        return description;
     }
 
     /**
-     * 设置帖子描述
-     * @param description 描述内容
+     * Sets the post description.
+     * @param description description content
      */
     public void setDescription(String description) {
-        // TODO
+        this.description = description;
     }
 
     /**
-     * 获取图片URL列表
-     * @return 图片URL集合
+     * Gets the list of image URLs.
+     * @return collection of image URLs
      */
     public List<String> getImageUrls() {
-        // TODO
+        return imageUrls;
     }
 
     /**
-     * 设置图片URL列表
-     * @param imageUrls 图片URL集合
+     * Sets the list of image URLs.
+     * @param imageUrls collection of image URLs
      */
     public void setImageUrls(List<String> imageUrls) {
-        // TODO
+        this.imageUrls = imageUrls;
     }
 
     /**
-     * 获取评分
-     * @return 评分值（1-5星）
+     * Gets the rating.
+     * @return rating value (1–5 stars)
      */
     public double getRating() {
-        // TODO
+        return rating;
     }
 
     /**
-     * 设置评分
-     * @param rating 评分值（1-5星）
+     * Sets the rating.
+     * @param rating rating value (1–5 stars)
      */
     public void setRating(double rating) {
-        // TODO
+        this.rating = rating;
     }
 
     /**
-     * 获取创建时间
-     * @return Firebase时间戳
+     * Gets the creation timestamp.
+     * @return Firebase Timestamp
      */
     public Timestamp getCreatedAt() {
-        // TODO
+        return createdAt;
     }
 
     /**
-     * 设置创建时间
-     * @param createdAt Firebase时间戳
+     * Sets the creation timestamp.
+     * @param createdAt Firebase Timestamp
      */
     public void setCreatedAt(Timestamp createdAt) {
-        // TODO
+        this.createdAt = createdAt;
     }
 
     /**
-     * 获取点赞数量
-     * @return 点赞总数
+     * Gets the like count.
+     * @return total likes
      */
     public int getLikeCount() {
-        // TODO
+        return likeCount;
     }
 
     /**
-     * 设置点赞数量
-     * @param likeCount 点赞总数
+     * Sets the like count.
+     * @param likeCount total likes
      */
     public void setLikeCount(int likeCount) {
-        // TODO
+        this.likeCount = likeCount;
     }
 
     /**
-     * 获取收藏数量
-     * @return 收藏总数
+     * Gets the favorite count.
+     * @return total favorites
      */
     public int getFavoriteCount() {
-        // TODO
+        return favoriteCount;
     }
 
     /**
-     * 设置收藏数量
-     * @param favoriteCount 收藏总数
+     * Sets the favorite count.
+     * @param favoriteCount total favorites
      */
     public void setFavoriteCount(int favoriteCount) {
-        // TODO
+        this.favoriteCount = favoriteCount;
     }
 
     /**
-     * 检查当前用户是否已点赞
-     * @return true表示已点赞，false表示未点赞
+     * Checks whether the current user has liked this post.
+     * @return true if liked; false otherwise
      */
     public boolean isLikedByCurrentUser() {
-        // TODO
+        return isLikedByCurrentUser;
     }
 
     /**
-     * 设置当前用户点赞状态
-     * @param likedByCurrentUser true表示已点赞，false表示未点赞
+     * Sets the current user's like state.
+     * @param likedByCurrentUser true if liked; false otherwise
      */
     public void setLikedByCurrentUser(boolean likedByCurrentUser) {
-        // TODO
+        isLikedByCurrentUser = likedByCurrentUser;
     }
 
     /**
-     * 检查当前用户是否已收藏
-     * @return true表示已收藏，false表示未收藏
+     * Checks whether the current user has favorited this post.
+     * @return true if favorited; false otherwise
      */
     public boolean isFavoritedByCurrentUser() {
-        // TODO
+        return isFavoritedByCurrentUser;
     }
 
     /**
-     * 设置当前用户收藏状态
-     * @param favoritedByCurrentUser true表示已收藏，false表示未收藏
+     * Sets the current user's favorite state.
+     * @param favoritedByCurrentUser true if favorited; false otherwise
      */
     public void setFavoritedByCurrentUser(boolean favoritedByCurrentUser) {
-        // TODO
+        isFavoritedByCurrentUser = favoritedByCurrentUser;
     }
 }
