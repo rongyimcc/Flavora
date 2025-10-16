@@ -12,144 +12,231 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * 存储仓库类
+ * Storage Repository
  * <p>
- * 该类负责处理所有与 Firebase Storage 相关的操作，主要用于图片的上传、下载和删除。
- * 使用单例模式确保全局只有一个存储仓库实例。
+ * Handles all operations related to Firebase Storage, mainly for uploading,
+ * downloading, and deleting images. Uses the Singleton pattern to ensure a
+ * single repository instance across the app.
  * </p>
  *
- * <p>主要功能：</p>
+ * <p>Main features:</p>
  * <ul>
- *   <li>批量图片上传：支持同时上传多张图片，返回所有图片的下载链接</li>
- *   <li>单张图片上传：上传单张图片并返回下载链接</li>
- *   <li>图片删除：根据图片 URL 删除 Firebase Storage 中的图片文件</li>
+ *   <li>Batch image upload: upload multiple images in parallel and return all download URLs</li>
+ *   <li>Single image upload: upload a single image and return its download URL</li>
+ *   <li>Image deletion: delete an image file in Firebase Storage by its URL</li>
  * </ul>
  *
- * <p>使用场景：</p>
+ * <p>Use cases:</p>
  * <ul>
- *   <li>用户头像上传</li>
- *   <li>帖子图片上传（支持多图）</li>
- *   <li>图片资源管理和清理</li>
+ *   <li>User avatar upload</li>
+ *   <li>Post image upload (supports multiple images)</li>
+ *   <li>Image resource management and cleanup</li>
  * </ul>
  *
- * @author Flavora团队
+ * @author
+ * Flavora Team
  * @version 1.0
  * @since 1.0
  */
 public class StorageRepository {
-    /** 单例实例 */
+    /** Singleton instance */
     private static StorageRepository instance;
-    /** Firebase Storage 实例 */
+    /** Firebase Storage instance */
     private final FirebaseStorage storage;
-    /** 存储根引用 */
+    /** Root storage reference */
     private final StorageReference storageRef;
 
     /**
-     * 私有构造函数
+     * Private constructor
      * <p>
-     * 初始化 Firebase Storage 实例和存储根引用。
-     * 使用私有构造函数防止外部直接实例化，确保单例模式。
+     * Initializes the Firebase Storage instance and root storage reference.
+     * Private to prevent external instantiation and enforce the Singleton pattern.
      * </p>
      */
     private StorageRepository() {
-        // TODO
+        this.storage = FirebaseStorage.getInstance();
+        this.storageRef = storage.getReference();
     }
 
     /**
-     * 获取 StorageRepository 的单例实例
+     * Returns the singleton instance of StorageRepository
      * <p>
-     * 使用双重检查锁定（DCL）实现线程安全的懒加载。
+     * Uses double-checked locking (DCL) for thread-safe lazy initialization.
      * </p>
      *
-     * @return StorageRepository 的唯一实例
+     * @return the unique instance of StorageRepository
      */
     public static StorageRepository getInstance() {
-        // TODO
+        if (instance == null) {
+            synchronized (StorageRepository.class) {
+                if (instance == null) {
+                    instance = new StorageRepository();
+                }
+            }
+        }
+        return instance;
     }
 
     /**
-     * 批量上传图片到 Firebase Storage
+     * Uploads multiple images to Firebase Storage.
      * <p>
-     * 该方法支持同时上传多张图片，每张图片使用 UUID 生成唯一文件名。
-     * 所有图片上传完成后，统一返回下载链接列表。
+     * Supports uploading multiple images concurrently. Each image is given a
+     * unique filename generated via UUID. After all uploads complete, returns
+     * the list of download URLs.
      * </p>
      *
-     * <p>上传流程：</p>
+     * <p>Upload steps:</p>
      * <ol>
-     *   <li>验证输入参数，如果图片列表为空则返回空列表</li>
-     *   <li>为每张图片生成唯一的文件名（使用 UUID）</li>
-     *   <li>创建上传任务并添加到任务列表</li>
-     *   <li>等待所有上传任务完成</li>
-     *   <li>获取所有图片的下载 URL 并返回</li>
+     *   <li>Validate input; if the list is empty, return an empty list</li>
+     *   <li>Generate a unique filename (UUID) for each image</li>
+     *   <li>Create an upload task for each image and add it to the task list</li>
+     *   <li>Wait for all upload tasks to complete</li>
+     *   <li>Collect and return all image download URLs</li>
      * </ol>
      *
-     * <p>文件命名规则：</p>
+     * <p>Filename rule:</p>
      * <pre>
      * images/[UUID].jpg
-     * 例如：images/550e8400-e29b-41d4-a716-446655440000.jpg
+     * e.g. images/550e8400-e29b-41d4-a716-446655440000.jpg
      * </pre>
      *
-     * @param imageUris 要上传的图片 URI 列表，从本地文件系统或相册选择的图片
-     * @param listener 完成回调监听器
-     *                 成功时返回包含所有图片下载 URL 的字符串列表
-     *                 失败时返回异常信息
+     * @param imageUris list of image URIs selected from local storage or gallery
+     * @param listener  completion listener:
+     *                  on success, returns a list of download URL strings;
+     *                  on failure, returns an exception
      */
     public void uploadImages(List<Uri> imageUris, OnCompleteListener<List<String>> listener) {
-        // TODO
+        // Validate parameters: check whether the image list is empty
+        if (imageUris == null || imageUris.isEmpty()) {
+            listener.onComplete(Tasks.forResult(new ArrayList<>()));
+            return;
+        }
+
+        // Prepare tasks for concurrent uploads
+        List<Task<Uri>> uploadTasks = new ArrayList<>();
+
+        // Create an upload task for each image
+        for (Uri imageUri : imageUris) {
+            // Generate a unique filename to avoid conflicts
+            String filename = "images/" + UUID.randomUUID().toString() + ".jpg";
+            StorageReference imageRef = storageRef.child(filename);
+
+            // Chain: upload file -> get download URL
+            Task<Uri> uploadTask = imageRef.putFile(imageUri)
+                    .continueWithTask(task -> {
+                        if (!task.isSuccessful() && task.getException() != null) {
+                            throw task.getException();
+                        }
+                        return imageRef.getDownloadUrl();
+                    });
+
+            uploadTasks.add(uploadTask);
+        }
+
+        // Wait for all uploads to succeed
+        Tasks.whenAllSuccess(uploadTasks).addOnCompleteListener(task -> {
+            if (task.isSuccessful() && task.getResult() != null) {
+                List<String> downloadUrls = new ArrayList<>();
+                for (Object result : task.getResult()) {
+                    if (result instanceof Uri) {
+                        downloadUrls.add(result.toString());
+                    }
+                }
+                listener.onComplete(Tasks.forResult(downloadUrls));
+            } else {
+                listener.onComplete(Tasks.forException(
+                        task.getException() != null ? task.getException() :
+                                new Exception("Failed to upload images")));
+            }
+        });
     }
 
     /**
-     * 上传单张图片到 Firebase Storage
+     * Uploads a single image to Firebase Storage.
      * <p>
-     * 该方法用于上传单张图片，适用于头像上传等单图场景。
-     * 图片上传成功后返回可访问的下载 URL。
+     * Intended for single-image scenarios such as avatar upload.
+     * Returns a publicly accessible download URL upon success.
      * </p>
      *
-     * <p>上传流程：</p>
+     * <p>Upload steps:</p>
      * <ol>
-     *   <li>验证图片 URI 是否为 null</li>
-     *   <li>生成唯一的文件名</li>
-     *   <li>上传图片文件</li>
-     *   <li>获取并返回下载 URL</li>
+     *   <li>Validate that the image URI is not null</li>
+     *   <li>Generate a unique filename</li>
+     *   <li>Upload the image file</li>
+     *   <li>Fetch and return the download URL</li>
      * </ol>
      *
-     * @param imageUri 要上传的图片 URI
-     * @param listener 完成回调监听器
-     *                 成功时返回图片的下载 URL（字符串格式）
-     *                 失败时返回异常信息（如：网络错误、权限不足等）
+     * @param imageUri the image URI to upload
+     * @param listener completion listener:
+     *                 on success, returns the download URL as a string;
+     *                 on failure, returns an exception (e.g., network error, permission denied)
      */
     public void uploadImage(Uri imageUri, OnCompleteListener<String> listener) {
-        // TODO
+        // Validate parameter
+        if (imageUri == null) {
+            listener.onComplete(Tasks.forException(new IllegalArgumentException("Image URI is null")));
+            return;
+        }
+
+        // Generate a unique filename
+        String filename = "images/" + UUID.randomUUID().toString() + ".jpg";
+        StorageReference imageRef = storageRef.child(filename);
+
+        // Execute upload
+        imageRef.putFile(imageUri)
+                .continueWithTask(task -> {
+                    if (!task.isSuccessful() && task.getException() != null) {
+                        throw task.getException();
+                    }
+                    return imageRef.getDownloadUrl();
+                })
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful() && task.getResult() != null) {
+                        listener.onComplete(Tasks.forResult(task.getResult().toString()));
+                    } else {
+                        listener.onComplete(Tasks.forException(
+                                task.getException() != null ? task.getException() :
+                                        new Exception("Failed to upload image")));
+                    }
+                });
     }
 
     /**
-     * 从 Firebase Storage 删除图片
+     * Deletes an image from Firebase Storage.
      * <p>
-     * 根据图片的下载 URL 删除对应的文件。
-     * 常用于用户删除帖子、更换头像时清理旧图片资源。
+     * Deletes the file by its download URL. Commonly used when a user deletes a post
+     * or changes avatar to clean up the old image resource.
      * </p>
      *
-     * <p>删除流程：</p>
+     * <p>Deletion steps:</p>
      * <ol>
-     *   <li>验证图片 URL 是否有效</li>
-     *   <li>从 URL 解析出 Storage 引用</li>
-     *   <li>执行删除操作</li>
-     *   <li>返回删除结果</li>
+     *   <li>Validate that the image URL is valid</li>
+     *   <li>Resolve a Storage reference from the URL</li>
+     *   <li>Perform the delete operation</li>
+     *   <li>Return the deletion result</li>
      * </ol>
      *
-     * <p>注意事项：</p>
+     * <p>Cautions:</p>
      * <ul>
-     *   <li>删除操作不可逆，请谨慎使用</li>
-     *   <li>如果文件不存在，Firebase 会返回 404 错误</li>
-     *   <li>删除成功后，原有的下载 URL 将失效</li>
+     *   <li>Deletion is irreversible—use with care</li>
+     *   <li>If the file does not exist, Firebase returns a 404 error</li>
+     *   <li>After a successful deletion, the original download URL becomes invalid</li>
      * </ul>
      *
-     * @param imageUrl 要删除的图片的下载 URL
-     * @param listener 完成回调监听器
-     *                 成功时返回 null
-     *                 失败时返回异常信息（如：文件不存在、权限不足等）
+     * @param imageUrl the download URL of the image to delete
+     * @param listener completion listener:
+     *                 on success returns null;
+     *                 on failure returns an exception (e.g., not found, permission denied)
      */
     public void deleteImage(String imageUrl, OnCompleteListener<Void> listener) {
-        // TODO
+        // Validate parameter
+        if (imageUrl == null || imageUrl.isEmpty()) {
+            listener.onComplete(Tasks.forException(new IllegalArgumentException("Image URL is null or empty")));
+            return;
+        }
+
+        // Resolve reference and delete
+        StorageReference imageRef = storage.getReferenceFromUrl(imageUrl);
+        imageRef.delete().addOnCompleteListener(listener);
     }
 }

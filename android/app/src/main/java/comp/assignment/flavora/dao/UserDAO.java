@@ -7,118 +7,125 @@ import comp.assignment.flavora.model.User;
 import java.util.List;
 
 /**
- * 用户数据访问对象
- * 负责用户实体的数据访问操作
- * 遵循单例模式，符合reference-app设计规范
+ * User Data Access Object (DAO)
+ * Handles all data access operations related to User entities.
+ * Implements the Singleton pattern and follows the reference-app design conventions.
  *
  * @author Flavora Team
  * @version 1.0
  */
 public class UserDAO extends DAO<User> {
-    /** 单例实例 */
+    /** Singleton instance */
     private static UserDAO instance;
-    /** Firebase数据源实例 */
+    /** Firebase data source instance */
     private final FirebaseDataSource dataSource;
 
     /**
-     * 私有构造函数，防止外部实例化
-     * 初始化Firebase数据源
+     * Private constructor to prevent external instantiation.
+     * Initializes the Firebase data source.
      */
     private UserDAO() {
-        // TODO
+        this.dataSource = FirebaseDataSource.getInstance();
     }
 
     /**
-     * 获取UserDAO的单例实例
-     * 使用双重检查锁定（DCL）实现线程安全的懒加载
+     * Returns the singleton instance of UserDAO.
+     * Implements thread-safe lazy initialization using Double-Checked Locking (DCL).
      *
-     * @return UserDAO单例实例
+     * @return UserDAO singleton instance
      */
     public static UserDAO getInstance() {
-        // TODO
+        if (instance == null) {
+            synchronized (UserDAO.class) {
+                if (instance == null) {
+                    instance = new UserDAO();
+                }
+            }
+        }
+        return instance;
     }
 
     /**
-     * 添加用户到数据库
+     * Adds a user to the database.
      *
-     * @param user     要添加的用户对象
-     * @param listener 完成回调
+     * @param user     the user to add
+     * @param listener completion listener for operation callback
      */
     @Override
     public void add(User user, OnCompleteListener<Void> listener) {
-        // TODO
+        dataSource.addUser(user, listener);
     }
 
     /**
-     * 根据用户ID获取用户信息
+     * Retrieves a user by ID.
      *
-     * @param id       用户ID
-     * @param listener 完成回调，返回用户对象
+     * @param id       the user ID
+     * @param listener completion listener returning the User object
      */
     @Override
     public void get(String id, OnCompleteListener<User> listener) {
-        // TODO
+        dataSource.getUser(id, listener);
     }
 
     /**
-     * 获取所有用户
+     * Retrieves all users.
      *
-     * @param listener 完成回调，返回用户列表
+     * @param listener completion listener returning a list of all users
      */
     @Override
     public void getAll(OnCompleteListener<List<User>> listener) {
-        // TODO
+        dataSource.getAllUsers(listener);
     }
 
     /**
-     * 根据用户ID删除用户
+     * Deletes a user by ID.
      *
-     * @param id       用户ID
-     * @param listener 完成回调
+     * @param id       the user ID
+     * @param listener completion listener for operation callback
      */
     @Override
     public void delete(String id, OnCompleteListener<Void> listener) {
-        // TODO
+        dataSource.deleteUser(id, listener);
     }
 
     /**
-     * 更新用户信息
+     * Updates user information.
      *
-     * @param user     包含更新数据的用户对象
-     * @param listener 完成回调
+     * @param user     the user object containing updated data
+     * @param listener completion listener for operation callback
      */
     @Override
     public void update(User user, OnCompleteListener<Void> listener) {
-        // TODO
+        dataSource.updateUser(user, listener);
     }
 
     /**
-     * 根据用户名查询用户
+     * Retrieves a user by username.
      *
-     * @param username 要查询的用户名
-     * @param listener 完成回调，返回匹配的用户对象
+     * @param username the username to search for
+     * @param listener completion listener returning the matching User object
      */
     public void getUserByUsername(String username, OnCompleteListener<User> listener) {
-        // TODO
+        dataSource.getUserByUsername(username, listener);
     }
 
     /**
-     * 增加用户的帖子数量计数
+     * Increments the user's post count.
      *
-     * @param userId   用户ID
-     * @param listener 完成回调
+     * @param userId   the user ID
+     * @param listener completion listener for operation callback
      */
     public void incrementPostsCount(String userId, OnCompleteListener<Void> listener) {
-        // TODO
+        dataSource.incrementUserPostsCount(userId, listener);
     }
 
     /**
-     * 减少用户的帖子数量计数
+     * Decrements the user's post count.
      *
-     * @param userId   用户ID
-     * @param listener 完成回调
+     * @param userId   the user ID
+     * @param listener completion listener for operation callback
      */
     public void decrementPostsCount(String userId, OnCompleteListener<Void> listener) {
-        // TODO
+        dataSource.decrementUserPostsCount(userId, listener);
     }
 }

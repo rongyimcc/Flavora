@@ -8,131 +8,139 @@ import comp.assignment.flavora.model.Favorite;
 import java.util.List;
 
 /**
- * 收藏数据访问对象
- * 负责收藏实体的数据访问操作
- * 遵循单例模式，符合reference-app设计规范
+ * Favorite Data Access Object (DAO)
+ * Handles all data access operations related to Favorite entities.
+ * Implements the Singleton pattern and follows the reference-app design conventions.
  *
- * @author Flavora Team
+ * @author
+ * Flavora Team
  * @version 1.0
  */
 public class FavoriteDAO extends DAO<Favorite> {
-    /** 单例实例 */
+    /** Singleton instance */
     private static FavoriteDAO instance;
-    /** Firebase数据源实例 */
+    /** Firebase data source instance */
     private final FirebaseDataSource dataSource;
 
     /**
-     * 私有构造函数，防止外部实例化
-     * 初始化Firebase数据源
+     * Private constructor to prevent external instantiation.
+     * Initializes the Firebase data source.
      */
     private FavoriteDAO() {
-        // TODO
+        this.dataSource = FirebaseDataSource.getInstance();
     }
 
     /**
-     * 获取FavoriteDAO的单例实例
-     * 使用双重检查锁定（DCL）实现线程安全的懒加载
+     * Returns the singleton instance of FavoriteDAO.
+     * Implements thread-safe lazy initialization using Double-Checked Locking (DCL).
      *
-     * @return FavoriteDAO单例实例
+     * @return FavoriteDAO singleton instance
      */
     public static FavoriteDAO getInstance() {
-        // TODO
+        if (instance == null) {
+            synchronized (FavoriteDAO.class) {
+                if (instance == null) {
+                    instance = new FavoriteDAO();
+                }
+            }
+        }
+        return instance;
     }
 
     /**
-     * 添加收藏记录到数据库
+     * Adds a favorite record to the database.
      *
-     * @param favorite 要添加的收藏对象
-     * @param listener 完成回调
+     * @param favorite the Favorite object to add
+     * @param listener completion listener for operation callback
      */
     @Override
     public void add(Favorite favorite, OnCompleteListener<Void> listener) {
-        // TODO
+        dataSource.addFavorite(favorite, listener);
     }
 
     /**
-     * 根据收藏ID获取收藏记录
+     * Retrieves a favorite record by ID.
      *
-     * @param id       收藏记录ID
-     * @param listener 完成回调，返回收藏对象
+     * @param id       the favorite record ID
+     * @param listener completion listener returning the Favorite object
      */
     @Override
     public void get(String id, OnCompleteListener<Favorite> listener) {
-        // TODO
+        dataSource.getFavorite(id, listener);
     }
 
     /**
-     * 获取所有收藏记录
+     * Retrieves all favorite records.
      *
-     * @param listener 完成回调，返回收藏列表
+     * @param listener completion listener returning a list of favorites
      */
     @Override
     public void getAll(OnCompleteListener<List<Favorite>> listener) {
-        // TODO
+        dataSource.getAllFavorites(listener);
     }
 
     /**
-     * 根据收藏ID删除收藏记录
+     * Deletes a favorite record by ID.
      *
-     * @param id       收藏记录ID
-     * @param listener 完成回调
+     * @param id       the favorite record ID
+     * @param listener completion listener for operation callback
      */
     @Override
     public void delete(String id, OnCompleteListener<Void> listener) {
-        // TODO
+        dataSource.deleteFavorite(id, listener);
     }
 
     /**
-     * 更新收藏记录（收藏通常不需要更新，此方法直接返回成功）
+     * Updates a favorite record (not typically needed for favorites, returns success immediately).
      *
-     * @param favorite 收藏对象
-     * @param listener 完成回调
+     * @param favorite the Favorite object
+     * @param listener completion listener for operation callback
      */
     @Override
     public void update(Favorite favorite, OnCompleteListener<Void> listener) {
-        // TODO
+        listener.onComplete(Tasks.forResult(null));
     }
 
     /**
-     * 原子操作：添加收藏记录并增加帖子的收藏数
+     * Atomic operation: adds a favorite record and increments the post's favorite count.
      *
-     * @param userId   用户ID
-     * @param postId   帖子ID
-     * @param listener 完成回调
+     * @param userId   the user ID
+     * @param postId   the post ID
+     * @param listener completion listener for operation callback
      */
     public void addFavoriteWithCount(String userId, String postId, OnCompleteListener<Void> listener) {
-        // TODO
+        dataSource.addFavoriteAndIncrementCount(userId, postId, listener);
     }
 
     /**
-     * 原子操作：删除收藏记录并减少帖子的收藏数
+     * Atomic operation: removes a favorite record and decrements the post's favorite count.
      *
-     * @param userId   用户ID
-     * @param postId   帖子ID
-     * @param listener 完成回调
+     * @param userId   the user ID
+     * @param postId   the post ID
+     * @param listener completion listener for operation callback
      */
     public void removeFavoriteWithCount(String userId, String postId, OnCompleteListener<Void> listener) {
-        // TODO
+        dataSource.removeFavoriteAndDecrementCount(userId, postId, listener);
     }
 
     /**
-     * 检查用户是否已收藏指定帖子
+     * Checks whether a user has favorited a specific post.
      *
-     * @param userId   用户ID
-     * @param postId   帖子ID
-     * @param listener 完成回调，返回布尔值结果
+     * @param userId   the user ID
+     * @param postId   the post ID
+     * @param listener completion listener returning a boolean result
      */
     public void hasFavorited(String userId, String postId, OnCompleteListener<Boolean> listener) {
-        // TODO
+        dataSource.checkFavoriteExists(userId, postId, listener);
     }
 
     /**
-     * 获取指定用户收藏的所有帖子ID
+     * Retrieves all post IDs favorited by a specific user.
      *
-     * @param userId   用户ID
-     * @param listener 完成回调，返回帖子ID列表
+     * @param userId   the user ID
+     * @param listener completion listener returning a list of post IDs
      */
     public void getFavoritesByUser(String userId, OnCompleteListener<List<String>> listener) {
-        // TODO
+        dataSource.getFavoritesByUser(userId, listener);
     }
 }
