@@ -21,257 +21,371 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 帖子列表适配器
+ * Posts Adapter
  * <p>
- * 用于在RecyclerView中显示帖子列表。支持帖子的显示、点击、点赞、收藏和删除等交互功能。
- * 每个帖子包含用户信息、图片轮播、标题、描述、评分和互动按钮。
+ * Used to display a list of posts in a RecyclerView.
+ * Supports displaying, clicking, liking, favoriting, and deleting posts.
+ * Each post includes user info, image carousel, title, description, rating, and interaction buttons.
  * </p>
- *
  * @author Flavora Team
  * @version 1.0
  * @since 1.0
  */
 public class PostsAdapter extends RecyclerView.Adapter<PostsAdapter.PostViewHolder> {
 
-    /** 帖子数据列表 */
     private final List<Post> posts = new ArrayList<>();
 
-    /** 帖子交互监听器 */
     private OnPostInteractionListener interactionListener;
 
-    /** 是否显示删除按钮（用于个人帖子页面） */
     private boolean showDeleteButton = false;
 
     /**
-     * 帖子交互监听器接口
+     * Listener interface for post interactions
      * <p>
-     * 定义了帖子相关的所有交互回调方法，包括点击、点赞、收藏和删除。
+     * Defines all post-related callbacks including click, like, favorite, and delete.
      * </p>
      */
     public interface OnPostInteractionListener {
         /**
-         * 帖子被点击时回调
+         * Called when a post is clicked
          *
-         * @param post 被点击的帖子对象
+         * @param post The clicked post
          */
         void onPostClicked(Post post);
 
         /**
-         * 点赞按钮被点击时回调
+         * Called when the favorite button is clicked
          *
-         * @param post 被点赞的帖子对象
-         * @param position 帖子在列表中的位置
+         * @param post The favorited post
+         * @param position The position of the post in the list
          */
         void onLikeClicked(Post post, int position);
 
         /**
-         * 收藏按钮被点击时回调
+         * Called when the favorite button is clicked
          *
-         * @param post 被收藏的帖子对象
-         * @param position 帖子在列表中的位置
+         * @param post The favorited post
+         * @param position The position of the post in the list
          */
         void onFavoriteClicked(Post post, int position);
 
         /**
-         * 删除按钮被点击时回调（可选方法）
+         * Called when the delete button is clicked (optional)
          *
-         * @param post 被删除的帖子对象
-         * @param position 帖子在列表中的位置
+         * @param post The deleted post
+         * @param position The position of the post in the list
          */
         default void onDeleteClicked(Post post, int position) {
-            // TODO
+            // Default implementation: do nothing
         }
     }
 
     /**
-     * 设置帖子交互监听器
+     * Set the interaction listener
      *
-     * @param listener 交互监听器实例
+     * @param listener The listener instance
      */
     public void setOnPostInteractionListener(OnPostInteractionListener listener) {
-        // TODO
+        this.interactionListener = listener;
     }
 
     /**
-     * 设置是否显示删除按钮
+     * Set whether to show the delete button
      * <p>
-     * 在个人帖子页面显示删除按钮，在发现页面隐藏。
-     * 调用此方法会触发界面刷新。
+     * The delete button is shown in the personal posts page and hidden in the discover page.
+     * This method will trigger a UI refresh.
      * </p>
      *
-     * @param show true表示显示删除按钮，false表示隐藏
+     * @param show true to show the delete button, false to hide
      */
     public void setShowDeleteButton(boolean show) {
-        // TODO
+        this.showDeleteButton = show;
+        notifyDataSetChanged();
     }
 
     /**
-     * 设置帖子列表数据
+     * Set the list of posts
      * <p>
-     * 清空现有数据并添加新数据，然后刷新整个列表。
-     * 注意：此方法会调用notifyDataSetChanged()，可能影响性能。
+     * Clears existing data and adds new posts, then refreshes the entire list.
+     * Note: This method calls notifyDataSetChanged(), which may impact performance.
      * </p>
      *
-     * @param newPosts 新的帖子列表，如果为null则清空列表
+     * @param newPosts The new list of posts (null to clear)
      */
     public void setPosts(List<Post> newPosts) {
-        // TODO
+        posts.clear();
+        if (newPosts != null) {
+            posts.addAll(newPosts);
+        }
+        notifyDataSetChanged();
     }
 
     /**
-     * 从列表中移除指定位置的帖子
+     * Remove a post from the list by position
      * <p>
-     * 移除帖子后会调用notifyItemRemoved()以实现删除动画。
+     * Calls notifyItemRemoved() to trigger a deletion animation.
      * </p>
      *
-     * @param position 要移除的帖子位置
+     * @param position The index of the post to remove
      */
     public void removePost(int position) {
-        // TODO
+        if (position >= 0 && position < posts.size()) {
+            posts.remove(position);
+            notifyItemRemoved(position);
+        }
     }
 
     /**
-     * 更新指定位置的帖子数据
+     * Update a specific post in the list
      * <p>
-     * 用于更新帖子的点赞、收藏等状态变化。
+     * Used to update like/favorite status or other dynamic post attributes.
      * </p>
      *
-     * @param position 要更新的帖子位置
-     * @param post 新的帖子对象
+     * @param position The index of the post to update
+     * @param post The updated post object
      */
     public void updatePost(int position, Post post) {
-        // TODO
+        if (position >= 0 && position < posts.size()) {
+            posts.set(position, post);
+            notifyItemChanged(position);
+        }
     }
 
     /**
-     * 创建ViewHolder
+     * Create a new ViewHolder
      * <p>
-     * 加载item_post布局并创建PostViewHolder实例。
+     * Inflates the item_post layout and returns a PostViewHolder instance.
      * </p>
      *
-     * @param parent 父ViewGroup
-     * @param viewType 视图类型（未使用）
-     * @return PostViewHolder实例
+     * @param parent The parent ViewGroup
+     * @param viewType The type of view (not used)
+     * @return A new PostViewHolder
      */
     @NonNull
     @Override
     public PostViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        // TODO
+        View view = LayoutInflater.from(parent.getContext())
+                .inflate(R.layout.item_post, parent, false);
+        return new PostViewHolder(view);
     }
 
     /**
-     * 绑定数据到ViewHolder
+     * Bind data to the ViewHolder
      * <p>
-     * 将指定位置的帖子数据绑定到ViewHolder中显示。
+     * Displays post information at the specified position.
      * </p>
      *
-     * @param holder ViewHolder实例
-     * @param position 数据位置
+     * @param holder The ViewHolder instance
+     * @param position The position of the post
      */
     @Override
     public void onBindViewHolder(@NonNull PostViewHolder holder, int position) {
-        // TODO
+        Post post = posts.get(position);
+        holder.bind(post, position, interactionListener, showDeleteButton);
     }
 
     /**
-     * 获取列表项数量
+     * Get the total number of posts
      *
-     * @return 帖子列表的大小
+     * @return The number of posts
      */
     @Override
     public int getItemCount() {
-        // TODO
+        return posts.size();
     }
 
     /**
-     * 帖子ViewHolder
+     * Post ViewHolder
      * <p>
-     * 负责持有和管理帖子列表项的所有视图组件，包括用户信息、图片轮播、
-     * 文本内容、评分和交互按钮。提供数据绑定和UI更新方法。
+     * Holds and manages all view components of a single post item, including
+     * user info, image carousel, text content, rating bar, and interaction buttons.
+     * Provides methods to bind post data and update the UI.
      * </p>
      */
     static class PostViewHolder extends RecyclerView.ViewHolder {
-        /** 用户头像 */
         private final ImageView imageAvatar;
-        /** 用户名 */
-        private final TextView textUsername;
-        /** 删除按钮 */
         private final ImageButton buttonDelete;
-        /** 图片轮播ViewPager */
         private final ViewPager2 viewPagerImages;
-        /** 图片指示器（显示当前图片位置） */
         private final TextView textImageIndicator;
-        /** 帖子标题 */
         private final TextView textTitle;
-        /** 帖子描述 */
         private final TextView textDescription;
-        /** 评分条 */
         private final RatingBar ratingBar;
-        /** 点赞按钮 */
         private final ImageButton buttonLike;
-        /** 点赞数量 */
         private final TextView textLikeCount;
-        /** 收藏按钮 */
         private final ImageButton buttonFavorite;
-        /** 收藏数量 */
         private final TextView textFavoriteCount;
-        /** 发布时间 */
         private final TextView textTime;
 
         /**
-         * ViewHolder构造方法
+         * Constructor for PostViewHolder
          * <p>
-         * 初始化并绑定所有视图组件。
+         * Initializes and binds all view components.
          * </p>
          *
-         * @param itemView 列表项视图
+         * @param itemView The root view of the item
          */
         PostViewHolder(@NonNull View itemView) {
-            // TODO
+            super(itemView);
+            imageAvatar = itemView.findViewById(R.id.image_avatar);
+            textUsername = itemView.findViewById(R.id.text_username);
+            buttonDelete = itemView.findViewById(R.id.button_delete);
+            viewPagerImages = itemView.findViewById(R.id.view_pager_images);
+            textImageIndicator = itemView.findViewById(R.id.text_image_indicator);
+            textTitle = itemView.findViewById(R.id.text_title);
+            textDescription = itemView.findViewById(R.id.text_description);
+            ratingBar = itemView.findViewById(R.id.rating_bar);
+            buttonLike = itemView.findViewById(R.id.button_like);
+            textLikeCount = itemView.findViewById(R.id.text_like_count);
+            buttonFavorite = itemView.findViewById(R.id.button_favorite);
+            textFavoriteCount = itemView.findViewById(R.id.text_favorite_count);
+            textTime = itemView.findViewById(R.id.text_time);
         }
 
         /**
-         * 绑定帖子数据到视图
+         * Bind post data to the view
          * <p>
-         * 将帖子的所有信息（用户信息、图片、内容、评分、点赞收藏状态等）
-         * 绑定到对应的视图组件，并设置各种交互监听器。
+         * Binds all post information such as user details, images, text, ratings,
+         * like/favorite status, and sets up interaction listeners.
          * </p>
          *
-         * @param post 要显示的帖子对象
-         * @param position 帖子在列表中的位置
-         * @param listener 交互监听器
-         * @param showDelete 是否显示删除按钮
+         * @param post The post to display
+         * @param position The position of the post in the list
+         * @param listener The interaction listener
+         * @param showDelete Whether to show the delete button
          */
         void bind(Post post, int position, OnPostInteractionListener listener, boolean showDelete) {
-            // TODO
+
+            textUsername.setText(post.getUsername());
+
+
+            buttonDelete.setVisibility(showDelete ? View.VISIBLE : View.GONE);
+
+            // Set up image carousel
+            if (post.getUserAvatarUrl() != null && !post.getUserAvatarUrl().isEmpty()) {
+                Glide.with(imageAvatar.getContext())
+                        .load(post.getUserAvatarUrl())
+                        .circleCrop()
+                        .into(imageAvatar);
+            } else {
+                imageAvatar.setImageResource(R.drawable.ic_person_24);
+            }
+
+            // Set up image carousel
+            if (post.getImageUrls() != null && !post.getImageUrls().isEmpty()) {
+                PostImageAdapter imageAdapter = new PostImageAdapter(post.getImageUrls());
+                viewPagerImages.setAdapter(imageAdapter);
+
+                // Update image indicator when page changes
+                viewPagerImages.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
+                    @Override
+                    public void onPageSelected(int position) {
+                        super.onPageSelected(position);
+                        textImageIndicator.setText((position + 1) + "/" + post.getImageUrls().size());
+                    }
+                });
+
+
+                textImageIndicator.setText("1/" + post.getImageUrls().size());
+                textImageIndicator.setVisibility(post.getImageUrls().size() > 1 ? View.VISIBLE : View.GONE);
+            }
+
+
+            textTitle.setText(post.getTitle());
+            textDescription.setText(post.getDescription());
+
+            ratingBar.setRating((float) post.getRating());
+
+
+            updateLikeButton(post.isLikedByCurrentUser());
+            textLikeCount.setText(String.valueOf(post.getLikeCount()));
+
+
+            updateFavoriteButton(post.isFavoritedByCurrentUser());
+            textFavoriteCount.setText(String.valueOf(post.getFavoriteCount()));
+
+            // Set post time (relative time)
+            if (post.getCreatedAt() != null) {
+                long timeMillis = post.getCreatedAt().toDate().getTime();
+                CharSequence timeAgo = DateUtils.getRelativeTimeSpanString(
+                        timeMillis,
+                        System.currentTimeMillis(),
+                        DateUtils.MINUTE_IN_MILLIS,
+                        DateUtils.FORMAT_ABBREV_RELATIVE);
+                textTime.setText(timeAgo);
+            }
+
+            // Set click listeners
+            itemView.setOnClickListener(v -> {
+                if (listener != null) {
+                    listener.onPostClicked(post);
+                }
+            });
+
+            buttonLike.setOnClickListener(v -> {
+                if (listener != null) {
+                    listener.onLikeClicked(post, position);
+                }
+            });
+
+            buttonFavorite.setOnClickListener(v -> {
+                if (listener != null) {
+                    listener.onFavoriteClicked(post, position);
+                }
+            });
+
+            buttonDelete.setOnClickListener(v -> {
+                if (listener != null) {
+                    listener.onDeleteClicked(post, position);
+                }
+            });
         }
 
         /**
-         * 更新点赞按钮的显示状态
+         * Update the like button state
          * <p>
-         * 根据是否已点赞切换按钮图标和颜色。
-         * 已点赞：实心图标 + 品牌黄色
-         * 未点赞：空心图标 + 默认主题颜色
+         * Changes the icon and color based on like status:
+         * - Liked: solid icon + brand yellow
+         * - Not liked: outlined icon + default color
          * </p>
          *
-         * @param isLiked 是否已点赞
+         * @param isLiked Whether the post is liked
          */
         private void updateLikeButton(boolean isLiked) {
-            // TODO
+            if (isLiked) {
+                buttonLike.setImageResource(R.drawable.ic_thumb_up_24);
+                // 设置品牌颜色（黄色）
+                int brandColor = ContextCompat.getColor(itemView.getContext(), R.color.yellow_500);
+                buttonLike.setImageTintList(ColorStateList.valueOf(brandColor));
+            } else {
+                buttonLike.setImageResource(R.drawable.ic_thumb_up_border_24);
+                // 设置默认图标颜色（自动适配主题）
+                int defaultColor = ContextCompat.getColor(itemView.getContext(), R.color.icon_color);
+                buttonLike.setImageTintList(ColorStateList.valueOf(defaultColor));
+            }
         }
 
         /**
-         * 更新收藏按钮的显示状态
+         * Update the favorite button state
          * <p>
-         * 根据是否已收藏切换按钮图标和颜色。
-         * 已收藏：实心书签图标 + 品牌黄色
-         * 未收藏：空心书签图标 + 默认主题颜色
+         * Changes the icon and color based on favorite status:
+         * - Favorited: solid icon + brand yellow
+         * - Not favorited: outlined icon + default color
          * </p>
          *
-         * @param isFavorited 是否已收藏
+         * @param isFavorited Whether the post is favorited
          */
         private void updateFavoriteButton(boolean isFavorited) {
-            // TODO
+            if (isFavorited) {
+                buttonFavorite.setImageResource(R.drawable.ic_bookmark_24);
+
+                int brandColor = ContextCompat.getColor(itemView.getContext(), R.color.yellow_500);
+                buttonFavorite.setImageTintList(ColorStateList.valueOf(brandColor));
+            } else {
+                buttonFavorite.setImageResource(R.drawable.ic_bookmark_border_24);
+
+                int defaultColor = ContextCompat.getColor(itemView.getContext(), R.color.icon_color);
+                buttonFavorite.setImageTintList(ColorStateList.valueOf(defaultColor));
+            }
         }
     }
 }
