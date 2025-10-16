@@ -7,147 +7,155 @@ import comp.assignment.flavora.model.Post;
 import java.util.List;
 
 /**
- * 帖子数据访问对象
- * 负责帖子实体的数据访问操作
- * 遵循单例模式，符合reference-app设计规范
+ * Post Data Access Object (DAO)
+ * Handles all data access operations related to Post entities.
+ * Implements the Singleton pattern and follows the reference-app design conventions.
  *
- * @author Flavora Team
+ * @author
+ * Flavora Team
  * @version 1.0
  */
 public class PostDAO extends DAO<Post> {
-    /** 单例实例 */
+    /** Singleton instance */
     private static PostDAO instance;
-    /** Firebase数据源实例 */
+    /** Firebase data source instance */
     private final FirebaseDataSource dataSource;
 
     /**
-     * 私有构造函数，防止外部实例化
-     * 初始化Firebase数据源
+     * Private constructor to prevent external instantiation.
+     * Initializes the Firebase data source.
      */
     private PostDAO() {
-        // TODO
+        this.dataSource = FirebaseDataSource.getInstance();
     }
 
     /**
-     * 获取PostDAO的单例实例
-     * 使用双重检查锁定（DCL）实现线程安全的懒加载
+     * Returns the singleton instance of PostDAO.
+     * Implements thread-safe lazy initialization using Double-Checked Locking (DCL).
      *
-     * @return PostDAO单例实例
+     * @return PostDAO singleton instance
      */
     public static PostDAO getInstance() {
-        // TODO
+        if (instance == null) {
+            synchronized (PostDAO.class) {
+                if (instance == null) {
+                    instance = new PostDAO();
+                }
+            }
+        }
+        return instance;
     }
 
     /**
-     * 添加帖子到数据库
+     * Adds a post to the database.
      *
-     * @param post     要添加的帖子对象
-     * @param listener 完成回调
+     * @param post     the post to add
+     * @param listener completion listener for operation callback
      */
     @Override
     public void add(Post post, OnCompleteListener<Void> listener) {
-        // TODO
+        dataSource.addPost(post, listener);
     }
 
     /**
-     * 根据帖子ID获取帖子信息
+     * Retrieves a post by ID.
      *
-     * @param id       帖子ID
-     * @param listener 完成回调，返回帖子对象
+     * @param id       the post ID
+     * @param listener completion listener returning the Post object
      */
     @Override
     public void get(String id, OnCompleteListener<Post> listener) {
-        // TODO
+        dataSource.getPost(id, listener);
     }
 
     /**
-     * 获取所有帖子
+     * Retrieves all posts.
      *
-     * @param listener 完成回调，返回帖子列表
+     * @param listener completion listener returning a list of posts
      */
     @Override
     public void getAll(OnCompleteListener<List<Post>> listener) {
-        // TODO
+        dataSource.getAllPosts(listener);
     }
 
     /**
-     * 根据帖子ID删除帖子
+     * Deletes a post by ID.
      *
-     * @param id       帖子ID
-     * @param listener 完成回调
+     * @param id       the post ID
+     * @param listener completion listener for operation callback
      */
     @Override
     public void delete(String id, OnCompleteListener<Void> listener) {
-        // TODO
+        dataSource.deletePost(id, listener);
     }
 
     /**
-     * 更新帖子信息
+     * Updates post information.
      *
-     * @param post     包含更新数据的帖子对象
-     * @param listener 完成回调
+     * @param post     the post object containing updated data
+     * @param listener completion listener for operation callback
      */
     @Override
     public void update(Post post, OnCompleteListener<Void> listener) {
-        // TODO
+        dataSource.updatePost(post, listener);
     }
 
     /**
-     * 获取指定用户发布的所有帖子
+     * Retrieves all posts published by a specific user.
      *
-     * @param userId   用户ID
-     * @param listener 完成回调，返回该用户的帖子列表
+     * @param userId   the user ID
+     * @param listener completion listener returning the user's posts
      */
     public void getPostsByUser(String userId, OnCompleteListener<List<Post>> listener) {
-        // TODO
+        dataSource.getPostsByUser(userId, listener);
     }
 
     /**
-     * 获取所有帖子并按创建时间排序（最新的在前）
+     * Retrieves all posts ordered by creation time (newest first).
      *
-     * @param listener 完成回调，返回按时间排序的帖子列表
+     * @param listener completion listener returning a time-ordered list of posts
      */
     public void getPostsOrderByTime(OnCompleteListener<List<Post>> listener) {
-        // TODO
+        dataSource.getPostsOrderByTime(listener);
     }
 
     /**
-     * 增加帖子的点赞数量
+     * Increments a post's like count.
      *
-     * @param postId   帖子ID
-     * @param listener 完成回调
+     * @param postId   the post ID
+     * @param listener completion listener for operation callback
      */
     public void incrementLikeCount(String postId, OnCompleteListener<Void> listener) {
-        // TODO
+        dataSource.incrementPostLikeCount(postId, listener);
     }
 
     /**
-     * 减少帖子的点赞数量
+     * Decrements a post's like count.
      *
-     * @param postId   帖子ID
-     * @param listener 完成回调
+     * @param postId   the post ID
+     * @param listener completion listener for operation callback
      */
     public void decrementLikeCount(String postId, OnCompleteListener<Void> listener) {
-        // TODO
+        dataSource.decrementPostLikeCount(postId, listener);
     }
 
     /**
-     * 获取指定用户收藏的所有帖子
+     * Retrieves all posts favorited by a specific user.
      *
-     * @param userId   用户ID
-     * @param listener 完成回调，返回用户收藏的帖子列表
+     * @param userId   the user ID
+     * @param listener completion listener returning a list of favorited posts
      */
     public void getFavoritedPostsByUser(String userId, OnCompleteListener<List<Post>> listener) {
-        // TODO
+        dataSource.getFavoritedPostsByUser(userId, listener);
     }
 
     /**
-     * 获取指定用户所有帖子收到的点赞总数
+     * Retrieves the total number of likes received across all posts of a user.
      *
-     * @param userId   用户ID
-     * @param listener 完成回调，返回该用户的总点赞数
+     * @param userId   the user ID
+     * @param listener completion listener returning the total like count
      */
     public void getTotalLikesForUser(String userId, OnCompleteListener<Integer> listener) {
-        // TODO
+        dataSource.getTotalLikesForUser(userId, listener);
     }
 }

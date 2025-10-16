@@ -17,14 +17,14 @@ import comp.assignment.flavora.repository.AuthRepository;
 import comp.assignment.flavora.ui.auth.LoginActivity;
 
 /**
- * 设置底部表单
+ * Settings bottom sheet.
  * <p>
- * 显示应用设置选项的底部抽屉对话框，包括：
- * - 深色主题切换开关
- * - 登出按钮
+ * A bottom-sheet dialog showing app settings, including:
+ * - Dark theme toggle
+ * - Logout button
  * </p>
  * <p>
- * 主题设置使用SharedPreferences持久化保存，并通过AppCompatDelegate实时应用。
+ * Theme preference is persisted with SharedPreferences and applied in real time via AppCompatDelegate.
  * </p>
  *
  * @author Flavora Team
@@ -33,46 +33,93 @@ import comp.assignment.flavora.ui.auth.LoginActivity;
  */
 public class SettingsBottomSheet extends BottomSheetDialogFragment {
 
-    /** SharedPreferences名称 */
+    /** SharedPreferences name */
     private static final String PREFS_NAME = "AppPreferences";
 
-    /** 深色主题偏好设置键 */
+    /** Preference key for dark theme. */
     private static final String KEY_DARK_THEME = "dark_theme";
 
-    /** 深色主题开关 */
+    /** Dark theme switch. */
     private SwitchMaterial switchDarkTheme;
 
-    /** SharedPreferences实例 */
+    /** SharedPreferences instance. */
     private SharedPreferences preferences;
 
     /**
-     * 创建视图
+     * Create view.
      * <p>
-     * 加载设置界面布局，初始化视图组件和SharedPreferences，
-     * 设置监听器并加载保存的主题设置。
+     * Inflate the settings layout, initialize views and SharedPreferences,
+     * attach listeners, and load the saved theme setting.
      * </p>
      *
-     * @param inflater 布局加载器
-     * @param container 父容器
-     * @param savedInstanceState 保存的实例状态
-     * @return 创建的视图
+     * @param inflater layout inflater
+     * @param container parent container
+     * @param savedInstanceState saved instance state
+     * @return created view
      */
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
-                                 // TODO
+        View view = inflater.inflate(R.layout.bottom_sheet_settings, container, false);
+
+        // Initialize SharedPreferences
+        preferences = requireContext().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+
+        switchDarkTheme = view.findViewById(R.id.switch_dark_theme);
+        View buttonClose = view.findViewById(R.id.button_close);
+        View buttonLogout = view.findViewById(R.id.button_logout);
+
+        // Load current theme state
+        boolean isDarkTheme = preferences.getBoolean(KEY_DARK_THEME, false);
+        switchDarkTheme.setChecked(isDarkTheme);
+
+        // Close button listener
+        buttonClose.setOnClickListener(v -> dismiss());
+
+        // Theme toggle listener
+        switchDarkTheme.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            // Persist theme preference
+            preferences.edit().putBoolean(KEY_DARK_THEME, isChecked).apply();
+
+            // Apply
+            if (isChecked) {
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
+            } else {
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
+            }
+        });
+
+        // Logout button listener
+        buttonLogout.setOnClickListener(v -> {
+            logout();
+            dismiss();
+        });
+
+        return view;
                              }
 
     /**
-     * 执行登出操作
+     * Perform logout.
      * <p>
-     * 调用AuthRepository登出，清除用户会话，并导航到登录页面。
-     * 使用FLAG_ACTIVITY_NEW_TASK和FLAG_ACTIVITY_CLEAR_TASK标志
-     * 清除返回栈，防止用户返回到已登出的页面。
+     * Calls AuthRepository to sign out, clears the user session, and navigates to Login.
+     * Uses FLAG_ACTIVITY_NEW_TASK and FLAG_ACTIVITY_CLEAR_TASK to clear the back stack
+     * and prevent returning to signed-out pages.
      * </p>
      */
     private void logout() {
-        // TODO
+        // Sign out
+        AuthRepository.getInstance().logout();
+
+        // Navigate to Login
+        Intent intent = new Intent(getActivity(), LoginActivity.class);
+        // Clear activity stack to prevent back navigation
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
+
+        // Finish current Activity
+        if (getActivity() != null) {
+            getActivity().finish();
+        }
     }
 }

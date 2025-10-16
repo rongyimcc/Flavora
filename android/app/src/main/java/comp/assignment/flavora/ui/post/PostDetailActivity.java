@@ -16,184 +16,344 @@ import comp.assignment.flavora.model.Post;
 import comp.assignment.flavora.ui.discover.PostImageAdapter;
 
 /**
- * 帖子详情Activity - 显示单个帖子的详细信息
+ * Post Detail Activity – shows details for a single post.
  *
- * <p>功能描述：</p>
+ * <p>Features:</p>
  * <ul>
- *   <li>显示帖子的完整信息，包括标题、描述、评分、图片等</li>
- *   <li>显示发帖用户的头像和用户名</li>
- *   <li>支持浏览多张图片，使用ViewPager2实现图片轮播</li>
- *   <li>支持点赞和收藏操作，实时更新UI</li>
- *   <li>显示帖子的点赞数和收藏数</li>
- *   <li>显示帖子的发布时间（相对时间格式）</li>
+ *   <li>Displays full post info, including title, description, rating, images, etc.</li>
+ *   <li>Shows the author’s avatar and username.</li>
+ *   <li>Supports browsing multiple images with ViewPager2.</li>
+ *   <li>Supports like and favorite actions with real-time UI updates.</li>
+ *   <li>Shows like and favorite counts.</li>
+ *   <li>Shows post publish time in relative format.</li>
  * </ul>
  *
- * <p>交互功能：</p>
+ * <p>Interactions:</p>
  * <ul>
- *   <li>点赞/取消点赞 - 点击点赞按钮切换状态</li>
- *   <li>收藏/取消收藏 - 点击收藏按钮切换状态</li>
- *   <li>图片浏览 - 左右滑动查看多张图片</li>
- *   <li>返回 - 点击工具栏返回按钮返回上一页</li>
+ *   <li>Like/Unlike – tap the like button to toggle state.</li>
+ *   <li>Favorite/Unfavorite – tap the favorite button to toggle state.</li>
+ *   <li>Image browsing – swipe left/right to view multiple images.</li>
+ *   <li>Back – tap the toolbar back button to return.</li>
  * </ul>
  *
- * <p>技术特点：</p>
+ * <p>Technical notes:</p>
  * <ul>
- *   <li>使用ViewBinding进行视图绑定</li>
- *   <li>使用Glide加载网络图片</li>
- *   <li>使用ViewPager2实现图片轮播</li>
- *   <li>使用Facade模式访问数据层</li>
- *   <li>使用Task异步处理网络请求</li>
- *   <li>使用DateUtils格式化相对时间</li>
+ *   <li>Uses ViewBinding for view access.</li>
+ *   <li>Uses Glide to load network images.</li>
+ *   <li>Uses ViewPager2 for image carousel.</li>
+ *   <li>Uses Facade pattern to access data layer.</li>
+ *   <li>Uses Task for async network requests.</li>
+ *   <li>Uses DateUtils to format relative time.</li>
  * </ul>
  *
- * @author Flavora开发团队
+ * @author Flavora Team
  * @version 1.0
  * @since 1.0
  */
 public class PostDetailActivity extends AppCompatActivity {
 
-    /** Intent Extra键名 - 帖子ID */
+    /** Intent extra key – post ID */
     public static final String EXTRA_POST_ID = "post_id";
 
-    /** ViewBinding对象，用于访问布局中的视图 */
+    /** ViewBinding object for accessing views in the layout */
     private ActivityPostDetailBinding binding;
-    /** 当前显示的帖子对象 */
+    /** Currently displayed post */
     private Post post;
 
     /**
-     * Activity生命周期方法 - 创建时调用
+     * Activity lifecycle – called on creation.
      *
-     * <p>执行流程：</p>
+     * <p>Flow:</p>
      * <ol>
-     *   <li>初始化ViewBinding并设置内容视图</li>
-     *   <li>设置工具栏</li>
-     *   <li>加载帖子数据</li>
+     *   <li>Initialize ViewBinding and set the content view.</li>
+     *   <li>Set up the toolbar.</li>
+     *   <li>Load post data.</li>
      * </ol>
      *
-     * @param savedInstanceState 保存的实例状态，用于恢复Activity状态
+     * @param savedInstanceState saved instance state for restoring Activity state
      */
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
-        // TODO
+        super.onCreate(savedInstanceState);
+        binding = ActivityPostDetailBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
+
+        setupToolbar();
+        loadPost();
     }
 
     /**
-     * 设置工具栏
+     * Set up the toolbar.
      *
-     * <p>配置工具栏的显示和行为：</p>
+     * <p>Configure toolbar display and behavior:</p>
      * <ul>
-     *   <li>将工具栏设置为ActionBar</li>
-     *   <li>隐藏默认标题</li>
-     *   <li>设置返回按钮的点击事件，点击后关闭当前Activity</li>
+     *   <li>Use the toolbar as ActionBar.</li>
+     *   <li>Hide the default title.</li>
+     *   <li>Set back navigation click to finish this Activity.</li>
      * </ul>
      */
     private void setupToolbar() {
-        // TODO
+        setSupportActionBar(binding.toolbar);
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayShowTitleEnabled(false);
+        }
+        binding.toolbar.setNavigationOnClickListener(v -> finish());
     }
 
     /**
-     * 加载帖子数据
+     * Load post data.
      *
-     * <p>执行流程：</p>
+     * <p>Flow:</p>
      * <ol>
-     *   <li>从Intent中获取帖子ID</li>
-     *   <li>验证帖子ID是否有效，无效则显示错误并关闭Activity</li>
-     *   <li>通过PostFacade加载帖子数据</li>
-     *   <li>加载用户对该帖子的交互状态（是否点赞、是否收藏）</li>
-     *   <li>将所有数据设置到Post对象中</li>
-     *   <li>调用displayPost()显示帖子内容</li>
+     *   <li>Get the post ID from Intent.</li>
+     *   <li>Validate the post ID; if invalid, show an error and finish.</li>
+     *   <li>Load post data via {@code PostFacade}.</li>
+     *   <li>Load the user’s interaction state for the post (liked, favorited).</li>
+     *   <li>Set all data to the {@code Post} object.</li>
+     *   <li>Call {@code displayPost()} to render the UI.</li>
      * </ol>
      *
-     * <p>注意：此方法使用嵌套回调处理异步请求，可能存在回调地狱问题</p>
+     * <p>Note: This method uses nested callbacks for async requests, which may lead to callback hell.</p>
      */
     private void loadPost() {
-        // TODO
+        String postId = getIntent().getStringExtra(EXTRA_POST_ID);
+        if (postId == null) {
+            Toast.makeText(this, "Invalid post", Toast.LENGTH_SHORT).show();
+            finish();
+            return;
+        }
+
+        // Load post data
+        PostFacade.getPost(postId, postTask -> {
+            if (!postTask.isSuccessful() || postTask.getResult() == null) {
+                Toast.makeText(this, "Failed to load post", Toast.LENGTH_SHORT).show();
+                finish();
+                return;
+            }
+
+            post = postTask.getResult();
+
+            // Load user interaction state (like and favorite)
+            PostInteractionFacade.checkIfLiked(postId, likedTask -> {
+                PostInteractionFacade.checkIfFavorited(postId, favoritedTask -> {
+                    boolean isLiked = likedTask.isSuccessful() && likedTask.getResult() != null
+                            && likedTask.getResult();
+                    boolean isFavorited = favoritedTask.isSuccessful() && favoritedTask.getResult() != null
+                            && favoritedTask.getResult();
+
+                    post.setLikedByCurrentUser(isLiked);
+                    post.setFavoritedByCurrentUser(isFavorited);
+
+                    displayPost();
+                });
+            });
+        });
     }
 
     /**
-     * 显示帖子内容到UI
+     * Bind post content to the UI.
      *
-     * <p>此方法负责将Post对象中的所有数据绑定到UI视图上，包括：</p>
+     * <p>This method binds all fields of {@code Post} to the views, including:</p>
      * <ul>
-     *   <li>用户信息：用户名、头像</li>
-     *   <li>帖子内容：标题、描述、评分</li>
-     *   <li>图片：使用ViewPager2展示多张图片，配置图片指示器</li>
-     *   <li>交互数据：点赞数、收藏数、点赞状态、收藏状态</li>
-     *   <li>时间：发布时间（相对时间格式）</li>
-     *   <li>点击监听器：点赞按钮、收藏按钮</li>
+     *   <li>User info: username, avatar</li>
+     *   <li>Post content: title, description, rating</li>
+     *   <li>Images: show multiple images with ViewPager2 and an indicator</li>
+     *   <li>Interaction data: like count, favorite count, like state, favorite state</li>
+     *   <li>Time: publish time in relative format</li>
+     *   <li>Click listeners: like button, favorite button</li>
      * </ul>
      */
     private void displayPost() {
-        // TODO
+        // Set User Name
+        binding.textUsername.setText(post.getUsername());
+
+        // Set User Avatar
+        if (post.getUserAvatarUrl() != null && !post.getUserAvatarUrl().isEmpty()) {
+            // Load network image with Glide and circle crop
+            Glide.with(this)
+                    .load(post.getUserAvatarUrl())
+                    .circleCrop()
+                    .into(binding.imageAvatar);
+        } else {
+            // Default avatar
+            binding.imageAvatar.setImageResource(R.drawable.ic_person_24);
+        }
+
+        // Image ViewPager
+        if (post.getImageUrls() != null && !post.getImageUrls().isEmpty()) {
+            PostImageAdapter imageAdapter = new PostImageAdapter(post.getImageUrls());
+            binding.viewPagerImages.setAdapter(imageAdapter);
+
+            // Register page change callback to update the indicator
+            binding.viewPagerImages.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
+                @Override
+                public void onPageSelected(int position) {
+                    super.onPageSelected(position);
+                    // Update indicator text
+                    binding.textImageIndicator.setText((position + 1) + "/" + post.getImageUrls().size());
+                }
+            });
+
+            binding.textImageIndicator.setText("1/" + post.getImageUrls().size());
+            // Only show indicator if more than one image
+            binding.textImageIndicator.setVisibility(post.getImageUrls().size() > 1 ? View.VISIBLE : View.GONE);
+        }
+
+        // Title and description
+        binding.textTitle.setText(post.getTitle());
+        binding.textDescription.setText(post.getDescription());
+
+        // Rating
+        binding.ratingBar.setRating((float) post.getRating());
+
+        // Like Button and Count
+        updateLikeButton(post.isLikedByCurrentUser());
+        binding.textLikeCount.setText(String.valueOf(post.getLikeCount()));
+
+        // Favorite Button and Count
+        updateFavoriteButton(post.isFavoritedByCurrentUser());
+        binding.textFavoriteCount.setText(String.valueOf(post.getFavoriteCount()));
+
+        // Relative publish time
+        if (post.getCreatedAt() != null) {
+            long timeMillis = post.getCreatedAt().toDate().getTime();
+            CharSequence timeAgo = DateUtils.getRelativeTimeSpanString(
+                    timeMillis,
+                    System.currentTimeMillis(),
+                    DateUtils.MINUTE_IN_MILLIS,
+                    DateUtils.FORMAT_ABBREV_RELATIVE);
+            binding.textTime.setText(timeAgo);
+        }
+
+        // Click listeners
+        binding.buttonLike.setOnClickListener(v -> handleLikeClick());
+        binding.buttonFavorite.setOnClickListener(v -> handleFavoriteClick());
     }
 
     /**
-     * 处理点赞按钮点击事件
+     * Handle like button click.
      *
-     * <p>执行流程：</p>
+     * <p>Flow:</p>
      * <ol>
-     *   <li>获取当前点赞状态</li>
-     *   <li>调用PostInteractionFacade切换点赞状态</li>
-     *   <li>根据返回结果更新本地Post对象和UI</li>
-     *   <li>如果失败，显示错误提示</li>
+     *   <li>Read current like state.</li>
+     *   <li>Call {@code PostInteractionFacade} to toggle like.</li>
+     *   <li>Update local {@code Post} and UI based on the result.</li>
+     *   <li>Show an error on failure.</li>
      * </ol>
      *
-     * <p>点赞/取消点赞会同步更新点赞数：</p>
+     * <p>Counts update with like/unlike:</p>
      * <ul>
-     *   <li>点赞：点赞数+1</li>
-     *   <li>取消点赞：点赞数-1（最小为0）</li>
+     *   <li>Like: count +1</li>
+     *   <li>Unlike: count −1 (min 0)</li>
      * </ul>
      */
     private void handleLikeClick() {
-        // TODO
+        boolean currentStatus = post.isLikedByCurrentUser();
+        PostInteractionFacade.toggleLike(post.getPostId(), currentStatus, task -> {
+            if (task.isSuccessful() && task.getResult() != null) {
+                boolean newStatus = task.getResult();
+                post.setLikedByCurrentUser(newStatus);
+
+                if (newStatus) {
+                    post.setLikeCount(post.getLikeCount() + 1);
+                } else {
+                    post.setLikeCount(Math.max(0, post.getLikeCount() - 1));
+                }
+
+                updateLikeButton(newStatus);
+                binding.textLikeCount.setText(String.valueOf(post.getLikeCount()));
+            } else {
+
+                String errorMessage = "Failed to update like";
+                if (task.getException() != null) {
+                    errorMessage = task.getException().getMessage();
+                }
+                Toast.makeText(this, errorMessage, Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     /**
-     * 处理收藏按钮点击事件
+     * Handle favorite button click.
      *
-     * <p>执行流程：</p>
+     * <p>Flow:</p>
      * <ol>
-     *   <li>获取当前收藏状态</li>
-     *   <li>调用PostInteractionFacade切换收藏状态</li>
-     *   <li>根据返回结果更新本地Post对象和UI</li>
-     *   <li>如果失败，显示错误提示</li>
+     *   <li>Read current favorite state.</li>
+     *   <li>Call {@code PostInteractionFacade} to toggle favorite.</li>
+     *   <li>Update local {@code Post} and UI based on the result.</li>
+     *   <li>Show an error on failure.</li>
      * </ol>
      *
-     * <p>收藏/取消收藏会同步更新收藏数：</p>
+     * <p>Counts update with favorite/unfavorite:</p>
      * <ul>
-     *   <li>收藏：收藏数+1</li>
-     *   <li>取消收藏：收藏数-1（最小为0）</li>
+     *   <li>Favorite: count +1</li>
+     *   <li>Unfavorite: count −1 (min 0)</li>
      * </ul>
      */
     private void handleFavoriteClick() {
-        // TODO
+        boolean currentStatus = post.isFavoritedByCurrentUser();
+        PostInteractionFacade.toggleFavorite(post.getPostId(), currentStatus, task -> {
+            if (task.isSuccessful() && task.getResult() != null) {
+                boolean newStatus = task.getResult();
+                post.setFavoritedByCurrentUser(newStatus);
+
+                if (newStatus) {
+                    post.setFavoriteCount(post.getFavoriteCount() + 1);
+                } else {
+                    post.setFavoriteCount(Math.max(0, post.getFavoriteCount() - 1));
+                }
+
+                updateFavoriteButton(newStatus);
+                binding.textFavoriteCount.setText(String.valueOf(post.getFavoriteCount()));
+            } else {
+
+                String errorMessage = "Failed to update favorite";
+                if (task.getException() != null) {
+                    errorMessage = task.getException().getMessage();
+                }
+                Toast.makeText(this, errorMessage, Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     /**
-     * 更新点赞按钮的图标
+     * Update the like button icon.
      *
-     * @param isLiked true表示已点赞，显示实心图标；false表示未点赞，显示空心图标
+     * @param isLiked true show the filled icon, false show the outlined icon
      */
     private void updateLikeButton(boolean isLiked) {
-        // TODO
+        if (isLiked) {
+
+            binding.buttonLike.setImageResource(R.drawable.ic_thumb_up_24);
+        } else {
+
+            binding.buttonLike.setImageResource(R.drawable.ic_thumb_up_border_24);
+        }
     }
 
     /**
-     * 更新收藏按钮的图标
+     * Update the favorite button icon.
      *
-     * @param isFavorited true表示已收藏，显示实心图标；false表示未收藏，显示空心图标
+     * @param isFavorited true show the filled icon, false show the outlined icon
      */
     private void updateFavoriteButton(boolean isFavorited) {
-        // TODO
+        if (isFavorited) {
+
+            binding.buttonFavorite.setImageResource(R.drawable.ic_bookmark_24);
+        } else {
+
+            binding.buttonFavorite.setImageResource(R.drawable.ic_bookmark_border_24);
+        }
     }
 
     /**
-     * Activity生命周期方法 - 销毁时调用
+     * Activity lifecycle – called on destroy.
      *
-     * <p>清理ViewBinding引用，防止内存泄漏。</p>
+     * <p>Clear the ViewBinding reference to prevent memory leaks.</p>
      */
     @Override
     protected void onDestroy() {
-        // TODO
+        super.onDestroy();
+        binding = null;
     }
 }
