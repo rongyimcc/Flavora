@@ -1,6 +1,6 @@
 # Flavora — Food Sharing App
 
-Flavora is an Android-based food sharing application that allows users to upload, browse, and interact with food posts in real time.
+Flavora is an Android-based food sharing application built with Firebase backend, enabling users to upload, browse, and interact with food posts in real time.
 
 ## Features
 - User authentication using Firebase
